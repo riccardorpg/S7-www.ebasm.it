@@ -1,0 +1,12 @@
+twig:
+    file_name_pattern: '*.twig'
+    globals:
+        path_graphics: '%path_graphics%'
+        iubenda_site_id: '%iubenda_site_id%'
+        iubenda_cookie_policy_id: '%iubenda_cookie_policy_id%'
+        iubenda_privacy_policy_id: '%iubenda_privacy_policy_id%'
+        iubenda_terms_id: '%iubenda_terms_id%'
+
+when@test:
+    twig:
+        strict_variables: true

@@ -1,0 +1,9 @@
+# CSRF classico basato su sessione.
+# Questo progetto usa form server-rendered (nessun frontend Stimulus/importmap), quindi
+# NON usiamo il CSRF stateless double-submit (che richiederebbe il controller JS csrf-protection).
+framework:
+    csrf_protection:
+        enabled: true
+    form:
+        csrf_protection:
+            enabled: true

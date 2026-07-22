@@ -1,0 +1,17 @@
+/* Tabelle delle liste con filtro a scelta multipla (modale): celle compatte */
+.multi-filter-table td {
+    padding: 0.1rem;
+}
+
+/* Scrivania - side-tabs allarmi: pill attiva col colore primary del gestionale (bg_pr) */
+#alarmTabs .nav-link.active {
+    background-color: #1ABC9C !important;
+    color: #fff !important;
+}
+
+/* Prodotto - bottone "Rimuovi" del file input (Krajee) in rosso */
+#productImageModal .fileinput-remove-button {
+    background-color: #cb0c0f !important;
+    border-color: #cb0c0f !important;
+    color: #fff !important;
+}

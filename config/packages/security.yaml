@@ -1,0 +1,70 @@
+security:
+    password_hashers:
+        App\Entity\Master\User:
+            algorithm: bcrypt
+        App\Entity\Slave\User:
+            algorithm: bcrypt
+        Symfony\Component\Security\Core\User\InMemoryUser:
+            algorithm: plaintext
+
+    providers:
+        # Il chain risolve prima sul master (ADMIN/NOTARY), poi sullo slave (AGENCY,
+        # DB già ri-puntato dal listener/authenticator).
+        app_user_provider:
+            chain:
+                providers: [master_provider, slave_provider]
+        master_provider:
+            entity:
+                class: App\Entity\Master\User
+                property: email
+                manager_name: master
+        slave_provider:
+            entity:
+                class: App\Entity\Slave\User
+                property: email
+                manager_name: slave
+        script_provider:
+            memory:
+                users:
+                    admin: { password: '%password_script%', roles: 'ROLE_SCRIPT' }
+
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js|assets|build)/
+            security: false
+        script:
+            pattern: ^/script
+            http_basic:
+                provider: script_provider
+        main:
+            lazy: true
+            provider: app_user_provider
+            switch_user: true
+            custom_authenticator: App\Security\LoginFormAuthenticator
+            entry_point: App\Security\LoginFormAuthenticator
+            remember_me:
+                secret: '%kernel.secret%'
+                lifetime: 604800 # 1 settimana
+            logout:
+                path: logout
+                target: login
+
+    role_hierarchy:
+        # Solo l'admin può impersonare (agenzie).
+        ROLE_ADMIN: [ROLE_ALLOWED_TO_SWITCH]
+
+    access_control:
+        - { path: ^/script, roles: ROLE_SCRIPT }
+        - { path: ^/amministratore, roles: ROLE_ADMIN }
+        - { path: ^/notaio, roles: ROLE_NOTARY }
+        - { path: ^/agenzia, roles: ROLE_AGENCY }
+
+when@test:
+    security:
+        password_hashers:
+            App\Entity\Master\User:
+                algorithm: bcrypt
+                cost: 4
+            App\Entity\Slave\User:
+                algorithm: bcrypt
+                cost: 4

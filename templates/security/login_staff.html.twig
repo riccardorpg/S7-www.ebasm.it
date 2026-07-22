@@ -1,0 +1,54 @@
+{% extends 'public/layout.html.twig' %}
+
+{% block title %} - Accesso staff{% endblock %}
+{% block robots %}<meta name="robots" content="noindex, follow">{% endblock %}
+
+{% block content %}
+    <section class="eb-section" style="padding-top:150px; min-height:70vh;">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-7 col-lg-5">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <div class="text-center mb-4">
+                                <h3 class="mb-0"><i class="bi-shield-lock eb-brand-color"></i> Accesso staff</h3>
+                                <p class="text-muted font_13">Amministratori e notai</p>
+                            </div>
+
+                            {% if error %}
+                                <div class="alert alert-danger alert-dismissible d-flex align-items-center">
+                                    <i class="bi-exclamation-triangle-fill me-2"></i>
+                                    <div>{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endif %}
+
+                            <form method="post" action="{{ path('login_check') }}">
+                                <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+                                <input type="hidden" name="staff" value="1">
+
+                                <div class="form-group mb-3">
+                                    <label class="form-label">E-mail</label>
+                                    <input type="email" name="email" value="{{ last_username }}" class="form-control" autofocus required>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Password</label>
+                                    <input type="password" name="password" class="form-control" required>
+                                </div>
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <div class="form-check form-switch m-0">
+                                        <input class="form-check-input" type="checkbox" role="switch" name="_remember_me" id="remember_me" checked>
+                                        <label class="form-check-label font_13" for="remember_me">Rimani collegato</label>
+                                    </div>
+                                    <a href="{{ path('password_recover') }}" class="font_13">Recupera password</a>
+                                </div>
+                                <button type="submit" class="button button-3d button-rounded button-large m-0 w-100" style="background:var(--eb-brand);">Accedi</button>
+                            </form>
+                        </div>
+                    </div>
+                    <p class="text-center mt-3"><a href="{{ path('login') }}" class="font_13 text-muted">&larr; Accesso con codice agenzia</a></p>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

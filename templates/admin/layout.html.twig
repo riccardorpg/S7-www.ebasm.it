@@ -1,0 +1,31 @@
+{% extends 'base.html.twig' %}
+
+{% block footer %}{% endblock %}
+
+{% block home_path %}{{ path('admin_index') }}{% endblock %}
+
+{% block menu %}
+    <li class="menu-item{{ app.request.attributes.get('_route') == 'admin_index' ? ' current' : '' }}">
+        <a class="menu-link" href="{{ path('admin_index') }}"><div><i class="bi-speedometer2"></i> Dashboard</div></a>
+    </li>
+    <li class="menu-item{{ app.request.attributes.get('_route') == 'admin_agencies' ? ' current' : '' }}">
+        <a class="menu-link" href="{{ path('admin_agencies') }}"><div><i class="bi-building"></i> Agenzie</div></a>
+    </li>
+    <li class="menu-item">
+        <a class="menu-link" href="{{ path('logout') }}"><div><i class="bi-box-arrow-right"></i> Esci</div></a>
+    </li>
+{% endblock %}
+
+{% block breadcrumb %}
+    {% set crumb_current = block('page_title')|striptags|trim %}
+    <li class="breadcrumb-item">
+        {% if app.request.attributes.get('_route') == 'admin_index' %}
+            Amministrazione
+        {% else %}
+            <a href="{{ path('admin_index') }}">Amministrazione</a>
+        {% endif %}
+    </li>
+    {% if app.request.attributes.get('_route') != 'admin_index' and crumb_current %}
+        <li class="breadcrumb-item active" aria-current="page">{{ crumb_current }}</li>
+    {% endif %}
+{% endblock %}

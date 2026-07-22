@@ -1,0 +1,28 @@
+{% extends 'base.html.twig' %}
+
+{% block footer %}{% endblock %}
+
+{% block home_path %}{{ path('notary_index') }}{% endblock %}
+
+{% block menu %}
+    <li class="menu-item{{ app.request.attributes.get('_route') == 'notary_index' ? ' current' : '' }}">
+        <a class="menu-link" href="{{ path('notary_index') }}"><div><i class="bi-speedometer2"></i> Dashboard</div></a>
+    </li>
+    <li class="menu-item">
+        <a class="menu-link" href="{{ path('logout') }}"><div><i class="bi-box-arrow-right"></i> Esci</div></a>
+    </li>
+{% endblock %}
+
+{% block breadcrumb %}
+    {% set crumb_current = block('page_title')|striptags|trim %}
+    <li class="breadcrumb-item">
+        {% if app.request.attributes.get('_route') == 'notary_index' %}
+            Notaio
+        {% else %}
+            <a href="{{ path('notary_index') }}">Notaio</a>
+        {% endif %}
+    </li>
+    {% if app.request.attributes.get('_route') != 'notary_index' and crumb_current %}
+        <li class="breadcrumb-item active" aria-current="page">{{ crumb_current }}</li>
+    {% endif %}
+{% endblock %}

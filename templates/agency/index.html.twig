@@ -1,0 +1,22 @@
+{% extends 'agency/layout.html.twig' %}
+
+{% block title %} - Agenzia{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+    <section class="content-wrap">
+        <div class="container">
+            <div class="card">
+                <div class="card-body">
+                    <h4>Benvenuto, {{ app.user.fullName }}</h4>
+                    <p class="op_07">Ruolo: <span class="badge bg-warning text-dark">Agenzia</span> — {{ app.user.userIdentifier }}</p>
+                    {% if company %}
+                        <p class="m_b_none">Agenzia: <strong>{{ company.name }}</strong> — DB: <code>{{ company.dbName }}</code></p>
+                    {% else %}
+                        <p class="op_07 m_b_none">Contesto agenzia non risolto.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

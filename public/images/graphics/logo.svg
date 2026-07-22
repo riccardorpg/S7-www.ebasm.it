@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 230 48" role="img" aria-label="EBASM (placeholder)">
+    <rect x="0" y="4" width="40" height="40" rx="10" fill="#1ABC9C"/>
+    <text x="20" y="32" text-anchor="middle" font-family="'IBM Plex Sans',Arial,sans-serif" font-size="24" font-weight="700" fill="#ffffff">E</text>
+    <text x="52" y="33" font-family="'IBM Plex Sans',Arial,sans-serif" font-size="26" font-weight="700" letter-spacing="1" fill="#12181f">EBASM</text>
+    <text x="53" y="44" font-family="'IBM Plex Sans',Arial,sans-serif" font-size="8" letter-spacing="2" fill="#9aa3ac">PLACEHOLDER LOGO</text>
+</svg>

@@ -1,0 +1,37 @@
+{% extends 'public/layout.html.twig' %}
+
+{% block title %} - Accedi{% endblock %}
+{% block robots %}<meta name="robots" content="noindex, follow">{% endblock %}
+
+{% block content %}
+    <section class="eb-section" style="padding-top:150px; min-height:70vh;">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-7 col-lg-5">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-4 text-center">
+                            <h3 class="mb-1">Accedi</h3>
+                            <p class="text-muted mb-4">Inserisci il tuo codice personale per accedere all'area della tua agenzia.</p>
+
+                            <form method="post" action="{{ path('login_code_submit') }}">
+                                <div class="form-group text-start mb-3">
+                                    <label class="form-label">Codice personale</label>
+                                    <input type="text" name="codice" class="form-control form-control-lg text-center"
+                                           placeholder="ES. AG001" autofocus required style="letter-spacing:2px; text-transform:uppercase;">
+                                </div>
+                                <button type="submit" class="button button-3d button-rounded button-large m-0 w-100" style="background:var(--eb-brand);">
+                                    Continua <i class="bi-arrow-right"></i>
+                                </button>
+                            </form>
+
+                            <hr class="my-4">
+                            <p class="font_13 text-muted mb-1">Sei un amministratore o un notaio?</p>
+                            <a href="{{ path('login_staff') }}" class="font_13"><i class="bi-shield-lock"></i> Accesso staff</a>
+                        </div>
+                    </div>
+                    <p class="text-center mt-3"><a href="{{ path('homepage') }}" class="font_13 text-muted">&larr; Torna al sito</a></p>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
