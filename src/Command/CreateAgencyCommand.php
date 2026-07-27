@@ -2,7 +2,6 @@
 
 namespace App\Command;
 
-use App\Entity\Master\AgencyUserIndex;
 use App\Entity\Master\Company;
 use App\Entity\Slave\User as AgencyUser;
 use App\Service\CompanyService;
@@ -22,8 +21,10 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
  * Provisiona una nuova agenzia (tenant):
  *   1) crea il record Company sul master (code + dbName);
  *   2) crea fisicamente il database slave dell'agenzia e ne genera lo schema;
- *   3) crea il primo utente ROLE_AGENCY nel DB slave;
- *   4) registra l'email nell'indice cross-tenant sul master (per il login).
+ *   3) crea il primo utente ROLE_AGENCY nel DB slave.
+ *
+ * L'email è univoca solo DENTRO il DB dell'agenzia: la stessa email può esistere in
+ * agenzie diverse (il login la disambigua tramite il codice).
  */
 #[AsCommand(name: 'app:create-agency', description: 'Crea una nuova agenzia: Company sul master, DB slave dedicato e primo utente ROLE_AGENCY')]
 class CreateAgencyCommand extends Command
@@ -73,11 +74,6 @@ class CreateAgencyCommand extends Command
 
             return Command::FAILURE;
         }
-        if ($masterEm->getRepository(AgencyUserIndex::class)->findOneBy(['email' => $email]) !== null) {
-            $io->error(sprintf('L\'email "%s" è già registrata (deve essere univoca cross-tenant).', $email));
-
-            return Command::FAILURE;
-        }
 
         // 1) Crea fisicamente il database slave
         $io->section('Creazione database slave: ' . $dbName);
@@ -104,15 +100,11 @@ class CreateAgencyCommand extends Command
         $slaveEm->persist($agencyUser);
         $slaveEm->flush();
 
-        // 4) Company + indice login sul master
+        // 4) Company sul master (registro agenzia: code + dbName)
         $company = new Company();
         $company->setCode($code)->setName($name)->setDbName($dbName)->setActive(true);
 
-        $index = new AgencyUserIndex();
-        $index->setEmail($email)->setCompany($company);
-
         $masterEm->persist($company);
-        $masterEm->persist($index);
         $masterEm->flush();
 
         $io->success(sprintf(

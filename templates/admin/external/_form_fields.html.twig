@@ -1,0 +1,15 @@
+<div class="row g-3">
+    <div class="col-md-6"><label class="form-label">Nome *</label><input type="text" name="name" class="form-control" required></div>
+    <div class="col-md-6"><label class="form-label">Cognome *</label><input type="text" name="surname" class="form-control" required></div>
+    <div class="col-md-6"><label class="form-label">E-mail *</label><input type="email" name="email" class="form-control" required></div>
+    <div class="col-md-6"><label class="form-label">Telefono</label><input type="text" name="phone" class="form-control"></div>
+    <div class="col-12">
+        <label class="form-label">Studio notarile di riferimento</label>
+        <select name="company_id" class="form-select">
+            <option value="0">— nessuno —</option>
+            {% for c in companies %}
+                <option value="{{ c.id }}">{{ c.name }} ({{ c.code }})</option>
+            {% endfor %}
+        </select>
+    </div>
+</div>

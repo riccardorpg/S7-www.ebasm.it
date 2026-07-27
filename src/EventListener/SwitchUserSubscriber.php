@@ -24,18 +24,11 @@ class SwitchUserSubscriber
 
     public function onSwitchUser(SwitchUserEvent $event): void
     {
-        $target = $event->getTargetUser();
-
-        if ($target instanceof SlaveUser) {
-            $company = $this->companyService->resolveAgencyCompanyByEmail($target->getUserIdentifier());
-            if ($company !== null) {
-                $this->companyService->switchToCompany($company);
-
-                return;
-            }
+        // Impersonazione agenzia: lo slave è già stato puntato al DB corretto dal
+        // SlaveDatabaseSwitcherListener (dal parametro `c`=codice) e lo stato tenant è in
+        // sessione; qui non serve altro. All'uscita (torna al ROLE_ADMIN master) si azzera.
+        if (!$event->getTargetUser() instanceof SlaveUser) {
+            $this->companyService->clearSession();
         }
-
-        // Uscita dall'impersonazione o switch verso un utente master: nessun tenant attivo.
-        $this->companyService->clearSession();
     }
 }

@@ -1,0 +1,45 @@
+{# =====================================================================
+   Modale filtro "a scelta multipla" (stile eposmanager/DualMoto, BS5).
+   Variabili (include ... only):
+     number  : id univoco del filtro nella pagina (1, 2, ...)
+     title   : titolo della modale
+     options : lista di {id, label} (id = valore inviato al backend; label = testo)
+   Da abbinare a:
+     - input visibile  #filter_multi_value_{{ number }} (readonly, onclick filterMulti{{ number }}())
+     - input hidden     #filter_multi_id_{{ number }}    (name = chiave del filtro)
+     - components/js/filter_multi_js.html.twig con lo stesso number
+   ===================================================================== #}
+<div id="filterMultiModal{{ number }}" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header"><h3 class="modal-title">{{ title }}</h3></div>
+            <div class="modal-stripe"></div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-12 m_b_20p">
+                        <button type="button" class="button button-3d button-mini button-green f_left" onclick="filterMultiAll{{ number }}(true)">Seleziona tutti</button>
+                        <button type="button" class="button button-3d button-mini button-grey f_right" onclick="filterMultiAll{{ number }}(false)">Deseleziona tutti</button>
+                    </div>
+                    <div class="col-12">
+                        <table class="table table-borderless m_none multi-filter-table">
+                            {% for o in options %}
+                                <tr>
+                                    <td class="td_w_40p txt_a_c">
+                                        <input type="checkbox" class="form-check-input switch_multi_{{ number }}" id="multi_{{ number }}_{{ loop.index }}" data-id="{{ o.id }}" data-val="{{ o.label }}">
+                                    </td>
+                                    <td class="txt_a_l"><label class="m_b_none" for="multi_{{ number }}_{{ loop.index }}">{{ o.label }}</label></td>
+                                </tr>
+                            {% else %}
+                                <tr><td class="text-muted txt_a_c">Nessun valore disponibile.</td></tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="button button-3d button-small button-red f_left" data-bs-dismiss="modal">Annulla</button>
+                <button type="button" class="button button-3d button-small button-green f_right" onclick="setFilterMulti{{ number }}()">Aggiorna filtro</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -6,10 +6,10 @@
 
 {% block menu %}
     <li class="menu-item{{ app.request.attributes.get('_route') == 'agency_index' ? ' current' : '' }}">
-        <a class="menu-link" href="{{ path('agency_index') }}"><div><i class="bi-speedometer2"></i> Dashboard</div></a>
+        <a class="menu-link" href="{{ path('agency_index') }}"><div>Dashboard</div></a>
     </li>
     <li class="menu-item">
-        <a class="menu-link" href="{{ path('logout') }}"><div><i class="bi-box-arrow-right"></i> Esci</div></a>
+        <a class="menu-link" href="{{ path('logout') }}"><div>Esci</div></a>
     </li>
 {% endblock %}
 

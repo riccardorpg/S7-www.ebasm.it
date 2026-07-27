@@ -1,0 +1,32 @@
+<script>
+jQuery(function ($) {
+    if (typeof $.fn.daterangepicker !== 'function') { console.warn('daterangepicker plugin not loaded'); return; }
+    if (typeof window.moment === 'undefined') { console.warn('moment.js not loaded'); return; }
+    $("#{{ id }}").daterangepicker({
+        "buttonClasses": "button button-3d button-mini",
+        "applyClass": "button-green",
+        "cancelClass": "button-red m_r_5p",
+        "autocomplete": "off",
+        "autoUpdateInput": false,
+        "timePicker": {{ hasTimePicker }},
+        "timePicker24Hour": {{ hasTimePicker }},
+        "locale": {
+            "format": "{{ format }}",
+            "separator": "/",
+            "applyLabel": "Applica",
+            "cancelLabel": "Resetta",
+            "fromLabel": "Da",
+            "toLabel": "A",
+            "customRangeLabel": "Custom",
+            "weekLabel": "W",
+            "daysOfWeek": ["Do","Lu","Ma","Me","Gi","Ve","Sa"],
+            "monthNames": ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"],
+            "firstDay": 1
+        }
+    });
+    $('#{{ id }}').on('apply.daterangepicker', function (ev, picker) {
+        $(this).val(picker.startDate.format('{{ format }}') + '/' + picker.endDate.format('{{ format }}'));
+    });
+    $('#{{ id }}').on('cancel.daterangepicker', function (ev, picker) { $(this).val(''); });
+});
+</script>

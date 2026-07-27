@@ -1,0 +1,28 @@
+{# Icone-azione per le liste (stile DualMoto). I globals (path_graphics) sono accessibili nei macro. #}
+
+{# Azione con link (href può essere una rotta o javascript:fn()). #}
+{% macro action(href, icon, title, color) %}
+    <a href="{{ href }}" class="d-inline-block m_r_5p" data-bs-toggle="tooltip" data-bs-title="{{ title }}">
+        <img src="{{ asset(path_graphics ~ '/icons/' ~ icon ~ '.png') }}" class="icon_action{% if color %} icon_{{ color }}{% endif %}" alt="{{ title }}">
+    </a>
+{% endmacro %}
+
+{# Azione dentro un <form> (bottone submit reso come icona). #}
+{% macro submit(icon, title, color) %}
+    <button type="submit" class="btn p-0 border-0 bg-transparent d-inline-block m_r_5p" data-bs-toggle="tooltip" data-bs-title="{{ title }}">
+        <img src="{{ asset(path_graphics ~ '/icons/' ~ icon ~ '.png') }}" class="icon_action{% if color %} icon_{{ color }}{% endif %}" alt="{{ title }}">
+    </button>
+{% endmacro %}
+
+{# Intestazione ordinabile: label (bianca, ereditata dal th) + freccia che cambia via JS.
+   Richiede l'inclusione di components/table/sort_js.html.twig (definisce setSort1). #}
+{% macro sort(label, field) %}
+    {{ label }}<button type="button" class="f_right filter_arrow" data-orderfield="{{ field }}" onclick="setSort1('{{ field }}')"><img alt="ordina"></button>
+{% endmacro %}
+
+{# Icona disabilitata (grigia, non cliccabile). #}
+{% macro disabled(icon, title) %}
+    <span class="d-inline-block m_r_5p" data-bs-toggle="tooltip" data-bs-title="{{ title }}">
+        <img src="{{ asset(path_graphics ~ '/icons/' ~ icon ~ '.png') }}" class="icon_action icon_grey" alt="{{ title }}">
+    </span>
+{% endmacro %}

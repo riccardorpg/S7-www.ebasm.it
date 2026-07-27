@@ -1,0 +1,34 @@
+{% import 'components/action_icons.html.twig' as ico %}
+{% if rows is empty %}
+    <p class="op_07 m_b_none">Nessun elemento in scadenza.</p>
+{% else %}
+    <table class="table table-striped table-bordered m_b_none">
+        <thead>
+            <tr>
+                <th class="td_w_60p"></th>
+                <th>Cliente</th>
+                <th>Codice</th>
+                <th>Licenza</th>
+                <th>Scadenza</th>
+                <th>Giorni</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for c in rows %}
+            {% set days = c.daysToExpiry %}
+            <tr>
+                <td class="txt_a_c">{{ ico.action(path('admin_client_show', {'id': c.id}), 'view', 'Apri scheda', '') }}</td>
+                <td>{{ c.name }}</td>
+                <td>{{ c.code }}</td>
+                <td>{{ c.licenseTypeLabel }}</td>
+                <td>{{ c.licenseExpiresAt ? c.licenseExpiresAt|date('d/m/Y') : '—' }}</td>
+                <td>
+                    <span class="badge {{ days is not null and days < 0 ? 'bg-danger' : 'bg-warning text-dark' }}">
+                        {{ days is null ? '—' : (days < 0 ? 'scaduta' : days ~ 'gg') }}
+                    </span>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endif %}

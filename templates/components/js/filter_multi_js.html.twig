@@ -1,0 +1,48 @@
+{# JS per il filtro "a scelta multipla" (vedi components/modals/filter_multi.html.twig).
+   Variabile: number (stesso valore di modale e input).
+   Gira al DOMContentLoaded perché il modale è renderizzato in #divModals (dopo il blocco JS). #}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var modalEl = document.getElementById('filterMultiModal{{ number }}');
+        if (!modalEl) return;
+        var modal = new bootstrap.Modal(modalEl, {backdrop: 'static', keyboard: false});
+        var valueInput = document.getElementById('filter_multi_value_{{ number }}');
+        var idInput = document.getElementById('filter_multi_id_{{ number }}');
+        if (!valueInput || !idInput) return;
+
+        function switches() { return document.getElementsByClassName('switch_multi_{{ number }}'); }
+
+        function refreshDisplay() {
+            var labels = [], ids = [], sw = switches();
+            for (var i = 0; i < sw.length; i++) {
+                if (sw[i].checked) {
+                    labels.push(sw[i].getAttribute('data-val'));
+                    ids.push(sw[i].getAttribute('data-id'));
+                }
+            }
+            valueInput.value = labels.join(', ');
+            valueInput.setAttribute('title', labels.join(', '));
+            idInput.value = ids.join(',');
+        }
+
+        (function prefill() {
+            var current = (idInput.value || '').split(',').filter(Boolean);
+            var sw = switches();
+            for (var i = 0; i < sw.length; i++) {
+                if (current.indexOf(sw[i].getAttribute('data-id')) !== -1) sw[i].checked = true;
+            }
+            refreshDisplay();
+        })();
+
+        window.filterMulti{{ number }} = function () { modal.show(); };
+        window.filterMultiAll{{ number }} = function (bool) {
+            var sw = switches();
+            for (var i = 0; i < sw.length; i++) sw[i].checked = bool;
+        };
+        window.setFilterMulti{{ number }} = function () {
+            refreshDisplay();
+            modal.hide();
+            if (idInput.form) idInput.form.submit();
+        };
+    });
+</script>

@@ -1,0 +1,37 @@
+{# =====================================================================
+   Modale "Seleziona città" (DualMoto/Tillomed, BS5).
+   Variabili (include ... only): number, cities (lista iniziale, può essere vuota).
+   Da abbinare a components/js/city_js.html.twig con lo stesso number.
+   ===================================================================== #}
+<div id="modalCity{{ number }}" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header"><h3 class="modal-title text-uppercase txt_a_c">Seleziona città</h3></div>
+            <div class="modal-stripe"></div>
+            <div class="modal-body">
+                <label class="m_b_10p">Cerca comune</label>
+                <input id="city_filter_val_{{ number }}" type="text" class="form-control m_b_20p" placeholder="Inserisci parte del nome del comune" onkeyup="cityFilter{{ number }}()" autocomplete="off">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr class="bg_pr">
+                            <th><label class="color_w m_b_none">Città (Provincia)</label></th>
+                            <th class="td_w_60p"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="city_table_{{ number }}">
+                        {% for c in cities|default([]) %}
+                            <tr>
+                                <td>{{ c.name }} ({{ c.province ? c.province.sign : '—' }})</td>
+                                <td class="txt_a_c"><a href='javascript:citySelect{{ number }}({{ c.id }}, "{{ c.name|e('js') }} ({{ c.province ? c.province.sign : '—' }})", "{{ c.displayZips }}")' data-bs-toggle="tooltip" title="Seleziona"><img class="icon_action icon_green" src="{{ asset(path_graphics ~ '/icons/select.png') }}" alt="Seleziona"></a></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="button button-3d button-small button-red f_left" onclick="cityModalClose{{ number }}()">Annulla</button>
+                <button type="button" onclick="cityDeselect{{ number }}()" class="button button-3d button-small bg_amber f_right">Deseleziona</button>
+            </div>
+        </div>
+    </div>
+</div>

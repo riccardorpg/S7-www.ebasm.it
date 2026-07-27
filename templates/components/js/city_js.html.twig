@@ -1,0 +1,109 @@
+{# =====================================================================
+   JS del modale "Seleziona città" (DualMoto/Tillomed, BS5).
+   Variabili (include ... only):
+     number       : suffisso numerico
+     formName     : prefisso id dei campi (attesi: {formName}_city [hidden id],
+                    {formName}_cityName [testo visibile], {formName}_select_zips [select CAP visibile],
+                    {formName}_zip [hidden id CAP])
+     modalToClose : id del modale padre da chiudere/riaprire ('' per nessuno)
+   Gira al DOMContentLoaded perché il modale è renderizzato in #divModals (dopo il blocco JS).
+   Richiede jQuery + Bootstrap 5.
+   ===================================================================== #}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var cityModalEl = document.getElementById('modalCity{{ number }}');
+        if (!cityModalEl) return;
+        var cityModalBs = bootstrap.Modal.getOrCreateInstance(cityModalEl, {backdrop: 'static', keyboard: false});
+        var parentModalId = {{ modalToClose|default('')|json_encode|raw }};
+        var parentModalEl = parentModalId ? document.getElementById(parentModalId) : null;
+        var parentModalBs = parentModalEl ? bootstrap.Modal.getOrCreateInstance(parentModalEl, {backdrop: 'static', keyboard: false}) : null;
+
+        window.cityModal{{ number }} = function () {
+            if (parentModalBs) parentModalBs.hide();
+            cityModalBs.show();
+        };
+        window.cityModalClose{{ number }} = function () {
+            cityModalBs.hide();
+            if (parentModalBs) parentModalBs.show();
+        };
+
+        window.cityFilter{{ number }} = function () {
+            var name = document.getElementById('city_filter_val_{{ number }}').value;
+            jQuery.post("{{ path('post_update_cities') }}", {name: name}, function (response) {
+                if (response.code !== 200 || !response.success) return;
+                var tbody = document.getElementById('city_table_{{ number }}');
+                tbody.innerHTML = '';
+                var cities = JSON.parse(response.cities);
+                if (cities.length === 0) {
+                    var tr = document.createElement('tr');
+                    var td = document.createElement('td');
+                    td.colSpan = 2; td.className = 'text-muted txt_a_c'; td.textContent = 'Nessun comune trovato.';
+                    tr.appendChild(td); tbody.appendChild(tr);
+                    return;
+                }
+                for (var i = 0; i < cities.length; i++) {
+                    var tr = document.createElement('tr');
+                    var tdName = document.createElement('td');
+                    var tdSelect = document.createElement('td');
+                    tdName.textContent = cities[i].name + ' (' + cities[i].province + ')';
+                    var a = document.createElement('a');
+                    a.href = 'javascript:citySelect{{ number }}(' + cities[i].id + ', "' + cities[i].name.replace(/"/g, '\\"') + ' (' + cities[i].province + ')", "")';
+                    a.innerHTML = '<img class="icon_action icon_green" src="{{ asset(path_graphics ~ "/icons/select.png") }}" alt="Seleziona">';
+                    tdSelect.className = 'txt_a_c';
+                    tdSelect.appendChild(a);
+                    tr.appendChild(tdName); tr.appendChild(tdSelect);
+                    tbody.appendChild(tr);
+                }
+            }, 'json');
+        };
+
+        window.citySelect{{ number }} = function (id, name) {
+            document.getElementById('{{ formName }}_city').value = id;
+            document.getElementById('{{ formName }}_cityName').value = name;
+            zipUpdateSelect{{ number }}(false);
+            cityModalBs.hide();
+            if (parentModalBs) parentModalBs.show();
+        };
+
+        window.cityDeselect{{ number }} = function () {
+            document.getElementById('{{ formName }}_city').value = '';
+            document.getElementById('{{ formName }}_cityName').value = '';
+            zipUpdateSelect{{ number }}(false);
+            cityModalBs.hide();
+            if (parentModalBs) parentModalBs.show();
+        };
+
+        window.zipUpdateSelect{{ number }} = function (preserveCurrent) {
+            var cityId = document.getElementById('{{ formName }}_city').value;
+            var select = document.getElementById('{{ formName }}_select_zips');
+            var hiddenZip = document.getElementById('{{ formName }}_zip');
+            if (!select) return;
+            while (select.options.length) select.remove(0);
+            if (!cityId) { hiddenZip.value = ''; return; }
+
+            jQuery.post("{{ path('post_update_city_zips') }}", {cityId: cityId}, function (response) {
+                if (response.code !== 200 || !response.success || !response.zips) return;
+                var pairs = response.zips.split(',');
+                for (var i = 0; i < pairs.length; i++) {
+                    var parts = pairs[i].split('-');
+                    if (parts.length !== 2) continue;
+                    select.options.add(new Option(parts[1], parts[0]));
+                }
+                if (preserveCurrent) {
+                    var cur = hiddenZip.value;
+                    for (var k = 0; k < select.options.length; k++) {
+                        if (select.options[k].value == cur) { select.selectedIndex = k; return; }
+                    }
+                }
+                if (select.options.length > 0) {
+                    select.selectedIndex = 0;
+                    hiddenZip.value = select.options[0].value;
+                }
+            }, 'json');
+        };
+
+        window.zipSet{{ number }} = function () {
+            document.getElementById('{{ formName }}_zip').value = document.getElementById('{{ formName }}_select_zips').value;
+        };
+    });
+</script>

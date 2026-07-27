@@ -5,14 +5,18 @@
 {% block home_path %}{{ path('admin_index') }}{% endblock %}
 
 {% block menu %}
-    <li class="menu-item{{ app.request.attributes.get('_route') == 'admin_index' ? ' current' : '' }}">
-        <a class="menu-link" href="{{ path('admin_index') }}"><div><i class="bi-speedometer2"></i> Dashboard</div></a>
+    {% set r = app.request.attributes.get('_route') %}
+    <li class="menu-item{{ r == 'admin_index' ? ' current' : '' }}">
+        <a class="menu-link" href="{{ path('admin_index') }}"><div>Scrivania</div></a>
     </li>
-    <li class="menu-item{{ app.request.attributes.get('_route') == 'admin_agencies' ? ' current' : '' }}">
-        <a class="menu-link" href="{{ path('admin_agencies') }}"><div><i class="bi-building"></i> Agenzie</div></a>
+    <li class="menu-item{{ r starts with 'admin_client' ? ' current' : '' }}">
+        <a class="menu-link" href="{{ path('admin_clients') }}"><div>Clienti</div></a>
+    </li>
+    <li class="menu-item{{ r starts with 'admin_external' ? ' current' : '' }}">
+        <a class="menu-link" href="{{ path('admin_external_accounts') }}"><div>Account esterni</div></a>
     </li>
     <li class="menu-item">
-        <a class="menu-link" href="{{ path('logout') }}"><div><i class="bi-box-arrow-right"></i> Esci</div></a>
+        <a class="menu-link" href="{{ path('logout') }}"><div>Esci</div></a>
     </li>
 {% endblock %}
 

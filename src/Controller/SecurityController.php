@@ -191,25 +191,29 @@ class SecurityController extends AbstractController
     // ================= helper =================
 
     /**
+     * Risoluzione code-scoped (come il login): con codice agenzia si cerca nello slave di
+     * quel DB, altrimenti (staff) sul master. La stessa email può esistere in più agenzie.
+     *
      * @return array{0: (MasterUser|SlaveUser|null), 1: string|null} [user, companyCode]
      */
     private function resolveUserByEmail(string $email, string $codice = ''): array
     {
-        $master = $this->registry->getManager('master')->getRepository(MasterUser::class)->findOneBy(['email' => $email]);
-        if ($master instanceof MasterUser) {
-            return [$master, null];
-        }
-
-        $company = $this->companyService->resolveAgencyCompanyByEmail($email);
-        if ($company !== null) {
-            $this->companyService->switchToCompany($company);
-            $agency = $this->registry->getManager('slave')->getRepository(SlaveUser::class)->findOneBy(['email' => $email]);
-            if ($agency instanceof SlaveUser) {
-                return [$agency, $company->getCode()];
+        if ($codice !== '') {
+            $company = $this->companyService->getCompanyByCode($codice);
+            if ($company !== null && $company->isActive()) {
+                $this->companyService->switchToCompany($company);
+                $agency = $this->registry->getManager('slave')->getRepository(SlaveUser::class)->findOneBy(['email' => $email]);
+                if ($agency instanceof SlaveUser) {
+                    return [$agency, $company->getCode()];
+                }
             }
+
+            return [null, null];
         }
 
-        return [null, null];
+        $master = $this->registry->getManager('master')->getRepository(MasterUser::class)->findOneBy(['email' => $email]);
+
+        return [$master instanceof MasterUser ? $master : null, null];
     }
 
     private function findUserByOneTimeCode(string $code, string $companyCode): MasterUser|SlaveUser|null

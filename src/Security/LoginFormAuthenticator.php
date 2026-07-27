@@ -21,12 +21,14 @@ use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 use Symfony\Component\Security\Http\SecurityRequestAttributes;
 
 /**
- * Login a form unico per tutti i ruoli.
+ * Login in 2 step, come eposmanager: il codice identifica il DATABASE, poi email+password
+ * risolvono l'utente DENTRO quel database. La stessa email può quindi esistere in più
+ * agenzie: è il codice a disambiguare.
  *
  * Risoluzione dell'utente:
- *   1) master (ROLE_ADMIN / ROLE_NOTARY) → cercato su App\Entity\Master\User;
- *   2) agenzia (ROLE_AGENCY) → email risolta sull'indice cross-tenant, si ri-punta lo
- *      slave al DB dell'agenzia e si carica App\Entity\Slave\User.
+ *   - con `codice` (pagina dedicata agenzia) → si punta lo slave al DB della Company e si
+ *     carica App\Entity\Slave\User per email da QUEL DB (nessuna ricerca su master);
+ *   - con `staff` (accesso staff) → si carica App\Entity\Master\User per email dal master.
  *
  * Il redirect post-login dipende dal ruolo.
  */
@@ -78,25 +80,29 @@ class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
         $email = mb_strtolower(trim((string) $request->request->get('email', '')));
         $password = (string) $request->request->get('password', '');
         $csrfToken = (string) $request->request->get('_csrf_token', '');
+        $codice = trim((string) $request->request->get('codice', ''));
+        $isStaff = (bool) $request->request->get('staff', false);
 
         $request->getSession()->set(SecurityRequestAttributes::LAST_USERNAME, $email);
 
-        $userBadge = new UserBadge($email, function (string $identifier) {
-            // 1) Master: ADMIN / NOTARY
-            $masterUser = $this->registry->getManager('master')
-                ->getRepository(MasterUser::class)
-                ->findOneBy(['email' => $identifier]);
-
-            if ($masterUser instanceof MasterUser) {
-                // login lato master: nessun tenant attivo
+        $userBadge = new UserBadge($email, function (string $identifier) use ($codice, $isStaff) {
+            // Accesso STAFF (ADMIN / NOTARY): solo master, nessun tenant.
+            if ($isStaff || $codice === '') {
                 $this->companyService->clearSession();
+                $masterUser = $this->registry->getManager('master')
+                    ->getRepository(MasterUser::class)
+                    ->findOneBy(['email' => $identifier]);
 
-                return $masterUser;
+                if ($masterUser instanceof MasterUser) {
+                    return $masterUser;
+                }
+
+                throw new UserNotFoundException();
             }
 
-            // 2) Agenzia: risolvi il tenant e punta lo slave prima di caricare lo User
-            $company = $this->companyService->resolveAgencyCompanyByEmail($identifier);
-            if ($company !== null) {
+            // Accesso AGENZIA: il codice identifica il DB. Punta lo slave e cerca SOLO lì.
+            $company = $this->companyService->getCompanyByCode($codice);
+            if ($company !== null && $company->isActive()) {
                 $this->companyService->switchToCompany($company);
 
                 $agencyUser = $this->registry->getManager('slave')

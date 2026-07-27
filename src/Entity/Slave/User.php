@@ -25,8 +25,24 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     use ActiveTrait;
     use TimestampsTrait;
 
+    /** 7.1.9.6.1.2 Amministratore dell'agenzia si/no. */
+    #[ORM\Column(name: 'is_admin', type: 'boolean', options: ['default' => false])]
+    private bool $admin = false;
+
     public function __construct()
     {
         $this->role = 'ROLE_AGENCY';
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->admin;
+    }
+
+    public function setAdmin(bool $admin): static
+    {
+        $this->admin = $admin;
+
+        return $this;
     }
 }

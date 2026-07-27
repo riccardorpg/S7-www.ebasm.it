@@ -3,7 +3,6 @@
 namespace App\Service;
 
 use App\Bundle\DynamicConnection;
-use App\Entity\Master\AgencyUserIndex;
 use App\Entity\Master\Company;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
@@ -14,8 +13,8 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * Gestione dello switch multi-tenant della connessione "slave".
  *
  * Il master è fisso; lo slave viene ri-puntato al database dell'agenzia (Company)
- * corrente. Il tenant è determinato dall'email dell'utente ROLE_AGENCY tramite
- * l'indice cross-tenant AgencyUserIndex sul master (nessun codice azienda da digitare).
+ * corrente. Il tenant è determinato dal CODICE agenzia (Company.code), che identifica
+ * il database: la stessa email può esistere in agenzie diverse.
  */
 class CompanyService
 {
@@ -30,15 +29,14 @@ class CompanyService
     }
 
     /**
-     * Risolve la Company (agenzia) a partire dall'email di un utente ROLE_AGENCY.
+     * Risolve la Company (agenzia) dal suo codice. Il codice identifica il database:
+     * la stessa email può esistere in agenzie diverse, quindi è il codice a disambiguare.
      */
-    public function resolveAgencyCompanyByEmail(string $email): ?Company
+    public function getCompanyByCode(string $code): ?Company
     {
-        $entry = $this->registry->getManager('master')
-            ->getRepository(AgencyUserIndex::class)
-            ->findOneBy(['email' => mb_strtolower(trim($email))]);
-
-        return $entry?->getCompany();
+        return $this->registry->getManager('master')
+            ->getRepository(Company::class)
+            ->findOneBy(['code' => trim($code)]);
     }
 
     /**
@@ -90,6 +88,24 @@ class CompanyService
         if (is_string($dbName) && $dbName !== '') {
             $this->pointSlaveToDbName($dbName);
         }
+    }
+
+    /**
+     * 7.1.8 Spazio occupato reale (MB) dal database dell'agenzia, letto da information_schema.
+     */
+    public function getStorageUsedMb(string $dbName): float
+    {
+        if ($dbName === '') {
+            return 0.0;
+        }
+
+        $conn = $this->registry->getConnection('master');
+        $bytes = (int) $conn->executeQuery(
+            'SELECT COALESCE(SUM(data_length + index_length), 0) FROM information_schema.tables WHERE table_schema = :db',
+            ['db' => $dbName],
+        )->fetchOne();
+
+        return round($bytes / 1048576, 1);
     }
 
     public function getCurrentCompany(): ?Company

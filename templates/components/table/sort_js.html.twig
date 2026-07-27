@@ -1,0 +1,53 @@
+{# =====================================================================
+   Sort JS (pattern DualMoto) adattato a KnpPaginator (param sort/direction).
+   Clic sulla freccia → aggiorna gli hidden sort/direction del form filtri e submit.
+   Le frecce (arrow_up/down/sort.png) sono rese bianche dal CSS .filter_arrow img.
+   Variabili (include ... only):
+     formName       : id del <form> filtri (es. 'clientsFilter')
+     sortId         : id dell'input hidden name="sort"
+     directionId    : id dell'input hidden name="direction"
+     actualSort     : valore corrente di sort (es. 'c.name')
+     actualDirection: valore corrente di direction (asc|desc|'')
+   ===================================================================== #}
+<script>
+    (function () {
+        var actualField = {{ actualSort|default('')|json_encode|raw }};
+        var actualDir = ({{ actualDirection|default('')|json_encode|raw }} || '').toLowerCase();
+        var icons = {
+            sort: "{{ asset(path_graphics ~ '/icons/arrow_sort.png') }}",
+            up:   "{{ asset(path_graphics ~ '/icons/arrow_up.png') }}",
+            down: "{{ asset(path_graphics ~ '/icons/arrow_down.png') }}"
+        };
+
+        window.setSort1 = function (field) {
+            var f = document.getElementById({{ sortId|json_encode|raw }});
+            var d = document.getElementById({{ directionId|json_encode|raw }});
+            if (!f || !d) return;
+            if (actualField === field) {
+                d.value = (actualDir === 'asc') ? 'desc' : 'asc';
+            } else {
+                f.value = field;
+                d.value = 'asc';
+            }
+            var form = document.getElementById({{ formName|json_encode|raw }});
+            if (form) { form.submit(); }
+        };
+
+        function updateArrows() {
+            var arrows = document.getElementsByClassName('filter_arrow');
+            for (var i = 0; i < arrows.length; i++) {
+                var img = arrows[i].querySelector('img');
+                if (!img) continue;
+                img.src = icons.sort;
+                var tip = 'Ordina';
+                if (actualField && arrows[i].getAttribute('data-orderfield') === actualField) {
+                    if (actualDir === 'asc') { img.src = icons.up; tip = 'Ordinato A→Z. Clicca per invertire.'; }
+                    else if (actualDir === 'desc') { img.src = icons.down; tip = 'Ordinato Z→A. Clicca per invertire.'; }
+                }
+                img.setAttribute('data-bs-toggle', 'tooltip');
+                img.setAttribute('title', tip);
+            }
+        }
+        document.addEventListener('DOMContentLoaded', updateArrows);
+    })();
+</script>

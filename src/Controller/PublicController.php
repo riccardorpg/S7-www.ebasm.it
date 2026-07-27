@@ -2,6 +2,8 @@
 
 namespace App\Controller;
 
+use App\Entity\Master\DemoRequest;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -48,7 +50,7 @@ class PublicController extends AbstractController
     }
 
     #[Route('/demo/richiedi', name: 'demo_request_submit', methods: ['POST'])]
-    public function demoRequestSubmit(Request $request): Response
+    public function demoRequestSubmit(Request $request, EntityManagerInterface $em): Response
     {
         if (!$this->isCsrfTokenValid('demo', (string) $request->request->get('_csrf_token'))) {
             $this->addFlash('danger', 'Sessione scaduta, riprova a inviare il modulo.');
@@ -87,7 +89,21 @@ class PublicController extends AbstractController
             return $this->redirect($this->generateUrl('homepage') . '#contatti', Response::HTTP_SEE_OTHER);
         }
 
-        // TODO: verifica reCaptcha + invio email + creazione richiesta demo (lead) da approvare in area admin.
+        // Persistenza come richiesta demo (lead) da evadere in area admin (allarme 6.1.1).
+        // TODO: verifica reCaptcha + invio email di conferma.
+        $demo = new DemoRequest();
+        $demo->setAccountType($accountType)
+            ->setEmail($email)
+            ->setBusinessName($ragioneSociale)
+            ->setAddress($indirizzo)
+            ->setCivic($civico)
+            ->setCity($citta)
+            ->setZip($cap)
+            ->setSdi(trim((string) $request->request->get('sdi')) ?: null)
+            ->setPec(trim((string) $request->request->get('pec')) ?: null);
+        $em->persist($demo);
+        $em->flush();
+
         $this->addFlash('success', 'Richiesta demo ricevuta! Ti invieremo a breve le istruzioni di accesso all\'indirizzo ' . $email . '.');
 
         return $this->redirect($this->generateUrl('homepage') . '#contatti', Response::HTTP_SEE_OTHER);

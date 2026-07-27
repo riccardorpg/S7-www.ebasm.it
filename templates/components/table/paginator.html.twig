@@ -1,0 +1,10 @@
+{# Wrapper paginazione KnpPaginator + contatore "X–Y di Z".
+   Uso: {% include 'components/table/paginator.html.twig' with {records: records} only %} #}
+{% if records.totalItemCount > 0 %}
+    <div class="d-flex align-items-center justify-content-between mt-3 flex-wrap gap-2">
+        <small class="op_07">
+            {{ records.getPaginationData.firstItemNumber }}–{{ records.getPaginationData.lastItemNumber }} di {{ records.totalItemCount }}
+        </small>
+        <div>{{ knp_pagination_render(records) }}</div>
+    </div>
+{% endif %}

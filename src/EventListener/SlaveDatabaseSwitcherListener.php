@@ -55,13 +55,16 @@ class SlaveDatabaseSwitcherListener
         }
 
         try {
-            // Inizio impersonazione di un'agenzia: punta lo slave al DB del target
-            // prima che il firewall carichi l'utente impersonato.
+            // Inizio impersonazione di un'agenzia: il codice azienda (`c`) identifica il DB.
+            // Punta lo slave prima che il firewall carichi l'utente impersonato.
             $switchTarget = $request->query->get(self::SWITCH_USER_PARAM);
             if (is_string($switchTarget) && $switchTarget !== '' && $switchTarget !== self::SWITCH_USER_EXIT) {
-                $company = $this->companyService->resolveAgencyCompanyByEmail($switchTarget);
-                if ($company !== null) {
-                    $this->companyService->switchToCompany($company);
+                $code = trim((string) $request->query->get('c', ''));
+                if ($code !== '') {
+                    $company = $this->companyService->getCompanyByCode($code);
+                    if ($company !== null) {
+                        $this->companyService->switchToCompany($company);
+                    }
                 }
 
                 return;

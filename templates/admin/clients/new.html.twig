@@ -1,0 +1,75 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block title %} - Nuovo cliente{% endblock %}
+{% block page_title %}Nuovo cliente{% endblock %}
+
+{% block navbar_left %}
+    <li class="nav-item"><a class="nav-link" href="{{ path('admin_clients') }}">Torna alla lista</a></li>
+{% endblock %}
+
+{% block content %}
+    <section class="content-wrap">
+        <div class="container">
+            <div class="card">
+                <div class="card-body p-4">
+                    <form method="post" action="{{ path('admin_client_new') }}">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token('client_new') }}">
+
+                        <h5 class="mb-3">Dati identificativi</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-3">
+                                <label class="form-label">Codice cliente *</label>
+                                <input type="text" name="code" class="form-control text-uppercase" placeholder="ES. AG003" required>
+                                <div class="form-text">Serve per l'accesso dedicato dell'agenzia.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Ragione sociale / Nome e cognome *</label>
+                                <input type="text" name="name" class="form-control" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Tipo cliente</label>
+                                <select name="client_type" class="form-select">
+                                    <option value="aziendale">Aziendale</option>
+                                    <option value="professionista">Professionista</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {# 7.1.10.1 Dati fiscali #}
+                        <h5 class="mb-3">Dati fiscali</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4"><label class="form-label">P. IVA</label><input type="text" name="vat_number" class="form-control"></div>
+                            <div class="col-md-3"><label class="form-label">Codice fiscale</label><input type="text" name="tax_code" class="form-control"></div>
+                            <div class="col-md-3"><label class="form-label">PEC</label><input type="email" name="pec" class="form-control"></div>
+                            <div class="col-md-2"><label class="form-label">Codice SDI</label><input type="text" name="sdi" class="form-control" maxlength="7"></div>
+                            <div class="col-md-8"><label class="form-label">Indirizzo</label><input type="text" name="address" class="form-control"></div>
+                            <div class="col-md-4"><label class="form-label">Civico</label><input type="text" name="civic" class="form-control"></div>
+                            {% include 'admin/clients/_city_picker.html.twig' with {formName: 'clientNew', number: 1} only %}
+                        </div>
+
+                        {# 7.1.10.2 Nome del database #}
+                        <h5 class="mb-3">Database dedicato</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Nome del database *</label>
+                                <input type="text" name="db_name" class="form-control" placeholder="es. ebasm_ag_ag003" required>
+                                <div class="form-text">Verrà creato un database MySQL dedicato con lo schema dell'agenzia.</div>
+                            </div>
+                        </div>
+
+                        <a href="{{ path('admin_clients') }}" class="button button-3d button-small button-red m_b_none">Annulla</a>
+                        <button type="submit" class="button button-3d button-small button-green m_b_none f_right">Inserisci</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block modals %}
+    {% include 'components/modals/city.html.twig' with {number: 1, cities: []} only %}
+{% endblock %}
+
+{% block page_javascripts %}
+    {% include 'components/js/city_js.html.twig' with {number: 1, formName: 'clientNew', modalToClose: ''} only %}
+{% endblock %}
