@@ -137,7 +137,7 @@ class Company
 
     public function getClientTypeLabel(): string
     {
-        return $this->clientType === self::TYPE_PROFESSIONAL ? 'Professionista' : 'Aziendale';
+        return $this->clientType === self::TYPE_PROFESSIONAL ? 'Privato' : 'Azienda';
     }
 
     public function getVatNumber(): ?string

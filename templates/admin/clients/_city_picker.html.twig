@@ -1,14 +1,14 @@
-{# Picker Città/CAP (geo Master). Parametri: formName, number.
+{# Picker Città/CAP (geo Master). Parametri: formName, number, (opz) cityId, cityName, zipId.
    Produce gli elementi attesi da components/js/city_js.html.twig:
      {formName}_cityName (testo visibile), {formName}_city (hidden name=city_id),
      {formName}_select_zips (select CAP), {formName}_zip (hidden name=zip_id). #}
 <div class="col-md-8">
     <label class="form-label">Città</label>
-    <input type="text" id="{{ formName }}_cityName" class="form-control cursor_p" readonly onclick="cityModal{{ number }}()" placeholder="Clicca per cercare il comune…" autocomplete="off">
-    <input type="hidden" id="{{ formName }}_city" name="city_id" value="">
+    <input type="text" id="{{ formName }}_cityName" class="form-control cursor_p" readonly onclick="cityModal{{ number }}()" placeholder="Clicca per cercare il comune…" autocomplete="off" value="{{ cityName|default('') }}">
+    <input type="hidden" id="{{ formName }}_city" name="city_id" value="{{ cityId|default('') }}">
 </div>
 <div class="col-md-4">
     <label class="form-label">CAP</label>
     <select id="{{ formName }}_select_zips" class="form-select" onchange="zipSet{{ number }}()"><option value=""></option></select>
-    <input type="hidden" id="{{ formName }}_zip" name="zip_id" value="">
+    <input type="hidden" id="{{ formName }}_zip" name="zip_id" value="{{ zipId|default('') }}">
 </div>

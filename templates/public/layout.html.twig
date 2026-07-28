@@ -10,7 +10,8 @@
     <meta name="author" content="R.P.G. Servizi Multimediali">
     <title>EBASM{% block title %}{% endblock %}</title>
     <link rel="canonical" href="{{ app.request.schemeAndHttpHost ~ app.request.pathInfo }}">
-    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ asset(path_graphics ~ '/logos/ebasm-favicon.svg') }}">
+    <link rel="alternate icon" type="image/png" href="{{ asset(path_graphics ~ '/logos/ebasm-favicon-512.png') }}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -74,7 +75,7 @@
                 <div class="container">
                     <div class="header-row justify-content-between">
                         <div id="logo" class="py-2">
-                            <a href="{{ path('homepage') }}"><img src="{{ asset(path_graphics ~ '/logo.svg') }}" alt="EBASM" style="max-height:44px;"></a>
+                            <a href="{{ path('homepage') }}"><img src="{{ asset(path_graphics ~ '/logo-mono-white.svg') }}" alt="EBASM" style="max-height:100px;"></a>
                         </div>
 
                         <div id="primary-menu-trigger">
@@ -115,7 +116,7 @@
             <div class="container">
                 <div class="row g-4">
                     <div class="col-lg-5">
-                        <img src="{{ asset(path_graphics ~ '/logo-white.svg') }}" alt="EBASM" style="max-height:40px;" class="mb-3">
+                        <img src="{{ asset(path_graphics ~ '/logo.svg') }}" alt="EBASM" style="max-height:56px;" class="mb-3">
                         <p class="font_13">EBASM — il gestionale che semplifica il lavoro quotidiano di aziende e professionisti.</p>
                     </div>
                     <div class="col-lg-4 col-6">

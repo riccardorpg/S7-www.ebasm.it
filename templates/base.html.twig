@@ -55,7 +55,8 @@
         {% block meta %}{% endblock %}
         {% block recaptcha %}{% endblock %}
 
-        <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
+        <link rel="icon" type="image/svg+xml" href="{{ asset(path_graphics ~ '/logos/ebasm-favicon.svg') }}">
+        <link rel="alternate icon" type="image/png" href="{{ asset(path_graphics ~ '/logos/ebasm-favicon-512.png') }}">
     </head>
     <body id="body" class="stretched {% block body_class %}side-header open-header close-header-on-scroll{% endblock %}">
 
@@ -101,7 +102,7 @@
                                     <div class="header-row">
                                         <div id="logo" class="p_tb_15p">
                                             <a href="{% block home_path %}{{ path('login') }}{% endblock %}">
-                                                <img src="{{ asset(path_graphics ~ '/logo.svg') }}" alt="EBASM" style="max-height:40px;">
+                                                <img src="{{ asset(path_graphics ~ '/logo-mono-white.svg') }}" alt="EBASM" style="max-height:100px;">
                                             </a>
                                         </div>
                                         <div class="primary-menu-trigger">

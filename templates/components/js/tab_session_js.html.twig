@@ -1,0 +1,27 @@
+{# =====================================================================
+   Salvataggio in sessione della tab attiva (stile Tillomeditalia).
+   Requisiti sui bottoni tab: class "tab_session" + data-filter-tab="{chiave}".
+   Al load ripristina la tab salvata in sessione per la rotta corrente.
+   ===================================================================== #}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var route = "{{ app.request.attributes.get('_route') }}";
+        var saveUrl = "{{ path('admin_update_tab_session') }}";
+
+        {% set savedTab = app.session.get(app.request.attributes.get('_route') ~ '_tab') %}
+        {% if savedTab %}
+            var saved = document.querySelector('.tab_session[data-filter-tab="{{ savedTab }}"]');
+            if (saved && window.bootstrap) { bootstrap.Tab.getOrCreateInstance(saved).show(); }
+        {% endif %}
+
+        document.querySelectorAll('.tab_session').forEach(function (btn) {
+            btn.addEventListener('shown.bs.tab', function () {
+                fetch(saveUrl, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest'},
+                    body: new URLSearchParams({path: route, tab: btn.getAttribute('data-filter-tab')})
+                });
+            });
+        });
+    });
+</script>

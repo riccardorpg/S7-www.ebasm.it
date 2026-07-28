@@ -8,168 +8,189 @@
     <li class="nav-item"><a class="nav-link" href="{{ path('admin_clients') }}">Torna alla lista</a></li>
 {% endblock %}
 
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{{ path('admin_index') }}">Amministrazione</a></li>
+    <li class="breadcrumb-item"><a href="{{ path('admin_clients') }}">Clienti</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{ company.name }}</li>
+{% endblock %}
+
 {% block content %}
     <section class="content-wrap">
         <div class="container">
-            <div class="row g-3">
-                {# 7.1.9.1 Dati fiscali studio #}
-                <div class="col-lg-6">
-                    <div class="card h-100"><div class="card-body">
-                        <h5 class="mb-3">Dati fiscali studio <span class="badge bg-secondary float-end">{{ company.clientTypeLabel }}</span></h5>
-                        <table class="table table-sm m_b_none">
-                            <tr><th style="width:40%">Codice</th><td>{{ company.code }}</td></tr>
-                            <tr><th>Ragione sociale / Nome</th><td>{{ company.name }}</td></tr>
-                            <tr><th>P. IVA</th><td>{{ company.vatNumber ?? '—' }}</td></tr>
-                            <tr><th>Codice fiscale</th><td>{{ company.taxCode ?? '—' }}</td></tr>
-                            <tr><th>Indirizzo</th><td>{{ company.address ?? '—' }} {{ company.civic }}, {{ company.zip }} {{ company.city }}</td></tr>
-                            <tr><th>SDI</th><td>{{ company.sdi ?? '—' }}</td></tr>
-                            <tr><th>PEC</th><td>{{ company.pec ?? '—' }}</td></tr>
-                            <tr><th>Database</th><td><code>{{ company.dbName }}</code></td></tr>
-                        </table>
-                    </div></div>
+            <ul class="nav nav-tabs canvas-alt-tabs tabs-tb" role="tablist">
+                <li class="nav-item"><button class="nav-link active tab_session" data-filter-tab="fiscali" data-bs-toggle="tab" data-bs-target="#tab-fiscali" type="button">Dati fiscali</button></li>
+                <li class="nav-item"><button class="nav-link tab_session" data-filter-tab="licenza" data-bs-toggle="tab" data-bs-target="#tab-licenza" type="button">Licenza e spazio</button></li>
+                <li class="nav-item"><button class="nav-link tab_session" data-filter-tab="staff" data-bs-toggle="tab" data-bs-target="#tab-staff" type="button">Gestione staff</button></li>
+            </ul>
+
+            <div class="tab-content border border-top-0 p-3 bg-white">
+
+                {# ===== TAB 1: DATI FISCALI (tabella + modale modifica) ===== #}
+                <div class="tab-pane fade show active" id="tab-fiscali">
+                    <div class="d-flex justify-content-end mb-2">
+                        <button type="button" class="button button-3d button-small bg_amber m_b_none" onclick="clientEditShow()">Modifica</button>
+                    </div>
+                    {% set isPro = company.clientType == 'professionista' %}
+                    <table class="table align-middle m_b_none">
+                        <tr><th style="width:30%">Codice</th><td>{{ company.code }}</td></tr>
+                        <tr><th>Tipo cliente</th><td>{{ company.clientTypeLabel }}</td></tr>
+                        <tr><th>{{ isPro ? 'Nome e cognome' : 'Ragione sociale' }}</th><td>{{ company.name }}</td></tr>
+                        {% if not isPro %}<tr><th>P. IVA</th><td>{{ company.vatNumber ?? '—' }}</td></tr>{% endif %}
+                        <tr><th>Codice fiscale</th><td>{{ company.taxCode ?? '—' }}</td></tr>
+                        <tr><th>PEC</th><td>{{ company.pec ?? '—' }}</td></tr>
+                        <tr><th>Indirizzo</th><td>{{ company.address ?? '—' }} {{ company.civic }}</td></tr>
+                        <tr><th>Città</th><td>{{ company.city ?? '—' }}</td></tr>
+                        <tr><th>CAP</th><td>{{ company.zip ?? '—' }}</td></tr>
+                        <tr><th>SDI</th><td>{{ company.sdi ?? '—' }}</td></tr>
+                    </table>
                 </div>
 
-                {# 7.1.9.2/3/4/5 Licenza & spazio #}
-                <div class="col-lg-6">
-                    <div class="card h-100"><div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <h5 class="m_b_none">Licenza &amp; spazio</h5>
-                            <div class="text-end">
-                                <span class="badge {{ company.statusLabel == 'Attivo' ? 'bg-success' : (company.statusLabel == 'Demo' ? 'bg-info' : (company.statusLabel == 'Scaduto' ? 'bg-danger' : 'bg-secondary')) }}">{{ company.statusLabel }}</span>
-                                <form method="post" action="{{ path('admin_client_toggle_active', {id: company.id}) }}" class="d-inline ms-1">
-                                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('client_active_' ~ company.id) }}">
-                                    <button class="button button-3d button-mini {{ company.isActive ? 'button-red' : 'button-green' }} m_b_none">{{ company.isActive ? 'Sospendi' : 'Riattiva' }}</button>
-                                </form>
-                            </div>
-                        </div>
-                        {% set pct = company.storageQuotaMb > 0 ? (storageUsedMb / company.storageQuotaMb * 100)|round : 0 %}
-                        <p class="m_b_5p">Spazio: <strong>{{ storageUsedMb }}</strong> / {{ company.storageQuotaMb }} MB</p>
-                        <div class="progress mb-3" style="height:8px;"><div class="progress-bar {{ pct > 90 ? 'bg-danger' : '' }}" style="width:{{ pct > 100 ? 100 : pct }}%;"></div></div>
+                {# ===== TAB 2: LICENZA E SPAZIO (tabella + modale) ===== #}
+                <div class="tab-pane fade" id="tab-licenza">
+                    {% set pct = company.storageQuotaMb > 0 ? (storageUsedMb / company.storageQuotaMb * 100)|round : 0 %}
+                    <div class="d-flex justify-content-end mb-2">
+                        <button type="button" class="button button-3d button-small bg_amber m_b_none" onclick="clientLicenseShow()">Modifica</button>
+                    </div>
+                    <table class="table align-middle m_b_none">
+                        <tr>
+                            <th style="width:30%">Stato</th>
+                            <td>
+                                <span class="badge cursor_p {{ company.statusLabel == 'Attivo' ? 'bg-success' : (company.statusLabel == 'Demo' ? 'bg-info' : (company.statusLabel == 'Scaduto' ? 'bg-danger' : 'bg-secondary')) }}"
+                                      data-bs-toggle="tooltip"
+                                      data-bs-title="{{ company.isActive ? 'Clicca per sospendere' : 'Clicca per riattivare' }}"
+                                      onclick="clientToggleConfirm('{{ path('admin_client_toggle_active', {id: company.id}) }}', '{{ csrf_token('client_active_' ~ company.id) }}', '{{ company.isActive ? 'sospenderai il cliente' : 'riattiverai il cliente' }}')">{{ company.statusLabel }}</span>
+                            </td>
+                        </tr>
+                        <tr><th>Tipo di licenza</th><td>{{ company.licenseTypeLabel }}</td></tr>
+                        <tr><th>Scadenza licenza</th><td>{{ company.licenseExpiresAt ? company.licenseExpiresAt|date('d/m/Y') : '—' }}</td></tr>
+                        <tr><th>Quota spazio</th><td>{{ company.storageQuotaMb }} MB</td></tr>
+                        <tr>
+                            <th>Spazio occupato</th>
+                            <td>
+                                {{ storageUsedMb }} / {{ company.storageQuotaMb }} MB
+                                <div class="progress mt-1" style="height:6px; max-width:300px;"><div class="progress-bar {{ pct > 90 ? 'bg-danger' : '' }}" style="width:{{ pct > 100 ? 100 : pct }}%;"></div></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Contratto T&amp;C</th>
+                            <td>
+                                {% if company.isTermsAccepted %}
+                                    <span class="badge bg-success cursor_p"
+                                          data-bs-toggle="tooltip" data-bs-title="Clicca per revocare"
+                                          onclick="clientToggleConfirm('{{ path('admin_client_terms', {id: company.id}) }}', '{{ csrf_token('client_terms_' ~ company.id) }}', 'revocherai l’accettazione del contratto')">accettato il {{ company.termsAcceptedAt|date('d/m/Y') }}</span>
+                                {% else %}
+                                    <span class="badge bg-danger cursor_p"
+                                          data-bs-toggle="tooltip" data-bs-title="Clicca per segnare come accettato"
+                                          onclick="clientToggleConfirm('{{ path('admin_client_terms', {id: company.id}) }}', '{{ csrf_token('client_terms_' ~ company.id) }}', 'segnerai il contratto come accettato')">non accettato</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
 
-                        <form method="post" action="{{ path('admin_client_license', {id: company.id}) }}">
-                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('client_license_' ~ company.id) }}">
-                            <div class="row g-2 align-items-end">
-                                <div class="col-md-6">
-                                    <label class="form-label font_13">Tipo di licenza</label>
-                                    <select name="license_type" class="form-select form-select-sm">
-                                        {% for t, lab in {'demo':'Demo','base':'Base','pro':'Pro','enterprise':'Enterprise'} %}
-                                            <option value="{{ t }}" {{ company.licenseType == t ? 'selected' : '' }}>{{ lab }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label font_13">Rinnova di</label>
-                                    <select name="renew_months" class="form-select form-select-sm">
-                                        <option value="0">— nessun rinnovo —</option>
-                                        <option value="1">1 mese</option>
-                                        <option value="12">12 mesi</option>
-                                        <option value="24">24 mesi</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label font_13">Quota spazio (MB)</label>
-                                    <input type="number" name="storage_quota_mb" class="form-control form-control-sm" value="{{ company.storageQuotaMb }}" min="0">
-                                </div>
-                                <div class="col-md-6 text-end">
-                                    <button class="button button-3d button-small button-green m_b_none">Aggiorna licenza</button>
-                                </div>
-                            </div>
-                            <p class="op_07 font_12 mt-2 m_b_none">Scadenza attuale: {{ company.licenseExpiresAt ? company.licenseExpiresAt|date('d/m/Y') : '—' }}</p>
-                        </form>
-
-                        {# 7.1.9.7 Contratto termini #}
-                        <hr>
-                        <form method="post" action="{{ path('admin_client_terms', {id: company.id}) }}" class="d-flex align-items-center justify-content-between">
-                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('client_terms_' ~ company.id) }}">
-                            <span class="font_13">Contratto T&amp;C:
-                                {% if company.isTermsAccepted %}<span class="badge bg-success">accettato il {{ company.termsAcceptedAt|date('d/m/Y') }}</span>
-                                {% else %}<span class="badge bg-secondary">non accettato</span>{% endif %}
-                            </span>
-                            <button class="button button-3d button-small {{ company.isTermsAccepted ? 'button-red' : 'button-green' }} m_b_none">{{ company.isTermsAccepted ? 'Revoca' : 'Segna accettato' }}</button>
-                        </form>
-                    </div></div>
+                {# ===== TAB 3: GESTIONE STAFF (filtro JS) ===== #}
+                <div class="tab-pane fade" id="tab-staff">
+                    <div class="d-flex justify-content-end mb-2">
+                        <a href="javascript:staffNewShow()" class="button button-3d button-small button-green m_b_none">Nuovo</a>
+                    </div>
+                    <table class="table table-hover table-bordered align-middle" id="staffTable">
+                        <thead>
+                            <tr class="tr_filter">
+                                <td class="td_w_70p"></td>
+                                <td class="td_w_70p"></td>
+                                <td><input type="text" id="staffFilterUser" class="form-control form-control-sm" placeholder="Filtra" onkeyup="staffFilterFn()" autocomplete="off"></td>
+                                <td><input type="text" id="staffFilterEmail" class="form-control form-control-sm" placeholder="Filtra" onkeyup="staffFilterFn()" autocomplete="off"></td>
+                                <td class="td_w_140p"></td>
+                            </tr>
+                            <tr>
+                                <th class="txt_a_c td_w_70p">Stato</th>
+                                <th class="txt_a_c td_w_70p">Admin</th>
+                                <th>Utente</th>
+                                <th>E-mail</th>
+                                <th class="txt_a_c td_w_140p">Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for u in staff %}
+                            <tr>
+                                <td class="txt_a_c">
+                                    <img src="{{ asset(path_graphics ~ '/icons/' ~ (u.isActive ? 'circle_green' : 'circle_red') ~ '.png') }}"
+                                         class="icon_action icon_sm cursor_p"
+                                         data-bs-toggle="tooltip" data-bs-title="{{ u.isActive ? 'Attivo — clicca per sospendere' : 'Sospeso — clicca per attivare' }}"
+                                         onclick="clientToggleConfirm('{{ path('admin_client_staff_toggle', {id: company.id, sid: u.id}) }}', '{{ csrf_token('client_staff_' ~ company.id) }}', '{{ u.isActive ? 'sospenderai l’utente' : 'attiverai l’utente' }}')"
+                                         alt="Stato">
+                                </td>
+                                <td class="txt_a_c">
+                                    <img src="{{ asset(path_graphics ~ '/icons/' ~ (u.isAdmin ? 'circle_green' : 'circle_red') ~ '.png') }}"
+                                         class="icon_action icon_sm cursor_p"
+                                         data-bs-toggle="tooltip" data-bs-title="{{ u.isAdmin ? 'Amministratore — clicca per revocare' : 'Non admin — clicca per promuovere' }}"
+                                         onclick="clientToggleConfirm('{{ path('admin_client_staff_admin', {id: company.id, sid: u.id}) }}', '{{ csrf_token('client_staff_' ~ company.id) }}', '{{ u.isAdmin ? 'revocherai i permessi di amministratore' : 'promuoverai l’utente ad amministratore' }}')"
+                                         alt="Admin">
+                                </td>
+                                <td class="staff-user">{{ u.fullName }}</td>
+                                <td class="staff-email">{{ u.email }}</td>
+                                <td class="txt_a_c text-nowrap">
+                                    {{ ico.action("javascript:clientToggleConfirm('" ~ path('admin_client_staff_credentials', {id: company.id, sid: u.id}) ~ "', '" ~ csrf_token('client_staff_' ~ company.id) ~ "', 'invierai le credenziali di accesso all’utente')", 'send', 'Invia credenziali', 'pr') }}
+                                    {{ ico.action(path('agency_index', {'_switch_user': u.email, 'c': company.code}), 'impersonate', 'Impersona', 'pr') }}
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="5" class="op_07 text-center">Nessun utente. Aggiungine uno con "Nuovo".</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
-
-            {# 7.1.9.6 Gestione staff #}
-            <div class="card mt-3"><div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="m_b_none">Gestione staff</h5>
-                    <a href="javascript:staffNewShow()" class="button button-3d button-small button-green m_b_none">Nuovo</a>
-                </div>
-                <form id="staffFilter" method="get" action="{{ path('admin_client_show', {id: company.id}) }}">
-                    <input type="hidden" id="staffFilter_sort" name="sort" value="{{ app.request.query.get('sort') }}">
-                    <input type="hidden" id="staffFilter_direction" name="direction" value="{{ app.request.query.get('direction') }}">
-                </form>
-                <table class="table table-striped table-bordered align-middle">
-                    <thead>
-                        <tr class="tr_filter">
-                            <td>
-                                <div class="d-flex align-items-center gap-1">
-                                    {{ ico.action(path('admin_client_show', {id: company.id}), 'close', 'Escludi filtro', 'red') }}
-                                    <input form="staffFilter" name="f_user" value="{{ staffFilters.user }}" class="form-control form-control-sm" placeholder="Filtra">
-                                </div>
-                            </td>
-                            <td><input form="staffFilter" name="f_email" value="{{ staffFilters.email }}" class="form-control form-control-sm" placeholder="Filtra"></td>
-                            <td class="txt_a_c">
-                                <input form="staffFilter" type="text" class="form-control form-control-sm cursor_p" id="filter_multi_value_1" readonly onclick="filterMulti1()" placeholder="Tutti" autocomplete="off">
-                                <input form="staffFilter" type="hidden" id="filter_multi_id_1" name="f_status" value="{{ staffFilters.status }}">
-                            </td>
-                            <td class="txt_a_c">
-                                <input form="staffFilter" type="text" class="form-control form-control-sm cursor_p" id="filter_multi_value_2" readonly onclick="filterMulti2()" placeholder="Tutti" autocomplete="off">
-                                <input form="staffFilter" type="hidden" id="filter_multi_id_2" name="f_admin" value="{{ staffFilters.admin }}">
-                            </td>
-                            <td class="txt_a_c text-nowrap">
-                                <button form="staffFilter" type="submit" class="btn p-0 border-0 bg-transparent" data-bs-toggle="tooltip" data-bs-title="Filtra">
-                                    <img src="{{ asset(path_graphics ~ '/icons/search.png') }}" class="icon_action icon_green" alt="Filtra">
-                                </button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>{{ ico.sort('Utente', 'u.surname') }}</th>
-                            <th>{{ ico.sort('E-mail', 'u.email') }}</th>
-                            <th class="txt_a_c">Stato</th>
-                            <th class="txt_a_c">Admin</th>
-                            <th class="td_w_120p txt_a_c">Azioni</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {% for u in staff %}
-                        <tr>
-                            <td>{{ u.fullName }}</td>
-                            <td>{{ u.email }}</td>
-                            <td class="txt_a_c">
-                                <form method="post" action="{{ path('admin_client_staff_toggle', {id: company.id, sid: u.id}) }}" class="d-inline">
-                                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('client_staff_' ~ company.id) }}">
-                                    {{ ico.submit(u.isActive ? 'circle_green' : 'circle_grey', u.isActive ? 'Attivo — clic per sospendere' : 'Sospeso — clic per attivare', '') }}
-                                </form>
-                            </td>
-                            <td class="txt_a_c">
-                                <form method="post" action="{{ path('admin_client_staff_admin', {id: company.id, sid: u.id}) }}" class="d-inline">
-                                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('client_staff_' ~ company.id) }}">
-                                    {{ ico.submit('key', u.isAdmin ? 'Amministratore — clic per revocare' : 'Non admin — clic per promuovere', u.isAdmin ? 'amber' : 'grey') }}
-                                </form>
-                            </td>
-                            <td class="txt_a_c text-nowrap">
-                                <form method="post" action="{{ path('admin_client_staff_credentials', {id: company.id, sid: u.id}) }}" class="d-inline">
-                                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('client_staff_' ~ company.id) }}">
-                                    {{ ico.submit('send', 'Invia credenziali', '') }}
-                                </form>
-                                {{ ico.action(path('agency_index', {'_switch_user': u.email, 'c': company.code}), 'exchange', 'Impersona', '') }}
-                            </td>
-                        </tr>
-                    {% else %}
-                        <tr><td colspan="5" class="op_07 text-center">Nessun utente. Aggiungine uno con "Nuovo".</td></tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-                {% if staff %}{% include 'components/table/paginator.html.twig' with {records: staff} only %}{% endif %}
-            </div></div>
         </div>
     </section>
 {% endblock %}
 
 {% block modals %}
+    {# Modale conferma toggle (stato cliente / accettazione T&C) #}
+    {% include 'components/modals/confirm_modal.html.twig' with {type: 'clientToggle', title: 'Conferma'} only %}
+
+    {# Modale modifica dati fiscali #}
+    {% embed 'components/modals/form_modal.html.twig' with {type: 'clientEdit', title: 'Modifica dati fiscali', size: 'modal-lg', action: path('admin_client_edit', {id: company.id})} %}
+        {% block modalBody %}
+            {% include 'admin/clients/_fiscal_fields.html.twig' with {prefix: 'clientEdit', company: company, codeEditable: false} only %}
+        {% endblock %}
+        {% block modalSubmit %}Salva modifiche{% endblock %}
+    {% endembed %}
+
+    {# Modale città per il picker (dentro il modale modifica) #}
+    {% include 'components/modals/city.html.twig' with {number: 1, cities: []} only %}
+
+    {# Modale form licenza #}
+    {% embed 'components/modals/form_modal.html.twig' with {type: 'clientLicense', title: 'Modifica licenza', action: path('admin_client_license', {id: company.id})} %}
+        {% block modalBody %}
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label">Tipo di licenza</label>
+                    <select name="license_type" class="form-select">
+                        {% for t, lab in {'demo':'Demo','base':'Base','pro':'Pro','enterprise':'Enterprise'} %}
+                            <option value="{{ t }}" {{ company.licenseType == t ? 'selected' : '' }}>{{ lab }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Rinnova di</label>
+                    <select name="renew_months" class="form-select">
+                        <option value="0">— nessun rinnovo —</option>
+                        <option value="1">1 mese</option>
+                        <option value="12">12 mesi</option>
+                        <option value="24">24 mesi</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Quota spazio (MB)</label>
+                    <input type="number" name="storage_quota_mb" class="form-control" value="{{ company.storageQuotaMb }}" min="0">
+                </div>
+            </div>
+        {% endblock %}
+        {% block modalSubmit %}Aggiorna licenza{% endblock %}
+    {% endembed %}
+
+    {# Modale nuovo staff #}
     {% embed 'components/modals/form_modal.html.twig' with {type: 'staffNew', title: 'Nuovo utente staff', action: path('admin_client_staff_new', {id: company.id})} %}
         {% block modalBody %}
             <div class="row g-3">
@@ -180,20 +201,31 @@
         {% endblock %}
         {% block modalSubmit %}Aggiungi{% endblock %}
     {% endembed %}
-
-    {% include 'components/modals/filter_multi.html.twig' with {number: 1, title: 'Filtra per stato', options: [
-        {id: 'attivo', label: 'Attivo'}, {id: 'sospeso', label: 'Sospeso'}
-    ]} only %}
-    {% include 'components/modals/filter_multi.html.twig' with {number: 2, title: 'Filtra per amministratore', options: [
-        {id: '1', label: 'Sì'}, {id: '0', label: 'No'}
-    ]} only %}
 {% endblock %}
 
 {% block page_javascripts %}
-{% include 'components/table/sort_js.html.twig' with {
-    formName: 'staffFilter', sortId: 'staffFilter_sort', directionId: 'staffFilter_direction',
-    actualSort: app.request.query.get('sort'), actualDirection: app.request.query.get('direction')
-} only %}
-{% include 'components/js/filter_multi_js.html.twig' with {number: 1} only %}
-{% include 'components/js/filter_multi_js.html.twig' with {number: 2} only %}
+    {% include 'components/js/tab_session_js.html.twig' %}
+    {% include 'components/js/city_js.html.twig' with {number: 1, formName: 'clientEdit', modalToClose: 'clientEditModal'} only %}
+    {% include 'admin/clients/_fiscal_js.html.twig' with {prefix: 'clientEdit'} only %}
+    <script>
+        // Precarica i CAP del comune già associato (preservando quello salvato).
+        document.addEventListener('DOMContentLoaded', function () {
+            if (document.getElementById('clientEdit_city').value && window.zipUpdateSelect1) {
+                zipUpdateSelect1(true);
+            }
+        });
+        // Filtro staff lato client.
+        function staffFilterFn() {
+            var qUser = document.getElementById('staffFilterUser').value.trim().toLowerCase();
+            var qEmail = document.getElementById('staffFilterEmail').value.trim().toLowerCase();
+            var rows = document.querySelectorAll('#staffTable tbody tr');
+            rows.forEach(function (tr) {
+                if (!tr.querySelector('.staff-user')) return;
+                var user = ((tr.querySelector('.staff-user') || {}).textContent || '').toLowerCase();
+                var email = ((tr.querySelector('.staff-email') || {}).textContent || '').toLowerCase();
+                var ok = (!qUser || user.indexOf(qUser) !== -1) && (!qEmail || email.indexOf(qEmail) !== -1);
+                tr.style.display = ok ? '' : 'none';
+            });
+        }
+    </script>
 {% endblock %}

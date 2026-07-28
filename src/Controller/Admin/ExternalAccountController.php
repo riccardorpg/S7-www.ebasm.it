@@ -8,6 +8,7 @@ use App\Repository\Master\ExternalAccountRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -61,6 +62,24 @@ class ExternalAccountController extends AbstractController
             'filters' => $filters,
             'companies' => $companies->findBy([], ['name' => 'ASC']),
         ]);
+    }
+
+    /** Ricerca studi (Company) per il campo ricercabile "Studio notarile di riferimento". */
+    #[Route('/api/cerca-studio', name: 'admin_company_search', methods: ['GET'])]
+    public function searchCompanies(Request $request, CompanyRepository $companies): JsonResponse
+    {
+        $q = trim((string) $request->query->get('q', ''));
+        $qb = $companies->createQueryBuilder('c')->orderBy('c.name', 'ASC')->setMaxResults(15);
+        if ($q !== '') {
+            $qb->andWhere('c.name LIKE :q OR c.code LIKE :q')->setParameter('q', '%' . $q . '%');
+        }
+
+        $items = array_map(static fn ($c) => [
+            'id' => $c->getId(),
+            'label' => $c->getName() . ' (' . $c->getCode() . ')',
+        ], $qb->getQuery()->getResult());
+
+        return $this->json($items);
     }
 
     #[Route('/nuovo', name: 'admin_external_account_new', methods: ['POST'])]

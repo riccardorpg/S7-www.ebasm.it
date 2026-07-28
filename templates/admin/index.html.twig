@@ -6,7 +6,7 @@
 {% block content %}
     <section class="content-wrap">
         <div class="container">
-            <ul class="nav nav-tabs" role="tablist">
+            <ul class="nav nav-tabs canvas-alt-tabs tabs-tb" role="tablist">
                 <li class="nav-item">
                     <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-richieste" type="button">
                         Nuove richieste in arrivo <span class="badge bg-danger">{{ newRequests|length }}</span>
@@ -30,7 +30,7 @@
                     {% if newRequests is empty %}
                         <p class="op_07 m_b_none">Nessuna nuova richiesta.</p>
                     {% else %}
-                        <table class="table table-striped table-bordered m_b_none">
+                        <table class="table table-hover table-bordered m_b_none">
                             <thead>
                                 <tr>
                                     <th>Data</th>

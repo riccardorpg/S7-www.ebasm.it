@@ -305,6 +305,8 @@ hr {
 .icon_amber { border: 1px solid #eb9c4d; }
 .icon_grey { border: 1px solid #777; }
 .icon_white { border: 1px solid #ffffff; }
+/* Icona compatta per gli indicatori di stato (pallini) nelle liste. */
+.icon_sm { width: 22px; height: 22px; padding: 2px; }
 .icon_btn-plain {
     background: transparent;
     border: 0;
@@ -1117,6 +1119,20 @@ form {
 [data-theme-resolved="dark"] .daterangepicker .drp-buttons { border-top-color: var(--dm-border); }
 [data-theme-resolved="dark"] .daterangepicker .ranges li { color: var(--dm-text); }
 [data-theme-resolved="dark"] .daterangepicker .ranges li:hover { background-color: var(--dm-surface-alt); }
+
+/* =====================================================================
+   TAB (canvas top-border) — pannello "aperto"
+   Le tab non devono chiudersi dentro un box: rimuoviamo i bordi laterali e
+   inferiore del pannello contenuto, lasciando solo il filo superiore che
+   aggancia la tab attiva. Vale globalmente per ogni .canvas-alt-tabs.
+   ===================================================================== */
+.canvas-alt-tabs + .tab-content {
+    border-left: 0 !important;
+    border-right: 0 !important;
+    border-bottom: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
 
 /* =====================================================================
    MOBILE — ottimizzazioni versione smartphone/tablet stretto

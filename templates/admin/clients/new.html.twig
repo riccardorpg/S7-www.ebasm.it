@@ -7,6 +7,12 @@
     <li class="nav-item"><a class="nav-link" href="{{ path('admin_clients') }}">Torna alla lista</a></li>
 {% endblock %}
 
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{{ path('admin_index') }}">Amministrazione</a></li>
+    <li class="breadcrumb-item"><a href="{{ path('admin_clients') }}">Clienti</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Nuovo</li>
+{% endblock %}
+
 {% block content %}
     <section class="content-wrap">
         <div class="container">
@@ -15,36 +21,9 @@
                     <form method="post" action="{{ path('admin_client_new') }}">
                         <input type="hidden" name="_csrf_token" value="{{ csrf_token('client_new') }}">
 
-                        <h5 class="mb-3">Dati identificativi</h5>
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-3">
-                                <label class="form-label">Codice cliente *</label>
-                                <input type="text" name="code" class="form-control text-uppercase" placeholder="ES. AG003" required>
-                                <div class="form-text">Serve per l'accesso dedicato dell'agenzia.</div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Ragione sociale / Nome e cognome *</label>
-                                <input type="text" name="name" class="form-control" required>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Tipo cliente</label>
-                                <select name="client_type" class="form-select">
-                                    <option value="aziendale">Aziendale</option>
-                                    <option value="professionista">Professionista</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        {# 7.1.10.1 Dati fiscali #}
-                        <h5 class="mb-3">Dati fiscali</h5>
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-4"><label class="form-label">P. IVA</label><input type="text" name="vat_number" class="form-control"></div>
-                            <div class="col-md-3"><label class="form-label">Codice fiscale</label><input type="text" name="tax_code" class="form-control"></div>
-                            <div class="col-md-3"><label class="form-label">PEC</label><input type="email" name="pec" class="form-control"></div>
-                            <div class="col-md-2"><label class="form-label">Codice SDI</label><input type="text" name="sdi" class="form-control" maxlength="7"></div>
-                            <div class="col-md-8"><label class="form-label">Indirizzo</label><input type="text" name="address" class="form-control"></div>
-                            <div class="col-md-4"><label class="form-label">Civico</label><input type="text" name="civic" class="form-control"></div>
-                            {% include 'admin/clients/_city_picker.html.twig' with {formName: 'clientNew', number: 1} only %}
+                        <h5 class="mb-3">Dati cliente</h5>
+                        <div class="mb-4">
+                            {% include 'admin/clients/_fiscal_fields.html.twig' with {prefix: 'clientNew', company: null, codeEditable: true} only %}
                         </div>
 
                         {# 7.1.10.2 Nome del database #}
@@ -72,4 +51,5 @@
 
 {% block page_javascripts %}
     {% include 'components/js/city_js.html.twig' with {number: 1, formName: 'clientNew', modalToClose: ''} only %}
+    {% include 'admin/clients/_fiscal_js.html.twig' with {prefix: 'clientNew'} only %}
 {% endblock %}

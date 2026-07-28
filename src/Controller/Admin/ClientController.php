@@ -40,6 +40,7 @@ class ClientController extends AbstractController
     public function index(CompanyRepository $companies, PaginatorInterface $paginator, Request $request): Response
     {
         $filters = [
+            'code' => trim((string) $request->query->get('f_code', '')),
             'name' => trim((string) $request->query->get('f_name', '')),
             'type' => trim((string) $request->query->get('f_type', '')),       // id multipli, comma-separated
             'license' => trim((string) $request->query->get('f_license', '')), // id multipli, comma-separated
@@ -48,8 +49,11 @@ class ClientController extends AbstractController
         ];
 
         $qb = $companies->createQueryBuilder('c');
+        if ($filters['code'] !== '') {
+            $qb->andWhere('c.code LIKE :code')->setParameter('code', '%' . $filters['code'] . '%');
+        }
         if ($filters['name'] !== '') {
-            $qb->andWhere('c.name LIKE :n OR c.code LIKE :n')->setParameter('n', '%' . $filters['name'] . '%');
+            $qb->andWhere('c.name LIKE :n')->setParameter('n', '%' . $filters['name'] . '%');
         }
         $types = array_values(array_filter(explode(',', $filters['type'])));
         if ($types !== []) {
@@ -68,15 +72,8 @@ class ClientController extends AbstractController
             'sortFieldAllowList' => ['c.name', 'c.code', 'c.clientType', 'c.licenseType', 'c.licenseExpiresAt', 'c.active'],
         ]);
 
-        // Spazio occupato reale calcolato solo per gli elementi della pagina corrente.
-        $storage = [];
-        foreach ($records as $company) {
-            $storage[$company->getId()] = $this->safeStorage($company);
-        }
-
         return $this->render('admin/clients/index.html.twig', [
             'records' => $records,
-            'storage' => $storage,
             'filters' => $filters,
         ]);
     }
@@ -210,17 +207,21 @@ class ClientController extends AbstractController
         return $this->render('admin/clients/new.html.twig');
     }
 
-    // ================= MODIFICA (modale) =================
+    // ================= MODIFICA (pagina dedicata, senza campo database) =================
 
-    #[Route('/{id}/modifica', name: 'admin_client_edit', methods: ['POST'], requirements: ['id' => '\d+'])]
+    #[Route('/{id}/modifica', name: 'admin_client_edit', methods: ['GET', 'POST'], requirements: ['id' => '\d+'])]
     public function edit(Company $company, Request $request): Response
     {
-        if ($this->isCsrfTokenValid('clientEdit', (string) $request->request->get('_csrf_token'))) {
+        if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('clientEdit', (string) $request->request->get('_csrf_token'))) {
+                return $this->redirectToRoute('admin_client_edit', ['id' => $company->getId()]);
+            }
+
             $name = trim((string) $request->request->get('name'));
             if ($name === '') {
                 $this->addFlash('danger', 'La ragione sociale / nome è obbligatoria.');
 
-                return $this->redirectToRoute('admin_clients');
+                return $this->redirectToRoute('admin_client_edit', ['id' => $company->getId()]);
             }
 
             $company->setName($name)
@@ -236,9 +237,12 @@ class ClientController extends AbstractController
 
             $this->registry->getManager('master')->flush();
             $this->addFlash('success', 'Cliente aggiornato.');
+
+            return $this->redirectToRoute('admin_client_show', ['id' => $company->getId()]);
         }
 
-        return $this->redirectToRoute('admin_clients');
+        // La modifica dati fiscali è ora nel tab "Dati fiscali" della scheda.
+        return $this->redirectToRoute('admin_client_show', ['id' => $company->getId()]);
     }
 
     // ================= SOSPENDI / RIATTIVA =================
@@ -292,50 +296,21 @@ class ClientController extends AbstractController
     // ================= 7.1.9 SCHEDA =================
 
     #[Route('/{id}', name: 'admin_client_show', methods: ['GET'], requirements: ['id' => '\d+'])]
-    public function show(Company $company, PaginatorInterface $paginator, Request $request): Response
+    public function show(Company $company): Response
     {
-        $filters = [
-            'user' => trim((string) $request->query->get('f_user', '')),
-            'email' => trim((string) $request->query->get('f_email', '')),
-            'status' => trim((string) $request->query->get('f_status', '')), // 'attivo','sospeso'
-            'admin' => trim((string) $request->query->get('f_admin', '')),   // '1','0'
-        ];
-
-        $records = null;
+        // Staff caricato tutto (filtro lato JS nel tab); lo slave è puntato solo per la query.
+        $staff = [];
         try {
             $slaveEm = $this->companyService->switchToCompany($company);
-            $qb = $slaveEm->getRepository(AgencyUser::class)->createQueryBuilder('u');
-            if ($filters['user'] !== '') {
-                $qb->andWhere('u.name LIKE :u OR u.surname LIKE :u OR u.email LIKE :u')->setParameter('u', '%' . $filters['user'] . '%');
-            }
-            if ($filters['email'] !== '') {
-                $qb->andWhere('u.email LIKE :e')->setParameter('e', '%' . $filters['email'] . '%');
-            }
-            // Stato/Admin sono binari: filtro solo se selezionato un unico valore.
-            $statuses = array_values(array_filter(explode(',', $filters['status'])));
-            if (count($statuses) === 1) {
-                $qb->andWhere('u.active = :act')->setParameter('act', $statuses[0] === 'attivo');
-            }
-            $admins = array_values(array_filter(explode(',', $filters['admin'])));
-            if (count($admins) === 1) {
-                $qb->andWhere('u.admin = :adm')->setParameter('adm', $admins[0] === '1');
-            }
-            // paginate() esegue subito le query mentre lo slave è puntato: gli item restano idratati.
-            $records = $paginator->paginate($qb->getQuery(), $request->query->getInt('page', 1), 15, [
-                'defaultSortFieldName' => 'u.email',
-                'defaultSortDirection' => 'asc',
-                'sortFieldAllowList' => ['u.email', 'u.name', 'u.surname'],
-            ]);
-            $records->getItems();
+            $staff = $slaveEm->getRepository(AgencyUser::class)->findBy([], ['email' => 'ASC']);
         } catch (\Throwable) {
-            $records = null;
+            $staff = [];
         }
         $this->companyService->clearSession();
 
         return $this->render('admin/clients/show.html.twig', [
             'company' => $company,
-            'staff' => $records,
-            'staffFilters' => $filters,
+            'staff' => $staff,
             'storageUsedMb' => $this->safeStorage($company),
         ]);
     }
@@ -345,7 +320,7 @@ class ClientController extends AbstractController
     #[Route('/{id}/licenza', name: 'admin_client_license', methods: ['POST'], requirements: ['id' => '\d+'])]
     public function license(Company $company, Request $request): Response
     {
-        if ($this->isCsrfTokenValid('client_license_' . $company->getId(), (string) $request->request->get('_csrf_token'))) {
+        if ($this->isCsrfTokenValid('clientLicense', (string) $request->request->get('_csrf_token'))) {
             $type = (string) $request->request->get('license_type');
             if (in_array($type, [Company::LICENSE_DEMO, Company::LICENSE_BASE, Company::LICENSE_PRO, Company::LICENSE_ENTERPRISE], true)) {
                 $company->setLicenseType($type);

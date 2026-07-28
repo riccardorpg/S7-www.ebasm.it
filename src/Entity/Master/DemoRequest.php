@@ -65,7 +65,7 @@ class DemoRequest
 
     public function getAccountTypeLabel(): string
     {
-        return $this->accountType === Company::TYPE_PROFESSIONAL ? 'Professionista' : 'Aziendale';
+        return $this->accountType === Company::TYPE_PROFESSIONAL ? 'Privato' : 'Azienda';
     }
 
     public function getEmail(): ?string

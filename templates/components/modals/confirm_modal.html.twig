@@ -1,0 +1,47 @@
+{# =====================================================================
+   Modale di conferma generico per azioni POST (toggle stato, T&C, ecc.).
+   Variabili (include):
+     type   : prefisso ID (es. 'clientToggle')
+     title  : titolo del modale (es. 'Conferma')
+   Espone JS: window["{type}Confirm"](url, csrf, message)
+     url     : action del form
+     csrf    : valore del token CSRF
+     message : frase dopo "Cliccando su Conferma ..." (es. "sospenderai il cliente")
+   ===================================================================== #}
+<div id="{{ type }}ConfirmModal" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form id="{{ type }}ConfirmForm" method="post" action="">
+                <input type="hidden" id="{{ type }}ConfirmToken" name="_csrf_token" value="">
+                <div class="modal-header"><h3 class="modal-title">{{ title|default('Conferma') }}</h3></div>
+                <div class="modal-stripe"></div>
+                <div class="modal-body">
+                    <div class="txt_a_c">
+                        <label class="modal_subtitle">Attenzione!</label>
+                        <p class="modal-paragraph">
+                            Cliccando su <span class="button button-3d button-mini button-green">Conferma</span>
+                            <span id="{{ type }}ConfirmText"></span>.<br>Sei sicuro di voler proseguire?
+                        </p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="button button-3d button-small button-red f_left" data-bs-dismiss="modal">Annulla</button>
+                    <button type="submit" class="button button-3d button-small button-green f_right">Conferma</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    (function () {
+        var el = document.getElementById("{{ type }}ConfirmModal");
+        if (!el) return;
+        var modal = new bootstrap.Modal(el, {backdrop: 'static', keyboard: false});
+        window["{{ type }}Confirm"] = function (url, csrf, message) {
+            document.getElementById("{{ type }}ConfirmForm").action = url;
+            document.getElementById("{{ type }}ConfirmToken").value = csrf;
+            document.getElementById("{{ type }}ConfirmText").textContent = message;
+            modal.show();
+        };
+    })();
+</script>
