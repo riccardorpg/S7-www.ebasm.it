@@ -1,0 +1,17 @@
+{% extends 'role/notary/layout.html.twig' %}
+
+{% block title %} - Notaio{% endblock %}
+{% block role_page_title_inner %}Dashboard{% endblock %}
+
+{% block role_content %}
+    <section class="content-wrap">
+        <div class="container">
+            <div class="card">
+                <div class="card-body">
+                    <h4>Benvenuto, {{ app.user.fullName }}</h4>
+                    <p class="op_07 m_b_none">Ruolo: <span class="badge bg-primary">Notaio</span> — {{ app.user.userIdentifier }}</p>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
