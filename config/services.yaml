@@ -20,8 +20,8 @@ parameters:
     # IUBENDA 
     iubenda_it: '00000000'
     iubenda_site: '00000000'
-    # iubenda_it: '30681299'
-    # iubenda_site: '4509875'
+    # iubenda_it: '38526742'
+    # iubenda_site: '4626295'
 
     # --- Multi-tenant: prefisso e coordinate del server che ospita i DB agenzia (slave) ---
     # Solo il NOME del database varia per agenzia (Company.dbName); host/port/user/password
