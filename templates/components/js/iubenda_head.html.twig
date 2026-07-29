@@ -1,0 +1,21 @@
+{# ===========================================================================
+   IUBENDA — parte da caricare nel <head>.
+   Configurazione del Cookie Solution + autoblocking. Deve stare PRIMA di ogni
+   altro script: l'autoblocking intercetta gli script di terze parti e non può
+   bloccare quelli già partiti.
+
+   Parametri: config/services.yaml → globals in config/packages/twig.yaml
+     IUBENDA_SITE : siteId del sito nella dashboard IUBENDA
+     IUBENDA_IT   : ID del documento legale IT (privacy/cookie policy)
+   =========================================================================== #}
+<script type="text/javascript">
+    var _iub = _iub || [];
+    _iub.csConfiguration = {
+        "lang": "it",
+        "siteId": {{ IUBENDA_SITE }},
+        "cookiePolicyId": {{ IUBENDA_IT }},
+        "storage": {"useSiteId": true}
+    };
+</script>
+<script type="text/javascript" src="https://cs.iubenda.com/autoblocking/{{ IUBENDA_SITE }}.js"></script>
+<script type="text/javascript" src="//cdn.iubenda.com/cs/gpp/stub.js"></script>

@@ -1,3 +1,8 @@
+{% set menuExternal = true %}
+{% set _route = app.request.attributes.get('_route') %}
+{% if _route starts with 'admin_' or _route starts with 'agency_' or _route starts with 'notary_' %}
+    {% set menuExternal = false %}
+{% endif %}
 <!DOCTYPE html>
 <html lang="it" data-theme="{{ app.user is not null and app.user.theme is defined ? app.user.theme : 'light' }}">
     <head>
@@ -5,234 +10,233 @@
         <meta http-equiv="content-language" content="it">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-
-        {# Anti-flicker: per 'auto' risolve subito chiaro/scuro dal sistema prima del rendering #}
-        <script>
-            (function () {
-                var html = document.documentElement;
-                var theme = html.getAttribute('data-theme') || 'light';
-                if (theme === 'auto') {
-                    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-                    html.setAttribute('data-theme-resolved', prefersDark ? 'dark' : 'light');
-                } else {
-                    html.setAttribute('data-theme-resolved', theme);
-                }
-            })();
-        </script>
-
         <meta name="author" content="R.P.G. Servizi Multimediali">
         <meta name="copyright" content="EBASM">
         <meta name="theme" content="Canvas - ThemeForest">
         <meta name="symfony-version" content="7.4">
 
-        {% block robots %}<meta name="robots" content="noindex, nofollow">{% endblock %}
-
-        <meta name="description" content="{% block description %}EBASM{% endblock %}">
+        {% block robots %}<meta name="robots" content="index, follow">{% endblock %}
+        <meta name="description" content="{% block description %}EBASM — il gestionale che semplifica il lavoro di aziende e professionisti.{% endblock %}">
 
         <title>EBASM{% block title %}{% endblock %}</title>
+        <link rel="canonical" href="{{ app.request.schemeAndHttpHost ~ app.request.pathInfo }}">
+        <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
 
-        {# CANVAS - tema ThemeForest #}
         {% block stylesheets %}
             <link rel="preconnect" href="https://fonts.googleapis.com">
             <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
             <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=PT+Serif:ital@0;1&display=swap">
-
             <link rel="stylesheet" href="{{ asset('css/style.css') }}">
             <link rel="stylesheet" href="{{ asset('css/font-icons.css') }}">
             <link rel="stylesheet" href="{{ asset('css/swiper.css') }}">
-            <link rel="stylesheet" href="{{ asset('css/components/bs-switches.css') }}">
-            <link rel="stylesheet" href="{{ asset('css/components/radio-checkbox.css') }}">
-            <link rel="stylesheet" href="{{ asset('css/components/datepicker.css') }}">
-            <link rel="stylesheet" href="{{ asset('css/components/daterangepicker.css') }}">
 
             {% block page_stylesheets %}{% endblock %}
 
-            <link rel="stylesheet" href="{{ asset('css/personal/classes.css') }}">
             <link rel="stylesheet" href="{{ asset('css/personal/custom.css') }}">
-            <link rel="stylesheet" href="{{ asset('css/personal/themeOverride.css') }}">
         {% endblock %}
 
         {% block meta %}{% endblock %}
         {% block recaptcha %}{% endblock %}
 
-        <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
+        {% block iubenda %}{{ include('components/js/iubenda_head.html.twig') }}{% endblock %}
     </head>
-    <body id="body" class="stretched {% block body_class %}side-header open-header close-header-on-scroll{% endblock %}">
+    <body id="body" class="stretched {% block body_class %}{% endblock %}">
 
-        {% if is_granted('IS_IMPERSONATOR') %}
-            <div class="alert alert-warning alert-dismissible txt_a_c m_b_none" style="border-radius:0;position:relative;z-index:1000;">
-                <i class="fa-solid fa-user-secret"></i>
-                Stai impersonando <strong>{{ app.user.userIdentifier }}</strong> —
-                <a href="{{ path('agency_index', {'_switch_user': '_exit'}) }}">Torna ad amministratore</a>
-            </div>
-        {% endif %}
-
-        <div id="noticesContainer" class="notices">
-            {% for flash_message in app.flashes('success') %}
-                <div class="alert alert-dismissible alert-success notice">
-                    <i class="fa-solid fa-thumbs-up"></i> <strong>Complimenti!</strong> {{ flash_message|raw }}
-                    <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert"></button>
-                </div>
-            {% endfor %}
-            {% for flash_message in app.flashes('warning') %}
-                <div class="alert alert-dismissible alert-warning notice">
-                    <i class="fa-solid fa-triangle-exclamation"></i> <strong>Attenzione!</strong> {{ flash_message|raw }}
-                    <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert"></button>
-                </div>
-            {% endfor %}
-            {% for flash_message in app.flashes('danger') %}
-                <div class="alert alert-dismissible alert-danger notice">
-                    <i class="fa-solid fa-xmark"></i> <strong>Attenzione!</strong> {{ flash_message|raw }}
-                    <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert"></button>
-                </div>
-            {% endfor %}
-        </div>
+        {% block preloader %}{% endblock %}
 
         {% block body %}
-            <div id="wrapper">
-                <div id="divContent" class="clearfix">
-                    <div id="header-trigger"><i class="bi-list"></i><i class="bi-x-lg"></i></div>
+            <div id="wrapper" class="clearfix">
 
-                    {# HEADER #}
-                    {% block header %}
-                        <header id="header">
-                            <div id="header-wrap">
-                                <div class="container">
-                                    <div class="header-row">
-                                        <div id="logo" class="p_tb_15p">
-                                            <a href="{% block home_path %}{{ path('login') }}{% endblock %}">
-                                                <img src="{{ asset(path_graphics ~ '/logo.svg') }}" alt="EBASM" style="max-height:40px;">
-                                            </a>
-                                        </div>
-                                        <div class="primary-menu-trigger">
-                                            <button class="cnvs-hamburger" type="button" title="Open Mobile Menu">
-                                                <span class="cnvs-hamburger-box"><span class="cnvs-hamburger-inner"></span></span>
-                                            </button>
-                                        </div>
-                                        <nav class="primary-menu on-click">
-                                            <ul class="menu-container">
-                                                {% block menu %}{% endblock %}
-                                            </ul>
-                                        </nav>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="header-wrap-clone"></div>
-                        </header>
-                    {% endblock %}
-
-                    {% block page_title_section %}
-                        <section class="page-title">
+                {% block header %}
+                    <header id="header" class="{% block header_class %}full-header sticky-header{% endblock %}" data-sticky-shrink="false">
+                        <div id="header-wrap">
                             <div class="container">
-                                <div class="page-title-row">
-                                    <div class="page-title-content">
-                                        <h3 class="m_b_none">{% block page_title %}{% endblock %}</h3>
+                                <div class="header-row">
+
+                                    <div id="logo">
+                                        <a href="{% block home_path %}{{ path('homepage') }}{% endblock %}">
+                                            <img src="{{ asset(PATH_GRAPHICS ~ 'logo.png') }}" alt="EBASM" style="max-height:44px;">
+                                        </a>
                                     </div>
-                                    <nav aria-label="breadcrumb">
-                                        <ol class="breadcrumb">
-                                            {% block breadcrumb %}{% endblock %}
-                                        </ol>
+
+                                    <div class="header-misc">
+                                        <a href="{{ path('login') }}" class="button button-rounded button-small m-0" style="background:var(--eb-brand);border-color:var(--eb-brand);"><i class="bi-person-circle"></i> Area riservata</a>
+                                    </div>
+
+                                    <div class="primary-menu-trigger">
+                                        <button class="cnvs-hamburger" type="button" aria-label="Apri il menu">
+                                            <span class="cnvs-hamburger-box">
+                                                <span class="cnvs-hamburger-inner"></span>
+                                            </span>
+                                        </button>
+                                    </div>
+
+                                    <nav class="primary-menu on-click one-page-menu" data-offset="100" data-active-class="current" aria-label="Navigazione principale">
+                                        <ul class="menu-container">
+                                            {% block menu %}
+                                                <li class="menu-item"><a class="menu-link" {% if _route == 'homepage' %}href="#hero" data-href="#hero" data-offset="0"{% else %}href="{{ path('homepage') }}"{% endif %}><div>Home</div></a></li>
+                                                <li class="menu-item"><a class="menu-link" {% if _route == 'homepage' %}href="#progetto" data-href="#progetto"{% else %}href="{{ path('homepage_with_section', {'section': 'progetto'}) }}"{% endif %}><div>Il progetto</div></a></li>
+                                                <li class="menu-item"><a class="menu-link" {% if _route == 'homepage' %}href="#punti-di-forza" data-href="#punti-di-forza"{% else %}href="{{ path('homepage_with_section', {'section': 'punti-di-forza'}) }}"{% endif %}><div>Punti di forza</div></a></li>
+                                                <li class="menu-item"><a class="menu-link" {% if _route == 'homepage' %}href="#pricing" data-href="#pricing"{% else %}href="{{ path('homepage_with_section', {'section': 'pricing'}) }}"{% endif %}><div>Prezzi</div></a></li>
+                                                <li class="menu-item"><a class="menu-link" {% if _route == 'homepage' %}href="#demo" data-href="#demo"{% else %}href="{{ path('homepage_with_section', {'section': 'demo'}) }}"{% endif %}><div>Demo</div></a></li>
+                                                <li class="menu-item"><a class="menu-link" {% if _route == 'homepage' %}href="#contatti" data-href="#contatti"{% else %}href="{{ path('homepage_with_section', {'section': 'contatti'}) }}"{% endif %}><div>Contatti</div></a></li>
+                                            {% endblock %}
+                                        </ul>
                                     </nav>
+
                                 </div>
                             </div>
-                        </section>
-                    {% endblock %}
+                        </div>
+                        <div class="header-wrap-clone"></div>
+                    </header>
+                {% endblock %}
 
-                    {% block action_bar %}
-                        <nav id="actionBar" class="navbar navbar-expand-md">
-                            <div class="container">
-                                <div class="mx-auto order-0">
-                                    <button class="navbar-toggler button button-mini" type="button" data-bs-toggle="collapse" data-bs-target="#navCollapse">
-                                        <span class="color_w">Elenco azioni</span>
-                                    </button>
+                {% set notices = app.flashes(['success', 'warning', 'danger'])|filter(msgs => msgs|length) %}
+                {% if notices|length %}
+                    {% set noticeIcons = {'success': 'fa-thumbs-up', 'warning': 'fa-triangle-exclamation', 'danger': 'fa-circle-exclamation'} %}
+                    <div id="noticesContainer" class="notices">
+                        {% for type, msgs in notices %}
+                            {% for msg in msgs %}
+                                <div class="alert alert-{{ type }} alert-dismissible notice"><i class="fa-solid {{ noticeIcons[type] }}"></i> {{ msg|raw }}<button type="button" class="btn-close btn-sm" data-bs-dismiss="alert"></button></div>
+                            {% endfor %}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                {% block content %}{% endblock %}
+
+                {% block footer %}
+                    <footer id="footer">
+                        {#<div class="container py-5">
+                            <div class="row g-4 align-items-start">
+                                <div class="col-lg-3 col-md-12">
+                                    <p class="footer-info mb-4" style="line-height:1.75;">
+                                        Impresa di costruzioni civili e infrastrutture operante in Lombardia e nel nord Italia dal 1978.
+                                    </p>
+                                    <div class="d-flex gap-2">
+                                        <a href="#" aria-label="LinkedIn" class="d-flex align-items-center justify-content-center rounded" style="width:34px; height:34px; background:rgba(255,255,255,.12);">
+                                            <i class="fa-brands fa-linkedin-in" style="font-size:.9rem;"></i>
+                                        </a>
+                                        <a href="#" aria-label="Facebook" class="d-flex align-items-center justify-content-center rounded" style="width:34px; height:34px; background:rgba(255,255,255,.12);">
+                                            <i class="fa-brands fa-facebook-f" style="font-size:.9rem;"></i>
+                                        </a>
+                                    </div>
                                 </div>
-                                <div id="navCollapse" class="navbar-collapse collapse">
-                                    <ul class="navbar-nav me-auto">
-                                        {% block navbar_left %}{% endblock %}
-                                    </ul>
-                                    <ul class="navbar-nav">
-                                        {% block navbar_right %}
-                                            <li class="nav-item"><a class="nav-link" href="{{ path('logout') }}"><i class="bi-box-arrow-right"></i> Esci</a></li>
-                                        {% endblock %}
-                                    </ul>
-                                </div>
-                            </div>
-                        </nav>
-                    {% endblock %}
 
-                    {% block earlyJavascripts %}
-                        <script type="text/javascript" src="{{ asset('js/jquery.js') }}"></script>
-                        <script type="text/javascript" src="{{ asset('js/functions.js') }}"></script>
-                        <script type="text/javascript" src="{{ asset('js/plugins.js') }}"></script>
-                        <script>
-                            // Canvas usa jsFolder/cssFolder relativi: su URL annidate fallisce a caricare i moduli lazy.
-                            // Forziamo a path assoluti.
-                            if (window.SEMICOLON && SEMICOLON.Core && SEMICOLON.Core.getOptions) {
-                                SEMICOLON.Core.getOptions.jsFolder  = '{{ asset('js/') }}';
-                                SEMICOLON.Core.getOptions.cssFolder = '{{ asset('css/') }}';
-                            }
-                        </script>
-                    {% endblock %}
-
-                    {# CONTENT #}
-                    {% block content %}{% endblock %}
-
-                    {# FOOTER #}
-                    {% block footer %}
-                        <footer id="footer">
-                            <div id="copyrights">
-                                <div class="container">
-                                    <div class="row m_none align-items-center justify-content-between col-mb-30">
-                                        <div class="col-12">
-                                            <p class="m_b_none">Copyrights &copy; {{ "now"|date("Y") }} - Tutti i diritti riservati da EBASM.</p>
+                                <div class="col-lg-3 col-md-4 col-sm-6">
+                                    <h4 class="mb-3 cog-footer-heading">Dove siamo</h4>
+                                    <div class="d-flex gap-3 mb-3">
+                                        <i class="fa-solid fa-location-dot mt-1 cog-footer-icon"></i>
+                                        <div>
+                                            <span class="cog-footer-sublabel">Sede operativa</span>
+                                            <span class="cog-footer-address">Via 24 Maggio n.129<br>21015 Lonate Pozzolo (VA)</span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex gap-3">
+                                        <i class="fa-solid fa-building mt-1 cog-footer-icon"></i>
+                                        <div>
+                                            <span class="cog-footer-sublabel">Uffici</span>
+                                            <span class="cog-footer-address">Via Tornavento n.1<br>20022 Castano Primo (MI)</span>
                                         </div>
                                     </div>
                                 </div>
+
+                                <div class="col-lg-3 col-md-4 col-sm-6">
+                                    <h4 class="mb-3 cog-footer-heading">Contatti</h4>
+                                    <div class="d-flex flex-column gap-2" style="font-size:.9rem;">
+                                        <div class="d-flex gap-3 align-items-center">
+                                            <i class="fa-solid fa-phone cog-footer-icon"></i>
+                                            <a href="tel:+390331890389" class="cog-footer-link">+39 0331 890389</a>
+                                        </div>
+                                        <div class="d-flex gap-3 align-items-center">
+                                            <i class="fa-solid fa-fax cog-footer-icon"></i>
+                                            <a href="tel:+390331899409" class="cog-footer-link">+39 0331 899409</a>
+                                        </div>
+                                        <div class="d-flex gap-3 align-items-center">
+                                            <i class="fa-solid fa-envelope cog-footer-icon"></i>
+                                            <a href="mailto:cogeti@cogetisrl.it" class="cog-footer-link">cogeti@cogetisrl.it</a>
+                                        </div>
+                                        <div class="d-flex gap-3 align-items-center">
+                                            <i class="fa-regular fa-clock cog-footer-icon"></i>
+                                            <span class="cog-footer-link">Lun–Ven&nbsp; 7:30 – 17:30</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-3 col-md-4 col-sm-6">
+                                    <h4 class="mb-3 cog-footer-heading">Dati fiscali</h4>
+                                    <div class="d-flex flex-column gap-2" style="font-size:.9rem;">
+                                        <div class="d-flex gap-3 align-items-start">
+                                            <i class="fa-solid fa-receipt mt-1 cog-footer-icon"></i>
+                                            <div>
+                                                <span class="cog-footer-sublabel">P.IVA / C.F.</span>
+                                                <span class="cog-footer-link">01286980121</span>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex gap-3 align-items-start">
+                                            <i class="fa-solid fa-landmark mt-1 cog-footer-icon"></i>
+                                            <div>
+                                                <span class="cog-footer-sublabel">Iscrizione C.C.I.A.A.</span>
+                                                <span class="cog-footer-link">Camera di Commercio di Varese</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
-                        </footer>
-                    {% endblock %}
-                </div>
+                        </div>#}
+
+                        <div id="copyrights">
+                            <div class="container">
+                                <div class="row align-items-center">
+                                    <div class="col-md-6 text-center text-md-start">
+                                        &copy; {{ "now"|date("Y") }} EBASM — Tutti i diritti riservati
+                                    </div>
+                                    <div class="col-md-6 text-center text-md-end">
+                                        {% block footer_legal %}
+                                        <a class="iubenda-white iubenda-noiframe iubenda-embed" href="https://www.iubenda.com/privacy-policy/{{ IUBENDA_IT }}" title="Privacy Policy">Privacy Policy</a>
+                                        &nbsp;&nbsp;
+                                        <a class="iubenda-white iubenda-noiframe iubenda-embed" href="https://www.iubenda.com/privacy-policy/{{ IUBENDA_IT }}/cookie-policy" title="Cookie Policy">Cookie Policy</a>
+                                        &nbsp;&nbsp;
+                                        <a href="https://rpgmultimedia.it" target="_blank" rel="noopener" class="powered_by"><img src="https://www.rpgmultimedia.it/favicon.ico" alt="R.P.G. Multimedia"> Powered by R.P.G.</a>
+                                        {% endblock %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </footer>
+                {% endblock %}
             </div>
+
+            <div id="gotoTop" class="uil uil-angle-up"></div>
         {% endblock %}
 
         {% block javascripts %}
-            <script type="text/javascript" src="{{ asset('js/components/moment.js') }}"></script>
-            <script type="text/javascript" src="{{ asset('js/components/datepicker.js') }}"></script>
-            <script type="text/javascript" src="{{ asset('js/components/datepicker-it.js') }}"></script>
-            <script type="text/javascript" src="{{ asset('js/components/daterangepicker.js') }}"></script>
-            <script type="text/javascript" src="{{ asset('js/components/timepicker.js') }}"></script>
-            <script type="text/javascript" src="{{ asset('js/personal/utilities.js') }}"></script>
-
-            {# Scroll orizzontale su mobile: avvolge ogni .table in un .table-responsive. #}
+            <script src="{{ asset('js/plugins.min.js') }}"></script>
+            <script src="{{ asset('js/functions.js') }}"></script>
+            <script>
+                if (window.SEMICOLON && SEMICOLON.Core && SEMICOLON.Core.getOptions) {
+                    SEMICOLON.Core.getOptions.jsFolder  = '{{ asset('js/') }}';
+                    SEMICOLON.Core.getOptions.cssFolder = '{{ asset('css/') }}';
+                }
+            </script>
             <script>
                 (function () {
-                    document.querySelectorAll('table.table').forEach(function (t) {
-                        if (t.closest('.table-responsive')) return;
-                        var wrap = document.createElement('div');
-                        wrap.className = 'table-responsive';
-                        t.parentNode.insertBefore(wrap, t);
-                        wrap.appendChild(t);
-                    });
+                    var html = document.documentElement;
+                    var theme = html.getAttribute('data-theme') || 'light';
+                    if (theme === 'auto') {
+                        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                        html.setAttribute('data-theme-resolved', prefersDark ? 'dark' : 'light');
+                    } else {
+                        html.setAttribute('data-theme-resolved', theme);
+                    }
                 })();
             </script>
 
-            {# Auto-dismiss flash notice (success/warning dopo 5s, danger dopo 8s) #}
-            <script>
-                (function () {
-                    var container = document.getElementById('noticesContainer');
-                    if (!container) return;
-                    container.querySelectorAll('.alert.notice').forEach(function (el) {
-                        var ms = el.classList.contains('alert-danger') ? 8000 : 5000;
-                        setTimeout(function () {
-                            var instance = bootstrap.Alert.getOrCreateInstance(el);
-                            instance.close();
-                        }, ms);
-                    });
-                })();
-            </script>
-
-            {% block page_javascripts %}{% endblock %}
+            {% include 'components/js/iubenda.html.twig' %}
         {% endblock %}
+
+        {% block page_javascripts %}{% endblock %}
 
         <div id="divModals" class="clearfix">
             {% block modals %}{% endblock %}

@@ -17,7 +17,7 @@ class AdminController extends AbstractController
     #[Route('', name: 'admin_index', methods: ['GET'])]
     public function index(CompanyRepository $companyRepository): Response
     {
-        return $this->render('admin/index.html.twig', [
+        return $this->render('role/admin/index.html.twig', [
             'companies' => $companyRepository->findBy([], ['name' => 'ASC']),
         ]);
     }
@@ -38,7 +38,7 @@ class AdminController extends AbstractController
             $indexByCompany[$entry->getCompany()->getId()][] = $entry->getEmail();
         }
 
-        return $this->render('admin/agencies.html.twig', [
+        return $this->render('role/admin/agencies.html.twig', [
             'companies' => $companies,
             'usersByCompany' => $indexByCompany,
         ]);

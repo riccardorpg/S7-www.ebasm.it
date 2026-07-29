@@ -1,0 +1,49 @@
+{% extends 'role/admin/layout.html.twig' %}
+
+{% block title %} - Agenzie{% endblock %}
+{% block role_page_title_inner %}Gestione agenzie{% endblock %}
+
+{% block role_content %}
+    <section class="content-wrap">
+        <div class="container">
+            <p class="op_07">Clicca &laquo;Impersona&raquo; per accedere al pannello dell'agenzia come uno dei suoi utenti.</p>
+
+            <div class="row col-mb-30">
+                {% for company in companies %}
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="m_b_5p">{{ company.name }} <small class="op_07">({{ company.code }})</small></h5>
+                                <p class="op_07">DB: {{ company.dbName }} — {{ company.active ? 'Attiva' : 'Sospesa' }}</p>
+
+                                {% set users = usersByCompany[company.id]|default([]) %}
+                                {% if users is empty %}
+                                    <p class="op_07 m_b_none">Nessun utente agenzia indicizzato.</p>
+                                {% else %}
+                                    <table class="table table-striped m_b_none">
+                                        <thead><tr><th>Utente</th><th style="width:160px;">Azione</th></tr></thead>
+                                        <tbody>
+                                            {% for email in users %}
+                                                <tr>
+                                                    <td>{{ email }}</td>
+                                                    <td>
+                                                        <a class="button button-3d button-mini button-green m_b_none"
+                                                           href="{{ path('agency_index', {'_switch_user': email}) }}">
+                                                            <i class="bi-person-badge"></i> Impersona
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="col-12"><div class="card"><div class="card-body"><p class="op_07 m_b_none">Nessuna agenzia registrata.</p></div></div></div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% if app.request.cookies.get('cookie_analytics') == "yes" or COOKIES_IUBENDA %}
+    <div id="divGoogle">
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ COOKIES_GA4_G }}"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', '{{ COOKIES_GA4_G }}');
+        </script>
+    </div>
+{% endif %}

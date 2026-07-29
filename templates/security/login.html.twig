@@ -1,0 +1,131 @@
+{% extends 'base.html.twig' %}
+
+{% block title %} - Accedi{% endblock %}
+{% block robots %}<meta name="robots" content="noindex, follow">{% endblock %}
+
+{# Stessa geometria d'header della homepage (trasparente, non sticky, nessun divisore
+   dopo il logo) ma senza la classe "dark": qui il fondo è bianco, quindi il menu
+   resta scuro e leggibile. Menu identico, ereditato dal base. #}
+{% block header_class %}transparent-header{% endblock %}
+{% block body_class %}eb-login-page{% endblock %}
+
+{% block content %}
+    <section class="eb-section eb-login-section">
+        <div class="container">
+
+            <div class="text-center mb-4">
+                <h1 class="mb-2" style="font-size:clamp(1.75rem,3.5vw,2.5rem);">Accedi alla tua area riservata</h1>
+                <p class="text-muted mb-0">Scegli come vuoi accedere a EBASM</p>
+            </div>
+
+            {% if error %}
+                <div class="row justify-content-center mb-4">
+                    <div class="col-lg-10">
+                        <div class="alert alert-danger alert-dismissible d-flex align-items-center mb-0">
+                            <i class="bi-exclamation-triangle-fill me-2"></i>
+                            <div>{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="row g-4 justify-content-center">
+
+                {# ── Card 1: codice agenzia → pagina di accesso dedicata ── #}
+                <div class="col-lg-5 col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4 d-flex flex-column">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="eb-login-icon"><i class="bi-building"></i></div>
+                                <h3 class="mb-0 h5">Faccio parte di un'agenzia</h3>
+                            </div>
+                            <p class="text-muted font_13">
+                                Inserisci il codice della tua agenzia: ti porteremo alla pagina di accesso dedicata.
+                            </p>
+
+                            <form method="post" action="{{ path('login_code_submit') }}" class="d-flex flex-column flex-grow-1">
+                                <div class="form-group mb-3">
+                                    <label class="form-label" for="codice">Codice personale</label>
+                                    <input type="text" id="codice" name="codice"
+                                           class="form-control form-control-lg text-center"
+                                           placeholder="ES. AG001"
+                                           maxlength="64"
+                                           autocomplete="off" autocapitalize="characters"
+                                           spellcheck="false" autofocus required
+                                           aria-describedby="codiceHelp"
+                                           style="letter-spacing:2px; text-transform:uppercase;">
+                                    <small id="codiceHelp" class="form-text text-muted font_13">
+                                        Lo trovi nella comunicazione di attivazione ricevuta dalla tua agenzia.
+                                    </small>
+                                </div>
+                                <button type="submit" class="button button-3d button-rounded button-large m-0 w-100 mt-auto" style="background:var(--eb-brand);">
+                                    Prosegui <i class="bi-arrow-right"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                {# ── Card 2: credenziali staff (admin / notaio) ── #}
+                <div class="col-lg-5 col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4 d-flex flex-column">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="eb-login-icon"><i class="bi-shield-lock"></i></div>
+                                <h3 class="mb-0 h5">Sono amministratore o notaio</h3>
+                            </div>
+                            <p class="text-muted font_13">
+                                Accedi con le credenziali che ti sono state assegnate.
+                            </p>
+
+                            <form method="post" action="{{ path('login_check') }}" class="d-flex flex-column flex-grow-1">
+                                <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+                                <div class="form-group mb-3">
+                                    <label class="form-label" for="email">E-mail</label>
+                                    <input type="email" id="email" name="email" value="{{ last_username }}"
+                                           class="form-control" placeholder="nome@esempio.it"
+                                           autocomplete="email" required>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label class="form-label" for="password">Password</label>
+                                    <input type="password" id="password" name="password"
+                                           class="form-control" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"
+                                           autocomplete="current-password" required>
+                                </div>
+                                <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+                                    <div class="form-check form-switch m-0">
+                                        <input class="form-check-input" type="checkbox" role="switch" name="_remember_me" id="remember_me" checked>
+                                        <label class="form-check-label font_13" for="remember_me">Resta collegato</label>
+                                    </div>
+                                    <button type="button" class="btn btn-link p-0 font_13 text-decoration-none text-black"
+                                            data-bs-toggle="modal" data-bs-target="#modalRecover">
+                                        <i class="bi-key"></i> Non ricordo la password
+                                    </button>
+                                </div>
+                                <button type="submit" class="button button-3d button-rounded button-large m-0 w-100 mt-auto" style="background:var(--eb-brand);">
+                                    Accedi <i class="bi-box-arrow-in-right"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block modals %}
+    {{ include('components/modal_recover.html.twig', {}, with_context = false) }}
+{% endblock %}
+
+{% block page_javascripts %}
+    <script>
+        // Il campo è mostrato in maiuscolo via CSS: allineiamo anche il valore inviato.
+        document.getElementById('codice').addEventListener('input', function () {
+            this.value = this.value.toUpperCase();
+        });
+    </script>
+{% endblock %}

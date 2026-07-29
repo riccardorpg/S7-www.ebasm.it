@@ -14,6 +14,6 @@ class NotaryController extends AbstractController
     #[Route('', name: 'notary_index', methods: ['GET'])]
     public function index(): Response
     {
-        return $this->render('notary/index.html.twig');
+        return $this->render('role/notary/index.html.twig');
     }
 }

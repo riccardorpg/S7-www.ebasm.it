@@ -1,11 +1,11 @@
 twig:
     file_name_pattern: '*.twig'
+    form_themes:
+        - 'form/errors.html.twig'
     globals:
-        path_graphics: '%path_graphics%'
-        iubenda_site_id: '%iubenda_site_id%'
-        iubenda_cookie_policy_id: '%iubenda_cookie_policy_id%'
-        iubenda_privacy_policy_id: '%iubenda_privacy_policy_id%'
-        iubenda_terms_id: '%iubenda_terms_id%'
+        PATH_GRAPHICS: 'images/graphics/'
+        IUBENDA_IT: "%iubenda_it%"
+        IUBENDA_SITE: "%iubenda_site%"
 
 when@test:
     twig:

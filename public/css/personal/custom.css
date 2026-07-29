@@ -1,17 +1,623 @@
-/* Tabelle delle liste con filtro a scelta multipla (modale): celle compatte */
-.multi-filter-table td {
-    padding: 0.1rem;
+/* =============================================================================
+   custom.css — FOGLIO DI STILE PERSONALE CONSOLIDATO
+   -----------------------------------------------------------------------------
+   Questo file unisce, in un unico posto e nell'ordine di cascata corretto:
+     [1] Utility classes ....... ex public/css/personal/classes.css
+     [2] Stili custom .......... contenuto originale di questo file
+     [3] Override del tema ..... ex public/css/personal/themeOverride.css
+     [4] Stili inline .......... ex <style> in templates/base.html.twig
+     [5] Stili landing ......... ex <style> in templates/default/index.html.twig
+   I percorsi relativi (es. url('../../images/...')) restano validi: questo file
+   è nella stessa cartella dei file originali (public/css/personal/).
+   ============================================================================= */
+
+
+/* =============================================================================
+   [1] UTILITY CLASSES  (ex classes.css)
+   ============================================================================= */
+
+/* ALIGN */
+.txt_a_c { text-align:center!important }
+.txt_a_l { text-align:left!important }
+.txt_a_r { text-align:right!important }
+.txt_a_j { text-align:justify!important }
+
+/* BACKGROUND */
+.bg_lgr { background-color:lightgray !important }
+.bg_g {background-color: darkgray }
+.bg_pr { background-color: #F4A02C !important }
+.bg_sc { background-color: #eb9318 }
+.bg_lp { background-color: #F9BCDB }
+.bg_tr { background-color:transparent!important }
+.bg_w { background-color:white!important }
+
+.bg_tgreen { background-color: rgba(0, 128, 0, 0.8)!important }
+.bg_tred { background-color: rgba(255, 0, 0, 0.8)!important }
+
+/* PROGRESS BAR */
+.bg_blue { background-color: blue!important }
+.bg_green { background-color: green!important }
+.bg_lblue { background-color: lightblue!important }
+.bg_orange { background-color: orange!important }
+.bg_red { background-color: red!important }
+.bg_yellow { background-color: yellow!important }
+
+/* BORDER */
+.b_none{ border:none }
+.b_c_g { border-color:#009878 }
+.b_t { border-top: 2px solid }
+.b_l_table { border-left:2px solid #eb9318 }
+.b_r_table { border-right:2px solid #eb9318 }
+
+.b_ra_10p { border-radius: 10px }
+
+/* BUTTON */
+.button-grey { background-color: #777; color: #fff!important; border: 1px solid #777 }
+.button-grey:hover { background-color: #777!important; color: #fff!important; border: 1px solid #777!important }
+
+/* COLOR */
+.color_amber { color: #EB9C4D!important }
+.color_pr { color: #F4A02C!important }
+.color_sc { color: #EB2188ff!important }
+.colo_lp { color: #F9BCDB!important }
+.color_gr { color: green!important }
+.color_grey { color: grey!important }
+.color_r { color: red!important }
+
+.color_w { color:#fff !important }
+.color_bl {color: black !important }
+.color_blue {color: blue !important }
+.color_777 {color: #777 !important }
+
+/* CURSOR */
+.cursor_p{ cursor:pointer }
+
+/* DISPLAY */
+.display_n { display:none }
+
+/* FLOAT */
+.f_left{ float:left!important }
+.f_right{ float:right!important }
+
+/* FONT SIZE*/
+.font_10{ font-size:10px!important }
+.font_12{ font-size:12px !important }
+.font_13{ font-size:13px!important }
+.font_14{ font-size:14px!important }
+.font_15{ font-size:15px !important }
+.font_16{ font-size:16px!important }
+.font_18{ font-size:18px!important }
+.font_20{ font-size:20px!important }
+.font_25{ font-size:25px!important }
+.font_30{ font-size:30px!important }
+.font_40{ font-size:40px !important }
+.font_50{ font-size:50px !important }
+.font_75{ font-size:75px!important }
+
+/* FONT WEIGHT */
+.f_w_n{ font-weight: normal !important }
+.f_w_b{ font-weight: bold !important }
+.f_w_600{ font-weight: 600 !important }
+.f_w_700{ font-weight: 700 !important }
+
+/* HEIGHT PIXEL */
+.height_0p{ height:0px !important }
+.height_55p{ height:55px }
+.height_60p{ height:60px!important }
+.height_200p{ height:200px!important }
+.height_400p{ height:400px!important }
+.height_500p{ height:500px }
+.height_600p{ height:600px }
+.max_h_80p{ max-height:80px }
+.max_h_150p{ max-height:150px }
+.max_h_400p{ max-height:400px }
+.min_h_auto{ min-height: auto!important }
+
+/* LINE HEIGHT */
+.line_h_0p { line-height: 0px !important }
+
+/* LISTA */
+.ul_none { list-style: none }
+
+/* OVERFLOW */
+.overflow_a{ overflow:auto!important }
+
+/* PADDING */
+.p_0p{ padding: 0px 0px 0px 0px !important }
+.p_10p { padding: 10px!important }
+.p_20p { padding: 20px!important }
+.p_30p { padding: 30px!important }
+.p_40p { padding: 40px!important }
+.p_80p { padding: 80px!important }
+.p_b_0p { padding-bottom: 0px !important }
+.p_t_5p{ padding-top:5px }
+.p_t_30p{ padding-top:30px }
+.p_t_40p{ padding-top:40px }
+.p_t_50p{ padding-top:50px }
+.p_t_20pc{ padding-top:20% }
+.p_15p {padding:15px }
+.p_l_0p {padding-left:0px !important }
+.p_l_15pc {padding-left:15% !important }
+.p_l_15p {padding-left:15px }
+.p_l_20p {padding-left:20px }
+.p_l_30p {padding-left:30px }
+.p_l_40p {padding-left:40px }
+.p_lr_20p {padding-left:20px; padding-right:20px }
+.p_lr_40p {padding-left:40px; padding-right:40px }
+.p_r_15p {padding-right:15px }
+
+.p_tb_5p {padding-top:5px!important; padding-bottom: 5px!important }
+.p_tb_10p {padding-top:10px!important; padding-bottom: 10px!important }
+.p_tb_20p {padding-top:20px!important; padding-bottom: 20px!important }
+.p_tb_40p {padding-top:40px; padding-bottom: 40px }
+.p_tb_50p { padding-top:50px; padding-bottom: 50px }
+.p_tb_80p{ padding-top:80px!important; padding-bottom: 80px!important }
+
+/* MARGIN PIXEL*/
+.m_none{ margin: 0px!important }
+.m_auto{ margin: auto!important }
+
+.m_b_none { margin-bottom: 0px !important }
+.m_b_5p { margin-bottom: 5px !important }
+.m_b_7p { margin-bottom: 7px !important }
+.m_b_10p { margin-bottom: 10px !important }
+.m_b_20p { margin-bottom: 20px !important }
+.m_b_30p { margin-bottom: 30px !important }
+.m_b_40p { margin-bottom: 40px !important }
+.m_b_50p { margin-bottom: 50px !important }
+.m_b_60p { margin-bottom: 60px !important }
+.m_b_70p { margin-bottom: 70px !important }
+.m_b_80p { margin-bottom: 80px !important }
+.m_b_90p { margin-bottom: 90px !important }
+.m_b_100p { margin-bottom: 100px !important }
+
+.m_l_5p { margin-left: 5px!important }
+.m_l_10p { margin-left: 10px!important }
+.m_l_15p { margin-left: 15px!important }
+.m_l_20p { margin-left: 20px!important }
+.m_l_25p { margin-left: 25px!important }
+.m_l_30p { margin-left: 30px!important }
+.m_l_35p { margin-left: 35px!important }
+.m_l_40p { margin-left: 40px!important }
+.m_l_50p { margin-left: 50px!important }
+.m_l_100p { margin-left: 100px!important }
+
+.m_r_none { margin-right: 0px !important }
+.m_r_2p { margin-right: 2px !important }
+.m_r_5p { margin-right: 5px !important }
+.m_r_10p { margin-right: 10px !important }
+.m_r_15p { margin-right: 15px!important }
+.m_r_20p { margin-right: 20px!important }
+.m_r_25p { margin-right: 25px!important }
+.m_r_30p { margin-right: 30px!important }
+.m_r_35p { margin-right: 35px!important }
+.m_r_40p { margin-right: 40px!important }
+.m_r_50p { margin-right: 50px !important }
+.m_r_80p { margin-right: 80px !important }
+.m_r_250p { margin-right: 250px !important }
+
+.m_l_r_1p { margin-left: 1px !important; margin-right: 1px !important }
+.m_l_r_2p { margin-left: 2px !important; margin-right: 2px !important }
+.m_l_r_5p { margin-left: 5px !important; margin-right: 5px !important }
+.m_l_r_10p { margin-left: 10px !important; margin-right: 10px !important }
+.m_l_r_20p { margin-left: 20px !important; margin-right: 20px !important }
+
+.m_t_auto{ margin-top: auto!important }
+.m_t_none { margin-top: 0px !important }
+.m_t_2p { margin-top: 2px !important }
+.m_t_5p { margin-top: 5px !important }
+.m_t_8p { margin-top: 8px !important }
+.m_t_10p { margin-top: 10px !important }
+.m_t_15p { margin-top: 15px !important }
+.m_t_20p { margin-top: 20px !important }
+.m_t_25p { margin-top: 25px !important }
+.m_t_30p { margin-top: 30px !important }
+.m_t_33p { margin-top: 33px !important }
+.m_t_35p { margin-top: 35px !important }
+.m_t_40p { margin-top: 40px !important }
+.m_t_43p { margin-top: 43px !important }
+.m_t_45p { margin-top: 45px !important }
+.m_t_50p { margin-top: 50px !important }
+.m_t_55p { margin-top: 55px !important }
+.m_t_60p { margin-top: 60px !important }
+.m_t_75p { margin-top: 75px !important }
+.m_t_80p { margin-top: 80px !important }
+.m_t_100p { margin-top: 100px !important }
+.m_t_200p { margin-top: 200px !important }
+.m_t_300p { margin-top: 300px !important }
+
+.m_tb_0p { margin-top: 0px !important; margin-bottom: 0px !important }
+.m_tb_10p { margin-top: 10px !important; margin-bottom: 10px !important }
+.m_tb_20p { margin-top: 20px !important; margin-bottom: 20px !important }
+.m_tb_30p { margin-top: 30px !important; margin-bottom: 30px !important }
+.m_tb_40p { margin-top: 40px !important; margin-bottom: 40px !important }
+.m_tb_50p { margin-top: 50px !important; margin-bottom: 50px !important }
+.m_tb_60p { margin-top: 60px !important; margin-bottom: 60px !important }
+.m_tb_70p { margin-top: 70px !important; margin-bottom: 70px !important }
+.m_tb_80p { margin-top: 80px !important; margin-bottom: 80px !important }
+
+.m_t_50 { margin-top: 50% !important }
+
+/* MAX-WIDTH */
+.max_w_20p{ max-width:20px!important }
+.max_w_30p{ max-width:30px }
+.max_w_100p{ max-width:100px }
+.max_w_200p{ max-width:200px }
+.max_w_300p{ max-width:300px }
+.max_w_400p{ max-width:400px }
+.max_w_500p{ max-width:500px }
+.max_w_600p{ max-width:600px }
+.max_w_700p{ max-width:700px }
+.max_w_800p{ max-width:800px }
+
+/* MIN-WIDTH */
+.min_w_60p{ min-width:60px }
+.min_w_70p{ min-width:70px }
+.min_w_80p{ min-width:80px }
+.min_w_90p{ min-width:90px }
+.min_w_100p{ min-width:100px }
+.min_w_130p{ min-width:130px }
+.min_w_150p{ min-width:150px }
+.min_w_210p{ min-width:210px }
+.min_w_220p{ min-width:220px }
+.min_w_300p{ min-width:300px }
+.min_w_380p{ min-width:380px }
+
+.td_w_20p { min-width:20px!important; width:20px!important }
+.td_w_30p { min-width:30px!important; width:30px!important }
+.td_w_40p { min-width:40px!important; width:40px!important }
+.td_w_50p { min-width:50px!important; width:50px!important }
+.td_w_60p { min-width:60px!important; width:60px!important }
+.td_w_70p { min-width:70px!important; width:70px!important }
+.td_w_80p { min-width:80px!important; width:80px!important }
+.td_w_100p { min-width:100px!important; width:100px!important }
+.td_w_110p { min-width:110px!important; width:110px!important }
+.td_w_120p { min-width:120px!important; width:120px!important }
+.td_w_140p { min-width:140px!important; width:140px!important }
+.td_w_150p { min-width:150px!important; width:150px!important }
+.td_w_160p { min-width:160px!important; width:160px!important }
+.td_w_170p { min-width:170px!important; width:170px!important }
+.td_w_180p { min-width:180px!important; width:180px!important }
+.td_w_190p { min-width:190px!important; width:190px!important }
+.td_w_200p { min-width:200px!important; width:200px!important }
+.td_w_210p { min-width:210px!important; width:210px!important }
+.td_w_220p { min-width:220px!important; width:220px!important }
+.td_w_230p { min-width:230px!important; width:230px!important }
+.td_w_240p { min-width:240px!important; width:240px!important }
+.td_w_250p { min-width:250px!important; width:250px!important }
+.td_w_300p { min-width:300px!important; width:300px!important }
+.td_w_340p { min-width:340px!important; width:340px!important }
+.td_w_400p { min-width:400px!important; width:400px!important }
+.td_w_500p { min-width:500px!important; width:500px!important }
+.td_w_1000p { min-width:1000px!important; width:1000px!important }
+
+.width_40p{ width:40px }
+.width_50p{ width:50px }
+.width_60p{ width:60px }
+.width_70p{ width:70px }
+.width_80p{ width:80px }
+.width_90p{ width:90px }
+.width_100p{ width:100px }
+.width_130p{ width:130px }
+.width_150p{ width:150px }
+.width_200p{ width:200px }
+.width_210p{ width:210px }
+.width_220p{ width:220px }
+.width_300p{ width:300px }
+.width_380p{ width:380px }
+
+/* TEXT DECORATION */
+.txt_d_n {text-decoration: none !important }
+
+/* TEXT TRNASFORM */
+.txt_trans_none {text-transform: none !important }
+.underline { text-decoration: underline!important }
+.uppercase { text-transform: uppercase!important }
+.lowercase { text-transform: lowercase!important }
+
+/* VERTICAL ALIGN */
+.v_a_m{ vertical-align:middle!important }
+
+/* WIDTH PIXEL */
+.width_130p{ width:130px }
+
+/* WIDTH PERCENT */
+.w_20p{ width:20px }
+.width_5{ width:5% }
+.width_10{ width:10% }
+.width_15{ width:15% }
+.width_20{ width:20% }
+.width_25{ width:25% }
+.width_30{ width:30% }
+.width_40{ width:40% }
+.width_45{ width:45% }
+.width_50{ width:50% }
+.width_60{ width:60% }
+.width_100{ width:100% }
+
+/* Z-INDEX */
+.z_ind-1{ z-index: -1!important }
+
+
+/* =============================================================================
+   [2] STILI CUSTOM  (contenuto originale di custom.css)
+   ============================================================================= */
+
+#divHelp { visibility: hidden; position: fixed; width: 350px; height: 250px; background: #fff; z-index: 10000; right: 20px; bottom: 20px; border: 1px solid #F4A02C; border-radius: 10px; padding: 20px }
+#helpTitle { border-bottom: 2px solid #F4A02C }
+#helpClose {  visibility: hidden; position: fixed; right: 30px; bottom: 240px; width: 20px }
+#helpImage { visibility: hidden; position: fixed; z-index: 15; right: 340px; bottom: 240px; width: 60px; height: 60px; border: 1px solid #F4A02C; border-radius: 50%; background: #fff; padding: 5px }
+#helpText, #helpText li { padding: 5px; font-size: 12px }
+
+#faq .toggle-title, #faq .toggle-content { color:white }
+#footer { font-size: 13px }
+#footer p { margin-bottom: 0px }
+#footer a { text-decoration: underline!important }
+/*#mg_logo { width: 230px; border-radius: 20px; padding: 10px; background: rgba(255,255,255,0.8); margin-bottom: 20px }*/
+#preloader { position: absolute; height: 100%; width: 100%; z-index:10000 }
+#preloader .css3-spinner { background-color: white; height: 100%; width: 100% }
+#whatsappBtn { position:fixed; bottom:10px; left: 10px; width: 45px; height: 45px; z-index: 10000 }
+
+b { color: #f4a02c !important }
+input.switch-toggle-flat:checked + label { background-color: #f4a02c!important }
+input.switch-toggle-flat:checked + label::after { background-color: #cf6c02 !important }
+input.switch-toggle-flat + label { background-color: #f4a02c!important }
+input.switch-toggle-flat + label::after { background-color: #bfbfbf!important }
+pre { overflow-x: auto; font-size: 14px; line-height: 1.5; margin-bottom: 0px!important }
+
+/* history.html.twig */
+.active_phase { background-color: #e0dcd5!important; font-weight: bold!important }
+.active_tr > td { background-color: #e0dcd5!important; font-weight: bold!important }
+.dark .feature-box-border-vertical .feature-box:not(.noborder)::before,
+.dark .feature-box-border-vertical .fbox-active.feature-box:not(.noborder)::after { background-color: var(--bs-gray-600) }
+.dark .feature-box-border-vertical .fbox-icon i,
+.dark .feature-box-border-vertical .fbox-border.fbox-light .fbox-icon i { box-shadow: 0 0 0 6px var(--bs-dark); background-color: var(--bs-dark) !important; color: var(--bs-gray-600); border-color: var(--bs-gray-600) }
+.dark .feature-box-border-vertical .fbox-active.feature-box .fbox-icon i,
+.dark .feature-box-border-vertical .fbox-active.feature-box .fbox-border.fbox-light .fbox-icon i,
+.dark .feature-box-border-vertical .fbox-active.feature-box:not(.noborder)::after { background-color: var(--bs-warning) !important; color: var(--bs-dark) }
+.dash_icon { border-radius: 5px!important; border: 3px solid #eb9318!important; padding: 15px!important; box-shadow: 5px 5px rgba(0,0,0,0.2); transition: transform 0.2s, box-shadow 0.2s }
+.dash_icon:hover { transform: translate(5px, 5px); box-shadow: none }
+.dash_icon_amber { border-radius: 5px; margin: auto; margin-bottom: 10px; border: 3px solid #EB9C4D; height: 150px; width:150px; padding: 30px; background: #fff; box-shadow: 5px 5px rgba(0,0,0,0.2) }
+.dash_icon_amber:hover{ margin-left: 5px; margin-top: 5px;  margin-bottom: 5px; box-shadow: none }
+.dash_icon_red { border-radius: 5px; margin: auto; margin-bottom: 10px; border: 3px solid #C02942; height: 150px; width:150px; padding: 30px; background: #fff; box-shadow: 5px 5px rgba(0,0,0,0.2) }
+.dash_icon_red:hover{ margin-left: 5px; margin-top: 5px;  margin-bottom: 5px; box-shadow: none }
+.dash_label { font-size: 14px; font-weight: 300; letter-spacing: 0px; color: #222; text-transform: none }
+.error input, .error textarea, .error select, .error div.well, .error img, .error video, .error .thumbnail { border: 1px solid #e32525!important; background-color: #e325254f !important }
+.error label.form_label, .error label { color: #e32525 !important }
+.error div.checkbox{ color: #e32525!important }
+.error #consentLabel { color: #e32525!important }
+.fbox_dashboard { border: 3px solid #eb9318; padding:10px }
+.fbox_dashboard:hover{ box-shadow: inset 0px 0px 7px rgba(235, 147, 24, 0.5) }
+.feature-box-border-vertical .feature-box { position: relative }
+.feature-box-border-vertical .feature-box:not(.noborder)::before, .feature-box-border-vertical .fbox-active.feature-box:not(.noborder)::after { content: ""; position: absolute; top: 0; left: 35px; width: 3px; height: 100%; background-color: var(--bs-gray-200) }
+.feature-box-border-vertical .fbox-icon i,
+.feature-box-border-vertical .fbox-border.fbox-light .fbox-icon i { position: relative; z-index: 5; text-align: center; box-shadow: 0 0 0 6px #FFF; border: 1px solid #EEE; background-color: #FFF !important }
+.feature-box-border-vertical .fbox-active.feature-box .fbox-icon i,
+.feature-box-border-vertical .fbox-active.feature-box .fbox-border.fbox-light .fbox-icon i,
+.feature-box-border-vertical .fbox-active.feature-box:not(.noborder)::after { background-color: Green !important; border-color: transparent !important; color: #FFF }
+
+/* NUOVE TABELLE */
+.form_body { padding: 20px 20px }
+.form_div { padding: 0px; border: 1px solid #ddd }
+.form_footer > .button { width: 130px }
+.form_header { padding: 10px 20px; background-color: #eb9318 }
+.form_header span { color: white }
+
+.form-color { border: 1px solid #dee2e6; height: 36px; padding: 2px; border-radius: 4px; background: white; width: 100% }
+.form_title { margin-bottom: 20px; text-transform: uppercase; font-weight: 300; letter-spacing: -1px; padding-bottom: 5px; border-bottom: 2px solid #F4A02C }
+.hidden_phase { background-color: #eee }
+.icon_pr { border: 2px solid #eb9318; padding: 3px }
+.icon_action_no_border_sm { min-width: 15px; min-height: 15px; width: 15px; height: 15px; cursor:pointer; background-color: transparent!important }
+.icon_amber { border: 2px solid #EB9C4D; padding: 3px }
+.icon_red { border: 2px solid #C02942; padding: 3px }
+.icon_green { border: 2px solid #245b16; padding: 3px }
+.icon_grey { border: 2px solid #777777; padding: 3px }
+.icon_blue { border: 2px solid #007bff; padding: 3px }
+.icon_info img { width: 15px; height: 15px }
+.icon_counter { width: 64px; height: 64px }
+.icon_info { width: 15px; height: 15px }
+.img_circle { border-radius: 50%!important; border: 2px solid #eb9318!important; width: 100px!important; height: 100px!important }
+.modalTitle { padding: 30px; padding-bottom: 15px }
+.modalTitle h4 { margin: 0px }
+.modalBody { padding: 15px 30px }
+.modalFooter { padding: 30px }
+.modalFooter .button-mini { width:100px }
+.modal_stripe { border-bottom: 1px solid #eb9318; background: #eb9318; height: 20px }
+.modal-content form { margin-bottom: 0px }
+.notice { width: 400px; position: fixed; z-index: 20000; right: 5px; top: 5px }
+.pagination { float: right; margin-top: 10px!important }
+.pagination span { margin-right: 5px; background: #eb9318; padding: 5px; width: 30px; height: 30px; text-align: center; border-radius: 50%; font-size:12px!important }
+.pagination span.current { color:white!important; font-size:12px!important }
+.pagination span a { color:#ddd!important; font-size:12px!important }
+.pagination span:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(8, 10, 82, 0.4) }
+/* Powered by R.P.G. — badge con favicon R.P.G. + testo.
+   inline-flex + box-sizing: senza, height/padding su un <a> inline non tengono
+   e l'immagine sfonda il badge. */
+.powered_by { font-size:11px!important; display:inline-flex; align-items:center; box-sizing:border-box; height:22px; padding:0 8px; background:white; border-radius:3px; color:rgba(0,0,0,0.65)!important; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.15), 0 1px 1px -1px rgba(0,0,0,0.15); font-weight:400; }
+.powered_by:hover { background-color: #ddd; }
+.powered_by img { height:14px; margin-right:5px }
+
+
+.table_colored { vertical-align: middle; margin-bottom: 0px }
+.table_colored th, .table_colored td, .table_colored select, .table_colored input { font-size: 13px }
+.table_colored thead th { background-color: #eb9318!important; color: #fff!important; text-transform: uppercase }
+.table_colored tfoot th { background-color: #eb9318!important; color: #fff!important; text-transform: uppercase }
+.table.b_none th, .table.b_none td { border: 0px !important }
+.table_transparent th, .table_transparent td { background-color: transparent!important }
+.td_action { min-width: 50px; width: 50px; text-align: center }
+.td_action img, .icon_action { min-width: 30px; min-height: 30px; width: 30px; height: 30px; cursor:pointer; background-color: #fff!important }
+.tr_spacer { height: 30px; border-left:0px white; border-right: 0px white }
+.tutorialMsg { background-color: #ddd }
+
+/* REVOLUTION SLIDER CSS */
+/*.revo-slider-emphasis-text { font-size: 80px!important; font-weight: 400; letter-spacing: -1px; padding: 15px 20px; border-top: 2px solid #FFF; border-bottom: 2px solid #FFF }*/
+.revo-slider-desc-text { font-size: 40px; width: 1000px; text-align: center; line-height: 1.5 }
+.revo-slider-caps-text { font-size: 16px; font-weight: 400; letter-spacing: 3px }
+.tp-video-play-button { display: none !important }
+.tp-caption { white-space: nowrap }
+h1.slider_title, h3.slider_subtitle { color: #FFF!important; text-shadow: 0px 0px 5px black;  font-weight: 100 }
+h1.slider_title { font-size:80px }
+h3.slider_subtitle { font-size:60px }
+
+
+/* =============================================================================
+   [3] OVERRIDE DEL TEMA  (ex themeOverride.css)
+   ============================================================================= */
+
+/* TAG */
+a { color: inherit }
+pre { font-family: "Lato"; font-size: 16px; word-wrap: break-word; white-space: pre-wrap }
+body { background: #fff!important }
+/* iframe { height: 170px!important } */
+img { color:#212529!important }
+ul.navbar-nav li.nav-item a.nav-link { height: 28px; line-height: 28px; padding: 0 14px; color: #FFF; font-size: 14px; border-radius: 14px }
+ul.navbar-nav li.nav-item a.nav-link:hover { background-color: rgba(0, 0, 0, 0.15) }
+
+/* ID */
+#copyrights { padding: 10px 0!important; background-color: var(--eb-brand-dark)!important; color: #fff!important }
+#divRecaptcha div { margin:auto; margin-bottom: 20px }
+#footer { border: 0px!important; background: var(--eb-brand)!important; color: #fff!important }
+#footer h1, #footer h2, #footer h3, #footer h4, #footer h5, #footer h6,
+#footer p, #footer span, #footer li, #footer i, #footer a { color: #fff!important }
+#footer .footer-widgets-wrap { padding: 40px 0!important }
+#footer .table tr td { color: #212529!important }
+/*#logo img { padding-bottom: 5px!important; padding-top: 5px!important; height: 60px!important }*/
+#portfolio .portfolio-item .grid-inner { border: 1px solid #dee2e6!important; border-radius: 10px!important; padding-bottom: 20px!important }
+#radius_top { border-radius: 10px 10px 0px 0px!important }
+
+/* CLASSES */
+.alert { z-index: 2999!important }
+.box { border: 2px solid #F9BCDB!important; width: 210px!important; height: 210px!important; padding: 10px!important; border-radius: 5px!important; box-shadow: 10px 10px 5px #dedede!important }
+.box:hover { box-shadow: none!important; background-color: #eeeeee!important }
+.heading-block::after { border-color: #f4a02c!important }
+.fc .fc-popover { z-index: 1000 }
+.fs-1 { text-shadow: 2px 2px 4px #333!important }
+.jf_font { margin-bottom: 10px!important }
+.modal-content, .modal-header{ border-radius: 0px }
+.modal-content { border: none }
+.modal-header { border-bottom: 1px solid #eb9318; background: #f4a02c }
+.modal-header .modal-title { color: white; margin: auto; font-size: 1.5rem!important }
+.modal-body { padding: 20px }
+.modal-footer { border-top: 1px solid #f4a02c; display: flow-root; text-align: center }
+.navbar .nav-link { color: white }
+.owl-item, .active { backdrop-filter: blur(20px)!important }
+.our_divider { background-image:url('../../images/graphics_2024_02_27/divider.jpg')!important; background-size: cover!important }
+.our_divider h2 { text-shadow: 2px 2px 4px #ddd!important }
+.portfolio-desc { padding: 20px!important }
+.portfolio-desc a { color:#f4a02c!important }
+.portfolio-desc span { color:#212529!important }
+.portfolio-image img { border-radius: 10px 10px 0px 0px!important }
+.required { padding-left: 10px!important; padding-right: 10px!important }
+.social-icon { border-color: #fff!important }
+.style-msg { margin-bottom: 0px!important }
+.time-inline > div { display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important }
+.time-inline select { width: auto !important; min-width: 70px !important; max-width: none !important }
+.time-inline > div > * { display: inline-block !important; vertical-align: middle !important }
+.title-block h2 + span { font-size: 18px!important }
+
+.card_home { border-radius: 20px; border-color: #F9BCDB }
+
+/* BUTTON */
+.btn-outline-primary { color:#F9BCDB!important; border-color: #F9BCDB!important }
+.btn-outline-primary:hover { color:#fff!important; background-color: #F9BCDB!important }
+.button-home { color: black }
+.button-home:hover { color: white }
+.button-light { color: black!important; border-color: #F9BCDB!important; background-color: white }
+.button-light:hover { background: #F9BCDB!important; color: black!important }
+
+/* MEDIA QUERY */
+@media (min-width: 992px){
+    .fs-1 { font-size: 50px!important }
 }
 
-/* Scrivania - side-tabs allarmi: pill attiva col colore primary del gestionale (bg_pr) */
-#alarmTabs .nav-link.active {
-    background-color: #1ABC9C !important;
-    color: #fff !important;
+@media (max-width: 991px){
+    #header_image { width: 50px!important }
 }
 
-/* Prodotto - bottone "Rimuovi" del file input (Krajee) in rosso */
-#productImageModal .fileinput-remove-button {
-    background-color: #cb0c0f !important;
-    border-color: #cb0c0f !important;
-    color: #fff !important;
-}
+.bg-success { background-color: rgba(41, 168, 71, 0.2)!important; color: #333!important }
+.bg-not-success { background-color: rgba(168, 41, 41, 0.2)!important; color: #333!important }
+
+
+/* =============================================================================
+   [4] STILI INLINE — base.html.twig  (ex blocco <style> nel <head>)
+   ============================================================================= */
+
+/* Colore primary del brand EBASM (blu, allineato alla landing). */
+:root { --eb-brand:#1D4ED8; --eb-brand-dark:#1739A8; --eb-dark:#12181f; }
+#header.transparent-header:not(.sticky-header) { background:transparent; }
+/* Logo bianco quando l'header è scuro/trasparente (es. hero della homepage). */
+#header.dark #logo img { filter:brightness(0) invert(1); }
+/* Immagine di testata (1.2.1): sostituire il gradiente con una foto mettendo il file
+   in public/images/graphics/hero.jpg e aggiungendo url('...') come primo layer. */
+.eb-hero { position:relative; min-height:88vh; display:flex; align-items:center;
+    background:radial-gradient(1200px 600px at 75% 10%, rgba(0,161,156,.35), transparent 60%),
+               linear-gradient(135deg, #0b1620 0%, #12303a 55%, #0b1620 100%); color:#fff; }
+.eb-hero h1 { font-size:clamp(2rem,5vw,3.6rem); font-weight:700; line-height:1.1; }
+.eb-brand-color { color:var(--eb-brand); }
+.eb-section { padding:80px 0; }
+
+/* Pastiglia tonda con icona nelle intestazioni delle card di accesso (templates/security/*). */
+.eb-login-icon { flex:0 0 auto; width:46px; height:46px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; font-size:1.25rem;
+    color:var(--eb-brand);
+    background:rgba(29,78,216,.12); /* fallback per browser senza color-mix() */
+    background:color-mix(in srgb, var(--eb-brand) 12%, transparent); }
+
+/* Pagine di accesso a tutta altezza: header e footer restano alle estremità e il
+   form occupa lo spazio residuo, centrato verticalmente, così su desktop non serve
+   scorrere. Volutamente min-height e non height, e nessun overflow:hidden: dove il
+   contenuto non entra davvero (mobile con le card impilate, zoom elevato, schermi
+   molto bassi) la pagina torna a scorrere invece di tagliare il form. */
+.eb-login-page #wrapper { display:flex; flex-direction:column;
+    min-height:100vh; min-height:100dvh; }
+.eb-login-page .eb-login-section { flex:1 0 auto; display:flex; align-items:center;
+    padding:40px 0; }
+.eb-login-page .eb-login-section > .container { width:100%; }
+.eb-section-alt { background:#f6f8f9; }
+.eb-feature { text-align:center; padding:26px 18px; height:100%; }
+.eb-feature .eb-feature-icon { font-size:2.4rem; color:var(--eb-brand); margin-bottom:14px; display:inline-block; }
+.eb-pricing { border:1px solid #e6e9ec; border-radius:14px; padding:34px 26px; text-align:center; height:100%; background:#fff; }
+.eb-pricing.featured { border-color:var(--eb-brand); box-shadow:0 12px 40px rgba(0,161,156,.15); }
+.eb-price { font-size:2.6rem; font-weight:700; color:var(--eb-dark); }
+.eb-price small { font-size:1rem; font-weight:400; color:#7a828a; }
+.eb-footer { background:var(--eb-brand); color:#fff; padding:50px 0 30px; }
+.eb-footer a { color:#fff; text-decoration:none; }
+.eb-footer a:hover { color:rgba(255,255,255,.75); }
+
+/* Footer blu su fondo brand: testi bianchi, gerarchia resa con l'opacità. */
+.cog-footer-heading { color:#fff!important; font-size:1rem; font-weight:600; letter-spacing:.02em; }
+.cog-footer-icon { color:rgba(255,255,255,.7)!important; width:16px; flex:0 0 16px; text-align:center; }
+.cog-footer-sublabel { display:block; color:rgba(255,255,255,.7)!important; font-size:.75rem;
+    text-transform:uppercase; letter-spacing:.06em; margin-bottom:2px; }
+.cog-footer-address { display:block; color:#fff!important; line-height:1.5; font-size:.9rem; }
+/* #footer-scoped: batte in specificità `#footer a { text-decoration: underline!important }`. */
+#footer .cog-footer-link { color:#fff!important; text-decoration:none!important; }
+#footer a.cog-footer-link:hover { color:rgba(255,255,255,.75)!important; }
+#footer .footer-info { color:rgba(255,255,255,.85)!important; }
+/* :not() esclude i badge: sono riquadri bianchi con testo scuro, forzarli a
+   bianco li rendeva invisibili (bianco su bianco). */
+#copyrights a:not(.iubenda-embed):not(.powered_by) { color:#fff!important; }
+
+/* Badge in #copyrights — iubenda (Privacy/Cookie Policy) + "Powered by R.P.G.".
+   iubenda.js disegna il badge a runtime: qui si allinea soltanto in verticale e
+   si annullano gli override del footer blu (testo bianco + sottolineatura),
+   che altrimenti vincono per specificità sul CSS iniettato da iubenda. */
+#footer #copyrights a.iubenda-embed {
+    vertical-align:middle; color:rgba(0,0,0,.65)!important;
+    text-decoration:none!important; }
+/* L'aspetto del badge resta quello di .powered_by: qui solo ciò che serve a
+   sopravvivere agli override del footer (testo bianco + sottolineatura). */
+#footer #copyrights a.powered_by {
+    vertical-align:middle; color:rgba(0,0,0,.65)!important;
+    text-decoration:none!important; white-space:nowrap; }
+#footer #copyrights a.powered_by:hover { background:#ddd; color:rgba(0,0,0,.65)!important; }
+.eb-video-wrap { position:relative; width:100%; max-width:720px; margin:0 auto; aspect-ratio:16/9; border-radius:14px; overflow:hidden; box-shadow:0 12px 40px rgba(0,0,0,.18); }
+.eb-video-wrap iframe, .eb-video-wrap video { position:absolute; inset:0; width:100%; height:100%; border:0; display:block; }
+
+
+/* =============================================================================
+   [5] STILI LANDING — index.html.twig  (ex blocco <style> in page_stylesheets)
+   ============================================================================= */
+
+/* Allinea il brand EBASM al blu della landing (usato anche dal footer del base). */
+:root { --eb-brand:#1D4ED8; }

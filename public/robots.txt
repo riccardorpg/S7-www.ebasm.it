@@ -1,0 +1,11 @@
+User-agent: *
+{% if allowCrawling %}
+Allow: /
+{% for path in disallowed %}
+Disallow: {{ path }}
+{% endfor %}
+{% else %}
+Disallow: /
+{% endif %}
+
+Sitemap: {{ sitemapUrl }}
