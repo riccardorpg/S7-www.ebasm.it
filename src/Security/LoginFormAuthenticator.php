@@ -63,9 +63,9 @@ class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
      */
     protected function getLoginUrl(Request $request): string
     {
-        $codice = $request->get('codice');
-        if (is_string($codice) && $codice !== '') {
-            return $this->urlGenerator->generate('login_dedicated', ['codice' => $codice]);
+        $code = $request->get('code');
+        if (is_string($code) && $code !== '') {
+            return $this->urlGenerator->generate('login_dedicated', ['code' => $code]);
         }
 
         if ($request->get('staff')) {
@@ -80,14 +80,14 @@ class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
         $email = mb_strtolower(trim((string) $request->request->get('email', '')));
         $password = (string) $request->request->get('password', '');
         $csrfToken = (string) $request->request->get('_csrf_token', '');
-        $codice = trim((string) $request->request->get('codice', ''));
+        $code = trim((string) $request->request->get('code', ''));
         $isStaff = (bool) $request->request->get('staff', false);
 
         $request->getSession()->set(SecurityRequestAttributes::LAST_USERNAME, $email);
 
-        $userBadge = new UserBadge($email, function (string $identifier) use ($codice, $isStaff) {
+        $userBadge = new UserBadge($email, function (string $identifier) use ($code, $isStaff) {
             // Accesso STAFF (ADMIN / NOTARY): solo master, nessun tenant.
-            if ($isStaff || $codice === '') {
+            if ($isStaff || $code === '') {
                 $this->companyService->clearSession();
                 $masterUser = $this->registry->getManager('master')
                     ->getRepository(MasterUser::class)
@@ -101,7 +101,7 @@ class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
             }
 
             // Accesso AGENZIA: il codice identifica il DB. Punta lo slave e cerca SOLO lì.
-            $company = $this->companyService->getCompanyByCode($codice);
+            $company = $this->companyService->getCompanyByCode($code);
             if ($company !== null && $company->isActive()) {
                 $this->companyService->switchToCompany($company);
 

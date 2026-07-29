@@ -307,6 +307,72 @@ hr {
 .icon_white { border: 1px solid #ffffff; }
 /* Icona compatta per gli indicatori di stato (pallini) nelle liste. */
 .icon_sm { width: 22px; height: 22px; padding: 2px; }
+
+/* =====================================================================
+   Card selezione agenzia (scrivania notaio) — ispirata a venanzieffe.
+   ===================================================================== */
+.rpg_customer_card {
+    display: block;
+    width: 100%;
+    text-align: center;
+    background: #ffffff;
+    border: 1px solid #e2e2e2;
+    border-radius: 8px;
+    padding: 24px 20px;
+    color: #333;
+    text-decoration: none;
+    height: 100%;
+    cursor: pointer;
+    transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+.rpg_customer_card:hover {
+    border-color: #1ABC9C;
+    box-shadow: 0 8px 20px -10px rgba(0, 0, 0, .15);
+    transform: translateY(-2px);
+    color: #333;
+}
+.rpg_customer_card.is-current {
+    border-color: #1ABC9C;
+    box-shadow: 0 0 0 2px rgba(26, 188, 156, .25);
+}
+.rpg_customer_card .rpg_logo_box {
+    height: 96px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+}
+.rpg_monogram {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: #1ABC9C;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    font-weight: 700;
+}
+.rpg_customer_card .rpg_business {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1ABC9C;
+    margin-bottom: 6px;
+    line-height: 1.2;
+}
+.rpg_customer_card .rpg_meta {
+    font-size: 13px;
+    color: #777;
+    margin-top: 2px;
+}
+[data-theme-resolved="dark"] .rpg_customer_card {
+    background: var(--dm-surface);
+    border-color: var(--dm-border);
+    color: var(--dm-text);
+}
+[data-theme-resolved="dark"] .rpg_customer_card:hover { color: var(--dm-text); }
+[data-theme-resolved="dark"] .rpg_customer_card .rpg_meta { color: var(--dm-text-muted); }
 .icon_btn-plain {
     background: transparent;
     border: 0;

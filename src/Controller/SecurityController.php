@@ -38,7 +38,7 @@ class SecurityController extends AbstractController
     #[Route('/accedi', name: 'login_code_submit', methods: ['POST'])]
     public function loginCodeSubmit(Request $request, CompanyRepository $companies): Response
     {
-        $code = trim((string) $request->request->get('codice'));
+        $code = trim((string) $request->request->get('code'));
         $company = $code !== '' ? $companies->findOneByCode($code) : null;
 
         if ($company === null || !$company->isActive()) {
@@ -47,15 +47,15 @@ class SecurityController extends AbstractController
             return $this->redirectToRoute('login');
         }
 
-        return $this->redirectToRoute('login_dedicated', ['codice' => $company->getCode()]);
+        return $this->redirectToRoute('login_dedicated', ['code' => $company->getCode()]);
     }
 
     // ================= 3. PAGINA DI ACCESSO DEDICATA (brandizzata agenzia) =================
 
-    #[Route('/accedi/{codice}', name: 'login_dedicated', methods: ['GET'], requirements: ['codice' => '[A-Za-z0-9._-]{1,64}'])]
-    public function loginDedicated(string $codice, CompanyRepository $companies, AuthenticationUtils $utils): Response
+    #[Route('/accedi/{code}', name: 'login_dedicated', methods: ['GET'], requirements: ['code' => '[A-Za-z0-9._-]{1,64}'])]
+    public function loginDedicated(string $code, CompanyRepository $companies, AuthenticationUtils $utils): Response
     {
-        $company = $companies->findOneByCode($codice);
+        $company = $companies->findOneByCode($code);
         if ($company === null || !$company->isActive()) {
             $this->addFlash('danger', 'Codice non valido.');
 
@@ -100,17 +100,17 @@ class SecurityController extends AbstractController
     #[Route('/recupera-password', name: 'password_recover', methods: ['GET', 'POST'])]
     public function passwordRecover(Request $request): Response
     {
-        $codice = trim((string) $request->query->get('codice', $request->request->get('codice', '')));
+        $code = trim((string) $request->query->get('code', $request->request->get('code', '')));
 
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('recover', (string) $request->request->get('_csrf_token'))) {
                 $this->addFlash('danger', 'Sessione scaduta, riprova.');
 
-                return $this->redirectToRoute('password_recover', $codice !== '' ? ['codice' => $codice] : []);
+                return $this->redirectToRoute('password_recover', $code !== '' ? ['code' => $code] : []);
             }
 
             $email = mb_strtolower(trim((string) $request->request->get('email')));
-            [$user, $companyCode] = $this->resolveUserByEmail($email, $codice);
+            [$user, $companyCode] = $this->resolveUserByEmail($email, $code);
 
             if ($user !== null) {
                 $user->setOneTimeCode(bin2hex(random_bytes(16)));
@@ -128,7 +128,7 @@ class SecurityController extends AbstractController
             return $this->redirectToRoute('login');
         }
 
-        return $this->render('security/password_recover.html.twig', ['codice' => $codice]);
+        return $this->render('security/password_recover.html.twig', ['code' => $code]);
     }
 
     // ================= 4. PAGINA CREAZIONE PASSWORD =================
@@ -196,10 +196,10 @@ class SecurityController extends AbstractController
      *
      * @return array{0: (MasterUser|SlaveUser|null), 1: string|null} [user, companyCode]
      */
-    private function resolveUserByEmail(string $email, string $codice = ''): array
+    private function resolveUserByEmail(string $email, string $code = ''): array
     {
-        if ($codice !== '') {
-            $company = $this->companyService->getCompanyByCode($codice);
+        if ($code !== '') {
+            $company = $this->companyService->getCompanyByCode($code);
             if ($company !== null && $company->isActive()) {
                 $this->companyService->switchToCompany($company);
                 $agency = $this->registry->getManager('slave')->getRepository(SlaveUser::class)->findOneBy(['email' => $email]);

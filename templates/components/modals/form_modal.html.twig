@@ -5,13 +5,14 @@
      title       : titolo
      action      : (opz) URL del POST; per i modali di modifica si imposta via JS ({type}Form.action)
      size        : (opz) 'modal-lg' | 'modal-xl' | ''
+     enctype     : (opz) es. 'multipart/form-data' per upload file
    Blocchi: modalBody (campi), modalSubmit (label bottone verde, default 'Salva').
    Espone: window["{type}Show"]().
    ===================================================================== #}
 <div id="{{ type }}Modal" class="modal fade" tabindex="-1" role="dialog">
     <div class="modal-dialog {{ size|default('') }}" role="document">
         <div class="modal-content">
-            <form id="{{ type }}Form" method="post" action="{{ action|default('') }}" novalidate>
+            <form id="{{ type }}Form" method="post" action="{{ action|default('') }}"{% if enctype is defined and enctype %} enctype="{{ enctype }}"{% endif %} novalidate>
                 <input type="hidden" name="_csrf_token" value="{{ csrf_token(type) }}">
                 <div class="modal-header"><h3 class="modal-title">{{ title }}</h3></div>
                 <div class="modal-stripe"></div>

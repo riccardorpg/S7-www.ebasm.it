@@ -26,12 +26,22 @@ class DynamicConnection extends Connection
         }
 
         $params = $this->getParams();
-        $params['url']      = 'mysql://' . $user . ':' . $password . '@' . $host . ':' . $port . '/' . $dbName;
+        // Il charset va riaffermato: dopo il close/reopen il driver deve riaprire in
+        // utf8mb4, altrimenti la connessione ricade su latin1 e i caratteri accentati
+        // (es. "à") vengono rifiutati dalle colonne utf8mb4.
+        $charset = $params['charset'] ?? 'utf8mb4';
+        $params['charset']  = $charset;
+        $params['url']      = 'mysql://' . $user . ':' . $password . '@' . $host . ':' . $port . '/' . $dbName . '?charset=' . $charset;
         $params['host']     = $host;
         $params['port']     = (int) $port;
         $params['dbname']   = $dbName;
         $params['user']     = $user;
         $params['password'] = $password;
+        // PHP 8.5: Pdo\Mysql::ATTR_INIT_COMMAND sostituisce PDO::MYSQL_ATTR_INIT_COMMAND (deprecato).
+        $initCommandAttr = \defined('Pdo\\Mysql::ATTR_INIT_COMMAND') ? \Pdo\Mysql::ATTR_INIT_COMMAND : \PDO::MYSQL_ATTR_INIT_COMMAND;
+        $params['driverOptions'] = ($params['driverOptions'] ?? []) + [
+            $initCommandAttr => 'SET NAMES ' . $charset,
+        ];
 
         $ref = new \ReflectionProperty(Connection::class, 'params');
         $ref->setValue($this, $params);

@@ -27,7 +27,7 @@
 
                             <form method="post" action="{{ path('login_check') }}">
                                 <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
-                                <input type="hidden" name="codice" value="{{ company.code }}">
+                                <input type="hidden" name="code" value="{{ company.code }}">
 
                                 <div class="form-group mb-3">
                                     <label class="form-label">E-mail</label>
@@ -42,13 +42,13 @@
                                         <input class="form-check-input" type="checkbox" role="switch" name="_remember_me" id="remember_me" checked>
                                         <label class="form-check-label font_13" for="remember_me">Rimani collegato</label>
                                     </div>
-                                    <a href="{{ path('password_recover', {'codice': company.code}) }}" class="font_13">Recupera password</a>
+                                    <a href="{{ path('password_recover', {'code': company.code}) }}" class="font_13">Recupera password</a>
                                 </div>
                                 <button type="submit" class="button button-3d button-rounded button-large m-0 w-100" style="background:var(--eb-brand);">Accedi</button>
                             </form>
                         </div>
                     </div>
-                    <p class="text-center mt-3"><a href="{{ path('login') }}" class="font_13 text-muted">&larr; Cambia codice</a></p>
+                    <p class="text-center mt-3"><a href="{{ path('login') }}" class="font_13 text-muted">&larr; Cambia code</a></p>
                 </div>
             </div>
         </div>

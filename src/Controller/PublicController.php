@@ -32,19 +32,19 @@ class PublicController extends AbstractController
             return $this->redirect($this->generateUrl('homepage') . '#contatti', Response::HTTP_SEE_OTHER);
         }
 
-        $nome = trim((string) $request->request->get('nome'));
-        $cognome = trim((string) $request->request->get('cognome'));
+        $name = trim((string) $request->request->get('name'));
+        $surname = trim((string) $request->request->get('surname'));
         $email = trim((string) $request->request->get('email'));
-        $messaggio = trim((string) $request->request->get('messaggio'));
+        $message = trim((string) $request->request->get('message'));
 
-        if ($nome === '' || $cognome === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || $messaggio === '') {
+        if ($name === '' || $surname === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || $message === '') {
             $this->addFlash('danger', 'Controlla i campi: nome, cognome, e-mail valida e messaggio sono obbligatori.');
 
             return $this->redirect($this->generateUrl('homepage') . '#contatti', Response::HTTP_SEE_OTHER);
         }
 
         // TODO: verifica reCaptcha + invio email della richiesta di contatto.
-        $this->addFlash('success', 'Grazie ' . $nome . '! Abbiamo ricevuto la tua richiesta e ti risponderemo al più presto.');
+        $this->addFlash('success', 'Grazie ' . $name . '! Abbiamo ricevuto la tua richiesta e ti risponderemo al più presto.');
 
         return $this->redirect($this->generateUrl('homepage') . '#contatti', Response::HTTP_SEE_OTHER);
     }
@@ -61,11 +61,11 @@ class PublicController extends AbstractController
         $accountType = (string) $request->request->get('account_type');
         $email = trim((string) $request->request->get('email'));
         $emailConfirm = trim((string) $request->request->get('email_confirm'));
-        $ragioneSociale = trim((string) $request->request->get('ragione_sociale'));
-        $indirizzo = trim((string) $request->request->get('indirizzo'));
-        $civico = trim((string) $request->request->get('civico'));
-        $citta = trim((string) $request->request->get('citta'));
-        $cap = trim((string) $request->request->get('cap'));
+        $businessName = trim((string) $request->request->get('business_name'));
+        $address = trim((string) $request->request->get('address'));
+        $civic = trim((string) $request->request->get('civic'));
+        $city = trim((string) $request->request->get('city'));
+        $zip = trim((string) $request->request->get('zip'));
 
         $errors = [];
         if (!in_array($accountType, ['aziendale', 'professionista'], true)) {
@@ -76,10 +76,10 @@ class PublicController extends AbstractController
         } elseif ($email !== $emailConfirm) {
             $errors[] = 'Le due e-mail non coincidono.';
         }
-        if ($ragioneSociale === '' || $indirizzo === '' || $civico === '' || $citta === '') {
+        if ($businessName === '' || $address === '' || $civic === '' || $city === '') {
             $errors[] = 'Compila tutti i campi anagrafici obbligatori.';
         }
-        if (!preg_match('/^\d{5}$/', $cap)) {
+        if (!preg_match('/^\d{5}$/', $zip)) {
             $errors[] = 'Il CAP deve essere di 5 cifre.';
         }
 
@@ -94,11 +94,11 @@ class PublicController extends AbstractController
         $demo = new DemoRequest();
         $demo->setAccountType($accountType)
             ->setEmail($email)
-            ->setBusinessName($ragioneSociale)
-            ->setAddress($indirizzo)
-            ->setCivic($civico)
-            ->setCity($citta)
-            ->setZip($cap)
+            ->setBusinessName($businessName)
+            ->setAddress($address)
+            ->setCivic($civic)
+            ->setCity($city)
+            ->setZip($zip)
             ->setSdi(trim((string) $request->request->get('sdi')) ?: null)
             ->setPec(trim((string) $request->request->get('pec')) ?: null);
         $em->persist($demo);
@@ -113,7 +113,7 @@ class PublicController extends AbstractController
     public function cookie(): Response
     {
         return $this->render('public/legal.html.twig', [
-            'titolo' => 'Normativa cookie',
+            'title' => 'Normativa cookie',
         ]);
     }
 
@@ -121,7 +121,7 @@ class PublicController extends AbstractController
     public function privacy(): Response
     {
         return $this->render('public/legal.html.twig', [
-            'titolo' => 'Normativa privacy',
+            'title' => 'Normativa privacy',
         ]);
     }
 
@@ -129,7 +129,7 @@ class PublicController extends AbstractController
     public function terms(): Response
     {
         return $this->render('public/legal.html.twig', [
-            'titolo' => 'Termini e condizioni di utilizzo',
+            'title' => 'Termini e condizioni di utilizzo',
         ]);
     }
 }

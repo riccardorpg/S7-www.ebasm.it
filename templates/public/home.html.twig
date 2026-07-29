@@ -181,10 +181,10 @@
                             <form method="post" action="{{ path('contact_submit') }}" novalidate>
                                 <input type="hidden" name="_csrf_token" value="{{ csrf_token('contact') }}">
                                 <div class="row g-3">
-                                    <div class="col-md-6"><label class="form-label">Nome *</label><input type="text" name="nome" class="form-control" required></div>
-                                    <div class="col-md-6"><label class="form-label">Cognome *</label><input type="text" name="cognome" class="form-control" required></div>
+                                    <div class="col-md-6"><label class="form-label">Nome *</label><input type="text" name="name" class="form-control" required></div>
+                                    <div class="col-md-6"><label class="form-label">Cognome *</label><input type="text" name="surname" class="form-control" required></div>
                                     <div class="col-12"><label class="form-label">E-mail *</label><input type="email" name="email" class="form-control" required></div>
-                                    <div class="col-12"><label class="form-label">Messaggio *</label><textarea name="messaggio" rows="4" class="form-control" required></textarea></div>
+                                    <div class="col-12"><label class="form-label">Messaggio *</label><textarea name="message" rows="4" class="form-control" required></textarea></div>
                                     <div class="col-12">
                                         {# 1.7.1.5 Google reCaptcha (inserire site key reale) #}
                                         <div class="g-recaptcha" data-sitekey="RECAPTCHA_SITE_KEY"></div>
@@ -222,13 +222,13 @@
                                     <div class="col-md-6"><label class="form-label">E-mail per la registrazione *</label><input type="email" name="email" class="form-control" required></div>
                                     <div class="col-md-6"><label class="form-label">Verifica e-mail *</label><input type="email" name="email_confirm" class="form-control" required></div>
                                     {# 1.7.2.4 ragione sociale / nome e cognome #}
-                                    <div class="col-12"><label class="form-label" id="labelRagioneSociale">Ragione sociale *</label><input type="text" name="ragione_sociale" class="form-control" required></div>
+                                    <div class="col-12"><label class="form-label" id="labelBusinessName">Ragione sociale *</label><input type="text" name="business_name" class="form-control" required></div>
                                     {# 1.7.2.5 / 1.7.2.6 indirizzo + civico #}
-                                    <div class="col-md-9"><label class="form-label">Indirizzo *</label><input type="text" name="indirizzo" class="form-control" required></div>
-                                    <div class="col-md-3"><label class="form-label">Civico *</label><input type="text" name="civico" class="form-control" required></div>
+                                    <div class="col-md-9"><label class="form-label">Indirizzo *</label><input type="text" name="address" class="form-control" required></div>
+                                    <div class="col-md-3"><label class="form-label">Civico *</label><input type="text" name="civic" class="form-control" required></div>
                                     {# 1.7.2.7 / 1.7.2.8 città + CAP #}
-                                    <div class="col-md-8"><label class="form-label">Città *</label><input type="text" name="citta" class="form-control" required></div>
-                                    <div class="col-md-4"><label class="form-label">CAP *</label><input type="text" name="cap" class="form-control" maxlength="5" required></div>
+                                    <div class="col-md-8"><label class="form-label">Città *</label><input type="text" name="city" class="form-control" required></div>
+                                    <div class="col-md-4"><label class="form-label">CAP *</label><input type="text" name="zip" class="form-control" maxlength="5" required></div>
                                     {# 1.7.2.9 / 1.7.2.10 SDI + PEC #}
                                     <div class="col-md-6"><label class="form-label">Codice SDI</label><input type="text" name="sdi" class="form-control" maxlength="7"></div>
                                     <div class="col-md-6"><label class="form-label">PEC</label><input type="email" name="pec" class="form-control"></div>
@@ -255,7 +255,7 @@
             // 1.7.2.4: l'etichetta cambia in base al tipo di account.
             var form = document.getElementById('demoForm');
             if (!form) return;
-            var label = document.getElementById('labelRagioneSociale');
+            var label = document.getElementById('labelBusinessName');
             form.querySelectorAll('input[name="account_type"]').forEach(function (r) {
                 r.addEventListener('change', function () {
                     label.textContent = (this.value === 'professionista') ? 'Nome e cognome *' : 'Ragione sociale *';
