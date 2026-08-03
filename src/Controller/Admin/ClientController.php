@@ -72,7 +72,7 @@ class ClientController extends AbstractController
             'sortFieldAllowList' => ['c.name', 'c.code', 'c.clientType', 'c.licenseType', 'c.licenseExpiresAt', 'c.active'],
         ]);
 
-        return $this->render('admin/clients/index.html.twig', [
+        return $this->render('role/admin/clients/index.html.twig', [
             'records' => $records,
             'filters' => $filters,
         ]);
@@ -204,7 +204,7 @@ class ClientController extends AbstractController
             return $this->redirectToRoute('admin_client_show', ['id' => $company->getId()]);
         }
 
-        return $this->render('admin/clients/new.html.twig');
+        return $this->render('role/admin/clients/new.html.twig');
     }
 
     // ================= MODIFICA (pagina dedicata, senza campo database) =================
@@ -308,7 +308,7 @@ class ClientController extends AbstractController
         }
         $this->companyService->clearSession();
 
-        return $this->render('admin/clients/show.html.twig', [
+        return $this->render('role/admin/clients/show.html.twig', [
             'company' => $company,
             'staff' => $staff,
             'storageUsedMb' => $this->safeStorage($company),

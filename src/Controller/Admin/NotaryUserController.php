@@ -64,7 +64,7 @@ class NotaryUserController extends AbstractController
             ]
         );
 
-        return $this->render('admin/notaries/index.html.twig', [
+        return $this->render('role/admin/notaries/index.html.twig', [
             'records' => $records,
             'filters' => $filters,
             'companies' => $companies->findBy(['active' => true], ['name' => 'ASC']),

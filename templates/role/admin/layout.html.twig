@@ -1,0 +1,36 @@
+{% extends 'role/base.html.twig' %}
+
+{% block home_path %}{{ path('admin_index') }}{% endblock %}
+
+{% block role_menu %}
+    {% set r = app.request.attributes.get('_route') %}
+    <li class="menu-item{{ r == 'admin_index' ? ' current' : '' }}">
+        <a class="menu-link" href="{{ path('admin_index') }}"><div><i class="bi-speedometer2"></i> Scrivania</div></a>
+    </li>
+    <li class="menu-item{{ r starts with 'admin_client' ? ' current' : '' }}">
+        <a class="menu-link" href="{{ path('admin_clients') }}"><div><i class="bi-people"></i> Clienti</div></a>
+    </li>
+    <li class="menu-item{{ r starts with 'admin_notar' ? ' current' : '' }}">
+        <a class="menu-link" href="{{ path('admin_notaries') }}"><div><i class="bi-person-badge"></i> Notai</div></a>
+    </li>
+    <li class="menu-item{{ r starts with 'admin_external' ? ' current' : '' }}">
+        <a class="menu-link" href="{{ path('admin_external_accounts') }}"><div><i class="bi-person-gear"></i> Account esterni</div></a>
+    </li>
+    <li class="menu-item">
+        <a class="menu-link" href="{{ path('logout') }}"><div><i class="bi-box-arrow-right"></i> Esci</div></a>
+    </li>
+{% endblock %}
+
+{% block role_page_title_breadcrumb %}
+    {% set crumb_current = block('role_page_title_inner')|striptags|trim %}
+    <li class="breadcrumb-item">
+        {% if app.request.attributes.get('_route') == 'admin_index' %}
+            Amministrazione
+        {% else %}
+            <a href="{{ path('admin_index') }}">Amministrazione</a>
+        {% endif %}
+    </li>
+    {% if app.request.attributes.get('_route') != 'admin_index' and crumb_current %}
+        <li class="breadcrumb-item active" aria-current="page">{{ crumb_current }}</li>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,238 @@
+{% extends 'role/notary/layout.html.twig' %}
+{% import 'components/action_icons.html.twig' as ico %}
+
+{% block title %} - Pratica {{ practice.number }}{% endblock %}
+{% block role_page_title_inner %}Pratica {{ practice.number }}{% endblock %}
+
+{% block sub_menu_left %}
+    <li class="nav-item"><a class="nav-link" href="{{ path('notary_practices') }}">Torna alle pratiche</a></li>
+{% endblock %}
+
+{% block sub_menu_right %}
+    {% set statusToken = csrf_token('practice_status_' ~ practice.id) %}
+    {% set statusUrl = path('notary_practice_status', {id: practice.id})|json_encode %}
+    {% if practice.status == 'aperta' %}
+        <li class="nav-item"><a class="nav-link" href="javascript:practiceStatusConfirm({{ statusUrl }}, {{ statusToken|json_encode }}, 'completata', 'segnerai la pratica come completata')">Segna come completata</a></li>
+    {% elseif practice.status == 'completata' %}
+        <li class="nav-item"><a class="nav-link" href="javascript:practiceStatusConfirm({{ statusUrl }}, {{ statusToken|json_encode }}, 'archiviabile', 'segnerai la pratica come archiviabile')">Segna come archiviabile</a></li>
+        <li class="nav-item"><a class="nav-link" href="javascript:practiceStatusConfirm({{ statusUrl }}, {{ statusToken|json_encode }}, 'aperta', 'riaprirai la pratica')">Riapri</a></li>
+    {% else %}
+        <li class="nav-item"><a class="nav-link" href="javascript:practiceStatusConfirm({{ statusUrl }}, {{ statusToken|json_encode }}, 'aperta', 'riaprirai la pratica')">Riapri</a></li>
+    {% endif %}
+{% endblock %}
+
+{% block role_page_title_breadcrumb %}
+    <li class="breadcrumb-item"><a href="{{ path('notary_index') }}">Notaio</a></li>
+    <li class="breadcrumb-item"><a href="{{ path('notary_practices') }}">Pratiche</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{ practice.number }}</li>
+{% endblock %}
+
+{% block role_content %}
+    <section class="content-wrap">
+        <div class="container">
+            <div class="d-flex align-items-center mb-2 flex-wrap gap-2">
+                <span class="op_07">Agenzia:</span>
+                <span class="badge bg-secondary">{{ company.code }}</span>
+                <strong>{{ company.name }}</strong>
+                <span class="ms-auto badge {{ practice.status == 'completata' ? 'bg-success' : (practice.status == 'archiviabile' ? 'bg-info' : 'bg-secondary') }}">{{ practice.statusLabel }}</span>
+            </div>
+
+            <ul class="nav nav-tabs canvas-alt-tabs tabs-tb" role="tablist">
+                <li class="nav-item"><button class="nav-link active tab_session" data-filter-tab="dati" data-bs-toggle="tab" data-bs-target="#tab-dati" type="button">Dati pratica</button></li>
+                <li class="nav-item"><button class="nav-link tab_session" data-filter-tab="documenti" data-bs-toggle="tab" data-bs-target="#tab-documenti" type="button">Documenti ({{ practice.documents|length }})</button></li>
+            </ul>
+
+            <div class="tab-content border border-top-0 p-3 bg-white">
+                {# ===== 17.1.1.1.5.1 DATI PRATICA + PARTI ===== #}
+                <div class="tab-pane fade show active" id="tab-dati">
+                    <table class="table align-middle m_b_none">
+                        <tr><th style="width:22%">Numero</th><td>{{ practice.number }}</td></tr>
+                        <tr><th>Tipo</th><td>{{ practice.type ?: '—' }}</td></tr>
+                        <tr><th>Stato</th><td><span class="badge {{ practice.status == 'completata' ? 'bg-success' : (practice.status == 'archiviabile' ? 'bg-info' : 'bg-secondary') }}">{{ practice.statusLabel }}</span></td></tr>
+                        <tr><th>Oggetto</th><td>{{ practice.subject ?: '—' }}</td></tr>
+                        <tr><th>Inserita il</th><td>{{ practice.createdAt ? practice.createdAt|date('d/m/Y H:i') : '—' }}</td></tr>
+                    </table>
+
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-6">
+                            <h6 class="mb-2">Acquirente</h6>
+                            {{ _self.partyTable(practice.buyer) }}
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="mb-2">Venditore</h6>
+                            {{ _self.partyTable(practice.seller) }}
+                        </div>
+                    </div>
+                </div>
+
+                {# ===== 17.1.1.1.5.2 ELENCO DOCUMENTI ===== #}
+                <div class="tab-pane fade" id="tab-documenti">
+                    <div class="d-flex justify-content-end mb-2">
+                        <a href="javascript:docNewShow()" class="button button-3d button-small button-green m_b_none">Nuovo allegato</a>
+                    </div>
+                    <table class="table table-hover table-bordered align-middle m_b_none">
+                        <thead>
+                            <tr>
+                                <th>Nome allegato</th>
+                                <th>Note dell'agente</th>
+                                <th>Note del notaio</th>
+                                <th class="txt_a_c td_w_120p">Richiesto</th>
+                                <th class="txt_a_c td_w_120p">Stato</th>
+                                <th class="txt_a_c td_w_140p">Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for d in practice.documents %}
+                            {% set token = csrf_token('practice_doc_' ~ practice.id) %}
+                            <tr>
+                                <td>
+                                    <strong>{{ d.name }}</strong>
+                                    {% if d.hasFile %}
+                                        <div class="op_07 small">{{ d.originalFilename }}{% if d.sizeBytes %} · {{ (d.sizeBytes / 1024)|round }} KB{% endif %}</div>
+                                    {% else %}
+                                        <div class="small"><span class="badge bg-warning">nessun file</span></div>
+                                    {% endif %}
+                                </td>
+                                <td class="op_07">{{ d.agentNote ?: '—' }}</td>
+                                <td>{{ d.notaryNote ?: '—' }}</td>
+                                <td class="txt_a_c">
+                                    <form method="post" action="{{ path('notary_doc_toggle_requested', {id: practice.id, did: d.id}) }}" class="d-inline">
+                                        <input type="hidden" name="_csrf_token" value="{{ token }}">
+                                        <button type="submit" class="btn p-0 border-0 bg-transparent" data-bs-toggle="tooltip" data-bs-title="Clicca per {{ d.requested ? 'segnare non richiesto' : 'segnare richiesto' }}">
+                                            <span class="badge {{ d.requested ? 'bg-primary' : 'bg-secondary' }}">{{ d.requested ? 'Richiesto' : 'Non richiesto' }}</span>
+                                        </button>
+                                    </form>
+                                </td>
+                                <td class="txt_a_c">
+                                    <form method="post" action="{{ path('notary_doc_toggle_status', {id: practice.id, did: d.id}) }}" class="d-inline">
+                                        <input type="hidden" name="_csrf_token" value="{{ token }}">
+                                        <button type="submit" class="btn p-0 border-0 bg-transparent" data-bs-toggle="tooltip" data-bs-title="Clicca per {{ d.verified ? 'rimettere da verificare' : 'segnare verificato' }}">
+                                            <span class="badge {{ d.verified ? 'bg-success' : 'bg-secondary' }}">{{ d.statusLabel }}</span>
+                                        </button>
+                                    </form>
+                                </td>
+                                <td class="txt_a_c text-nowrap">
+                                    {% if d.hasFile %}
+                                        {{ ico.action(path('notary_doc_download', {id: practice.id, did: d.id}), 'download', 'Scarica file', 'pr') }}
+                                    {% else %}
+                                        {{ ico.disabled('download', 'Nessun file da scaricare') }}
+                                    {% endif %}
+                                    {{ ico.action("javascript:docNoteShow('" ~ path('notary_doc_note', {id: practice.id, did: d.id}) ~ "', " ~ (d.notaryNote|default('')|json_encode) ~ ")", 'edit', 'Inserisci note', 'pr') }}
+                                    {{ ico.action("javascript:docDeleteConfirm(" ~ path('notary_doc_delete', {id: practice.id, did: d.id})|json_encode ~ ", " ~ token|json_encode ~ ", " ~ ('eliminerai l’allegato «' ~ d.name ~ '»')|json_encode ~ ")", 'delete', 'Elimina', 'red') }}
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="6" class="op_07 text-center">Nessun documento. Aggiungine uno con "Nuovo allegato".</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{# Tabella anagrafica di una parte (acquirente/venditore). #}
+{% macro partyTable(party) %}
+    <table class="table align-middle m_b_none">
+        <tr><th style="width:35%">Denominazione</th><td>{{ party.name ?: '—' }}</td></tr>
+        <tr><th>CF / P.IVA</th><td>{{ party.fiscalCode ?: '—' }}</td></tr>
+        <tr><th>E-mail</th><td>{{ party.email ?: '—' }}</td></tr>
+        <tr><th>Telefono</th><td>{{ party.phone ?: '—' }}</td></tr>
+        <tr><th>Indirizzo</th><td>{{ party.address ?: '—' }}</td></tr>
+    </table>
+{% endmacro %}
+
+{% block modals %}
+    {# Conferma eliminazione allegato #}
+    {% include 'components/modals/confirm_modal.html.twig' with {type: 'docDelete', title: 'Elimina allegato'} only %}
+
+    {# 17.1.1.1.5.3 Nuovo allegato #}
+    {% embed 'components/modals/form_modal.html.twig' with {type: 'docNew', title: 'Nuovo allegato', action: path('notary_doc_new', {id: practice.id}), enctype: 'multipart/form-data'} %}
+        {% block modalBody %}
+            <div class="row g-3">
+                <div class="col-12"><label class="form-label">Nome allegato</label><input type="text" name="name" class="form-control" placeholder="Se vuoto usa il nome del file"></div>
+                <div class="col-12"><label class="form-label">File *</label><input type="file" name="file" class="form-control" required></div>
+                <div class="col-12"><label class="form-label">Note</label><textarea name="note" class="form-control" rows="3"></textarea></div>
+            </div>
+        {% endblock %}
+        {% block modalSubmit %}Carica{% endblock %}
+    {% endembed %}
+
+    {# 17.1.1.2 Conferma cambio stato pratica #}
+    <div id="praticaStatusModal" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form id="praticaStatusForm" method="post" action="">
+                    <input type="hidden" id="praticaStatusToken" name="_csrf_token" value="">
+                    <input type="hidden" id="praticaStatusValue" name="status" value="">
+                    <div class="modal-header"><h3 class="modal-title">Cambio stato pratica</h3></div>
+                    <div class="modal-stripe"></div>
+                    <div class="modal-body">
+                        <div class="txt_a_c">
+                            <label class="modal_subtitle">Attenzione!</label>
+                            <p class="modal-paragraph">
+                                Cliccando su <span class="button button-3d button-mini button-green">Conferma</span>
+                                <span id="praticaStatusText"></span>.<br>Sei sicuro di voler proseguire?
+                            </p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="button button-3d button-small button-red f_left" data-bs-dismiss="modal">Annulla</button>
+                        <button type="submit" class="button button-3d button-small button-green f_right">Conferma</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {# 17.1.1.1.5.2.6 Inserisci note del notaio #}
+    <div id="docNoteModal" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form id="docNoteForm" method="post" action="">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('docNote') }}">
+                    <div class="modal-header"><h3 class="modal-title">Note del notaio</h3></div>
+                    <div class="modal-stripe"></div>
+                    <div class="modal-body">
+                        <textarea id="docNoteText" name="notary_note" class="form-control" rows="4"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="button button-3d button-small button-red f_left" data-bs-dismiss="modal">Annulla</button>
+                        <button type="submit" class="button button-3d button-small button-green f_right">Salva</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block page_javascripts %}
+    {% include 'components/js/tab_session_js.html.twig' %}
+    <script>
+        // I modali sono in #divModals, renderizzato DOPO questo blocco: inizializzo al DOMContentLoaded.
+        document.addEventListener('DOMContentLoaded', function () {
+            var noteEl = document.getElementById('docNoteModal');
+            if (noteEl) {
+                var noteModal = new bootstrap.Modal(noteEl, {backdrop: 'static', keyboard: false});
+                window.docNoteShow = function (url, note) {
+                    document.getElementById('docNoteForm').action = url;
+                    document.getElementById('docNoteText').value = note || '';
+                    noteModal.show();
+                };
+            }
+
+            var stEl = document.getElementById('praticaStatusModal');
+            if (stEl) {
+                var stModal = new bootstrap.Modal(stEl, {backdrop: 'static', keyboard: false});
+                window.practiceStatusConfirm = function (url, csrf, status, message) {
+                    document.getElementById('praticaStatusForm').action = url;
+                    document.getElementById('praticaStatusToken').value = csrf;
+                    document.getElementById('praticaStatusValue').value = status;
+                    document.getElementById('praticaStatusText').textContent = message;
+                    stModal.show();
+                };
+            }
+        });
+    </script>
+{% endblock %}

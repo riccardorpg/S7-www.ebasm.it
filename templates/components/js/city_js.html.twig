@@ -48,7 +48,7 @@
                     tdName.textContent = cities[i].name + ' (' + cities[i].province + ')';
                     var a = document.createElement('a');
                     a.href = 'javascript:citySelect{{ number }}(' + cities[i].id + ', "' + cities[i].name.replace(/"/g, '\\"') + ' (' + cities[i].province + ')", "")';
-                    a.innerHTML = '<img class="icon_action icon_green" src="{{ asset(path_graphics ~ "/icons/select.png") }}" alt="Seleziona">';
+                    a.innerHTML = '<img class="icon_action icon_green" src="{{ asset(PATH_GRAPHICS ~ "icons/select.png") }}" alt="Seleziona">';
                     tdSelect.className = 'txt_a_c';
                     tdSelect.appendChild(a);
                     tr.appendChild(tdName); tr.appendChild(tdSelect);

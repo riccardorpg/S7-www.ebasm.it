@@ -1,0 +1,70 @@
+{% extends 'role/admin/layout.html.twig' %}
+
+{% block title %} - Scrivania{% endblock %}
+{% block role_page_title_inner %}Scrivania{% endblock %}
+
+{% block role_content %}
+    <section class="content-wrap">
+        <div class="container">
+            <ul class="nav nav-tabs canvas-alt-tabs tabs-tb" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-richieste" type="button">
+                        Nuove richieste in arrivo <span class="badge bg-danger">{{ newRequests|length }}</span>
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-demo" type="button">
+                        Demo in scadenza <span class="badge bg-warning text-dark">{{ expiringDemos|length }}</span>
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-licenze" type="button">
+                        Licenze in scadenza <span class="badge bg-warning text-dark">{{ expiringLicenses|length }}</span>
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content border border-top-0 p-3 bg-white">
+                {# 6.1.1 Nuove richieste in arrivo #}
+                <div class="tab-pane fade show active" id="tab-richieste">
+                    {% if newRequests is empty %}
+                        <p class="op_07 m_b_none">Nessuna nuova richiesta.</p>
+                    {% else %}
+                        <table class="table table-hover table-bordered m_b_none">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Tipo</th>
+                                    <th>Ragione sociale / Nome</th>
+                                    <th>E-mail</th>
+                                    <th>Città</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for r in newRequests %}
+                                <tr>
+                                    <td>{{ r.createdAt ? r.createdAt|date('d/m/Y H:i') : '' }}</td>
+                                    <td>{{ r.accountTypeLabel }}</td>
+                                    <td>{{ r.businessName }}</td>
+                                    <td>{{ r.email }}</td>
+                                    <td>{{ r.city }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    {% endif %}
+                </div>
+
+                {# 6.1.2 Demo in scadenza #}
+                <div class="tab-pane fade" id="tab-demo">
+                    {% include 'role/admin/_expiring_table.html.twig' with {'rows': expiringDemos} %}
+                </div>
+
+                {# 6.1.3 Licenze in scadenza #}
+                <div class="tab-pane fade" id="tab-licenze">
+                    {% include 'role/admin/_expiring_table.html.twig' with {'rows': expiringLicenses} %}
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

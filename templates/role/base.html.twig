@@ -1,0 +1,146 @@
+{# ===========================================================================
+   ROLE BASE — chrome dell'area privata (side-header, titolo pagina, action bar,
+   modali). Estende il root base.html.twig. Le aree (admin/agency/notary)
+   estendono questa tramite role/{area}/layout.html.twig.
+   Blocchi per le pagine figlie:
+     home_path, role_menu, role_page_title_inner, role_page_title_breadcrumb,
+     sub_menu_left/center/right, role_content, modals, page_stylesheets, page_javascripts
+   =========================================================================== #}
+{% extends 'base.html.twig' %}
+
+{% block body_class %}side-header open-header close-header-on-scroll{% endblock %}
+
+{% block preloader %}{% include 'components/preloader.html.twig' %}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/components/bs-switches.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/components/radio-checkbox.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/components/datepicker.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/components/daterangepicker.css') }}">
+    {# Tema scuro + classi dell'area privata (icone azione, card, tabelle, picker). #}
+    <link rel="stylesheet" href="{{ asset('css/personal/themeOverride.css') }}">
+{% endblock %}
+
+{% block header %}
+    <div id="header-trigger"><i class="bi-list"></i><i class="bi-x-lg"></i></div>
+
+    {% if is_granted('IS_IMPERSONATOR') %}
+        <div class="alert alert-warning alert-dismissible txt_a_c m_b_none" style="border-radius:0;position:relative;z-index:1000;">
+            <i class="fa-solid fa-user-secret"></i>
+            Stai impersonando <strong>{{ app.user.userIdentifier }}</strong> —
+            <a href="{{ path('agency_index', {'_switch_user': '_exit'}) }}">Torna ad amministratore</a>
+        </div>
+    {% endif %}
+
+    <header id="header">
+        <div id="header-wrap">
+            <div class="container">
+                <div class="header-row">
+                    <div id="logo" class="p_tb_15p">
+                        <a href="{% block home_path %}{{ path('login') }}{% endblock %}">
+                            <img src="{{ asset(PATH_GRAPHICS ~ 'logo.png') }}" alt="EBASM" style="max-height:40px;">
+                        </a>
+                    </div>
+                    <div class="primary-menu-trigger">
+                        <button class="cnvs-hamburger" type="button" title="Open Mobile Menu">
+                            <span class="cnvs-hamburger-box"><span class="cnvs-hamburger-inner"></span></span>
+                        </button>
+                    </div>
+                    <nav class="primary-menu on-click">
+                        <ul class="menu-container">
+                            {% block role_menu %}{% endblock %}
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+        <div class="header-wrap-clone"></div>
+    </header>
+{% endblock %}
+
+{% block content %}
+    {% block role_page_title %}
+        <section class="page-title">
+            <div class="container">
+                <div class="page-title-row">
+                    <div class="page-title-content">
+                        <h3 class="m_b_none">{% block role_page_title_inner %}{% endblock %}</h3>
+                    </div>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            {% block role_page_title_breadcrumb %}{% endblock %}
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+        </section>
+    {% endblock %}
+
+    {% block action_bar %}
+        <nav id="actionBar" class="navbar navbar-expand-md">
+            <div class="container">
+                <div class="mx-auto order-0">
+                    <button class="navbar-toggler button button-mini" type="button" data-bs-toggle="collapse" data-bs-target="#navCollapse">
+                        <span class="color_w">Elenco azioni</span>
+                    </button>
+                </div>
+                <div id="navCollapse" class="navbar-collapse collapse">
+                    <ul class="navbar-nav me-auto">
+                        {% block sub_menu_left %}{% endblock %}
+                    </ul>
+                    <ul class="navbar-nav mx-auto text-center">
+                        {% block sub_menu_center %}{% endblock %}
+                    </ul>
+                    <ul class="navbar-nav">
+                        {% block sub_menu_right %}
+                            <li class="nav-item"><a class="nav-link" href="{{ path('logout') }}"><i class="bi-box-arrow-right"></i> Esci</a></li>
+                        {% endblock %}
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    {% endblock %}
+
+    {% block role_content %}{% endblock %}
+{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script type="text/javascript" src="{{ asset('js/components/moment.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('js/components/datepicker.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('js/components/datepicker-it.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('js/components/daterangepicker.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('js/components/timepicker.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('js/personal/utilities.js') }}"></script>
+
+    {# Scroll orizzontale su mobile: avvolge ogni .table in un .table-responsive. #}
+    <script>
+        (function () {
+            document.querySelectorAll('table.table').forEach(function (t) {
+                if (t.closest('.table-responsive')) return;
+                var wrap = document.createElement('div');
+                wrap.className = 'table-responsive';
+                t.parentNode.insertBefore(wrap, t);
+                wrap.appendChild(t);
+            });
+        })();
+    </script>
+
+    {# Auto-dismiss flash notice (success/warning dopo 5s, danger dopo 8s) #}
+    <script>
+        (function () {
+            var container = document.getElementById('noticesContainer');
+            if (!container) return;
+            container.querySelectorAll('.alert.notice').forEach(function (el) {
+                var ms = el.classList.contains('alert-danger') ? 8000 : 5000;
+                setTimeout(function () {
+                    var instance = bootstrap.Alert.getOrCreateInstance(el);
+                    instance.close();
+                }, ms);
+            });
+        })();
+    </script>
+{% endblock %}

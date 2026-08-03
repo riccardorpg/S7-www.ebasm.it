@@ -1,0 +1,26 @@
+{% extends 'role/base.html.twig' %}
+
+{% block home_path %}{{ path('agency_index') }}{% endblock %}
+
+{% block role_menu %}
+    <li class="menu-item{{ app.request.attributes.get('_route') == 'agency_index' ? ' current' : '' }}">
+        <a class="menu-link" href="{{ path('agency_index') }}"><div>Dashboard</div></a>
+    </li>
+    <li class="menu-item">
+        <a class="menu-link" href="{{ path('logout') }}"><div>Esci</div></a>
+    </li>
+{% endblock %}
+
+{% block role_page_title_breadcrumb %}
+    {% set crumb_current = block('role_page_title_inner')|striptags|trim %}
+    <li class="breadcrumb-item">
+        {% if app.request.attributes.get('_route') == 'agency_index' %}
+            Agenzia
+        {% else %}
+            <a href="{{ path('agency_index') }}">Agenzia</a>
+        {% endif %}
+    </li>
+    {% if app.request.attributes.get('_route') != 'agency_index' and crumb_current %}
+        <li class="breadcrumb-item active" aria-current="page">{{ crumb_current }}</li>
+    {% endif %}
+{% endblock %}

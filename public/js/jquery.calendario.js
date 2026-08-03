@@ -1,1 +1,451 @@
-!function(n,s){"use strict";n.Calendario=function(t,e){this.$el=n(e),this._init(t)},n.Calendario.defaults={weeks:["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],weekabbrs:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],months:["January","February","March","April","May","June","July","August","September","October","November","December"],monthabbrs:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],displayWeekAbbr:!1,displayMonthAbbr:!1,startIn:1,events:"click",fillEmpty:!0,feedParser:"./feed/",zone:"00:00",format:"MM-DD-YYYY",checkUpdate:!1},n.Calendario.prototype={_init:function(t){this.VERSION="3.2.0",this.UNIQUE="%{unique}%",this.options=n.extend(!0,{},n.Calendario.defaults,t),this.today=new Date,this.month=isNaN(this.options.month)||null===this.options.month?this.today.getMonth():this.options.month-1,this.year=isNaN(this.options.year)||null===this.options.year?this.today.getFullYear():this.options.year,this.caldata=this._processCaldata(this.options.caldata),1.9<=parseFloat(n().jquery)&&-1!=this.options.events.indexOf("hover")&&this.logError("'hover' psuedo-name is not supported in jQuery 1.9+. Use 'mouseenter' 'mouseleave' events instead."),this.options.events=this.options.events.split(","),this.options.zone="+"!=this.options.zone.charAt(0)&&"-"!=this.options.zone.charAt(0)?"+"+this.options.zone:this.options.zone,this._generateTemplate(!0),this._initEvents()},_processCaldataObj:function(t,e){var a;return(t="object"!=typeof t?{content:t,startTime:"00:00",endTime:"23:59",allDay:!0}:t).content||this.logError("Content is missing in date "+e),t.startTime&&!t.endTime&&(t.endTime=parseInt(t.startTime.split(":")[0])+1+":"+t.startTime.split(":")[1]),(t=!t.startTime&&!t.endTime?n.extend({},t,{startTime:"00:00",endTime:"23:59",allDay:!0}):t).startTime&&t.endTime&&t.allDay===s&&(t.allDay=!1),(/^\d{2}-DD-\d{4}/.test(e)||/^\d{2}-DD-YYYY/.test(e))&&(3==(e=/^(\d{2})-DD-(\d{4})/.exec(e)||/^(\d{2})-DD-YYYY/.exec(e)).length?a=new Date(e[2],e[1],0):2==e.length&&(a=new Date(this.year,e[1],0)),t.startDate||(t.startDate=1),t.endDate||1==a.getDate()||(t.endDate=a.getDate()),t.endDate||1!=a.getDate()||3!=e.length||(t.endDate=a.getDate())),t},_processCaldata:function(t){var s=this;return t=t||{},n.each(t,function(a,i){/^\d{2}-\d{2}-\d{4}/.test(a)||/^\d{2}-\d{2}-YYYY/.test(a)||/^\d{2}-DD-YYYY/.test(a)||/^MM-\d{2}-YYYY/.test(a)||/^\d{2}-DD-YYYY/.test(a)||/^MM-\d{2}-\d{4}/.test(a)||/^\d{2}-DD-\d{4}/.test(a)||"TODAY"==a||s.logError(a+" is an Invalid Date. Date should not contain spaces, should be separated by '-' and should be in the format 'MM-DD-YYYY'. That ain't that difficult!"),Array.isArray(i)?(n.each(i,function(t,e){i[t]=s._processCaldataObj(e,a)}),t[a]=i):t[a]=s._processCaldataObj(i,a)}),t},_propDate:function(t,e){var a=t.index(),i={allDay:[],content:[],endTime:[],startTime:[]},a={day:t.children("span.fc-date").text(),month:this.month+1,monthname:(this.options.displayMonthAbbr?this.options.monthabbrs:this.options.months)[this.month],year:this.year,weekday:a+this.options.startIn,weekdayname:this.options.weeks[6==a?0:a+this.options.startIn]};t.children("div.fc-calendar-events").children("div.fc-calendar-event").each(function(t,e){e=n("<div>"+n(e).html()+"</div>");i.startTime[t]=new Date(e.find("time.fc-starttime").attr("datetime")),i.endTime[t]=new Date(e.find("time.fc-endtime").attr("datetime")),i.allDay[t]="true"===e.find("time.fc-allday").attr("datetime"),e.find("time").remove(),i.content[t]=e.html()}),a.day&&this.options[e](t,i,a)},_initEvents:function(){for(var a=this,e=[],i=[],t=0;t<a.options.events.length;t++)e[t]=a.options.events[t].toLowerCase().trim(),i[t]="onDay"+e[t].charAt(0).toUpperCase()+e[t].slice(1),this.options[i[t]]===s&&(this.options[i[t]]=function(t,e,a){return!1}),this.$el.on(e[t]+".calendario","div.fc-row > div",function(t){"mouseenter"!=t.type&&"mouseleave"!=t.type||(t.type=-1==n.inArray(t.type,e)?"hover":t.type),a._propDate(n(this),i[n.inArray(t.type,e)])});this.$el.on("shown.calendar.calendario",function(t,e){e&&e.options.checkUpdate&&a._checkUpdate()}),this.$el.delay(new Date(this.today.getFullYear(),this.today.getMonth(),this.today.getDate()+1,0,0,0)-(new Date).getTime()).queue(function(){a.today=new Date,a.today.getMonth()!=a.month&&a.today.getMonth()+1!=a.month||a._generateTemplate(!0),a.$el.trigger(n.Event("newday.calendar.calendario"))})},_checkUpdate:function(){var a=this;n.getScript("js/cal-update.js").done(function(t,e){calendario.current!=a.version()&&parseFloat(calendario.current)>=parseFloat(a.version())&&console.info(calendario.msg)}).fail(function(t,e,a){console.error(a)})},_generateTemplate:function(t,e){var a,i=this._getHead(),s=this._getBody();switch(this.rowTotal){case 4:a="fc-four-rows";break;case 5:a="fc-five-rows";break;case 6:a="fc-six-rows"}this.$cal=n('<div class="fc-calendar '+a+'">').append(i,s),this.$el.find("div.fc-calendar").remove().end().append(this.$cal),this.$el.find(".fc-emptydate").parent().css({background:"transparent",cursor:"default"}),t||this.$el.trigger(n.Event("shown.calendario")),e&&e.call()},_getHead:function(){for(var t='<div class="fc-head">',e=0;e<=6;e++){var a=e+this.options.startIn,a=6<a?a-6-1:a;t+="<div>"+(this.options.displayWeekAbbr?this.options.weekabbrs:this.options.weeks)[a]+"</div>"}return t+"</div>"},_parseDataToDay:function(t,e,a){var i="";if(a){Array.isArray(t)||(t=[t]);for(var s=0;s<t.length;s++)1!=this.month&&e>=t[s].startDate&&e<=t[s].endDate?i+=this._wrapDay(t[s],e,!0):1==this.month&&e>=t[s].startDate&&(!(t[s].endDate&&e<=t[s].endDate)&&t[s].endDate||(i+=this._wrapDay(t[s],e,!0)))}else i=Array.isArray(t)?this._convertDayArray(t,e):this._wrapDay(t,e,!0);return i},_toDateTime:function(t,e,a){var i=parseInt(this.options.zone.split(":")[0]),s=parseInt(this.options.zone.charAt(0)+this.options.zone.split(":")[1]),n=parseInt(t.split(":")[0])-i,o=parseInt(t.split(":")[1])-s,t=new Date(Date.UTC(this.year,this.month,e,n,o,0,0));return a&&(i=parseInt(a.split(":")[0])-i,s=parseInt(a.split(":")[1])-s,t.getTime()-new Date(Date.UTC(this.year,this.month,e,i,s,0,0)).getTime()<0&&(t=new Date(Date.UTC(this.year,this.month,e+1,n,o,0,0)))),t.toISOString()},_timeHtml:function(t,e){var a=t.content;return a+='<time class="fc-allday" datetime="'+t.allDay+'"></time>',a+='<time class="fc-starttime" datetime="'+this._toDateTime(t.startTime,e)+'">'+t.startTime+"</time>",a+='<time class="fc-endtime" datetime="'+this._toDateTime(t.endTime,e,t.startTime)+'">'+t.endTime+"</time>"},_wrapDay:function(t,e,a){return e?a?'<div class="fc-calendar-event">'+this._timeHtml(t,e)+"</div>":this._timeHtml(t,e):'<div class="fc-calendar-event">'+t+"</div>"},_convertDayArray:function(t,e){for(var a=[],i=0;i<t.length;i++)a[i]=this._wrapDay(t[i],e,!1);return this._wrapDay(a.join('</div><div class="fc-calendar-event">'))},_getBody:function(){var t=new Date(this.year,this.month+1,0),e=t.getDate(),t=new Date(this.year,t.getMonth(),1),a=new Date(this.year,this.month,0).getDate();this.startingDay=t.getDay();for(var i='<div class="fc-body"><div class="fc-row">',s=1,n=0;n<7;n++){for(var o=0;o<=6;o++){var r,h,d,c,l=this.startingDay-this.options.startIn,p=l<0?6+l+1:l,y="",m=this.month===this.today.getMonth()&&this.year===this.today.getFullYear()&&s===this.today.getDate(),u=this.year<this.today.getFullYear()||this.month<this.today.getMonth()&&this.year===this.today.getFullYear()||this.month===this.today.getMonth()&&this.year===this.today.getFullYear()&&s<this.today.getDate(),f="";this.options.fillEmpty&&(o<p||0<n)&&(e<s?(y='<span class="fc-date fc-emptydate">'+(s-e)+'</span><span class="fc-weekday">',++s):1==s&&(y='<span class="fc-date fc-emptydate">'+(a-p+1)+'</span><span class="fc-weekday">',++a),y+=this.options.weekabbrs[6<o+this.options.startIn?o+this.options.startIn-6-1:o+this.options.startIn]+"</span>"),s<=e&&(0<n||p<=o)?(y='<span class="fc-date">'+s+'</span><span class="fc-weekday">'+this.options.weekabbrs[6<o+this.options.startIn?o+this.options.startIn-6-1:o+this.options.startIn]+"</span>",d=(this.month+1<10?"0"+(this.month+1):this.month+1)+"-"+(s<10?"0"+s:s)+"-"+this.year,r=this.caldata[d],c=(this.month+1<10?"0"+(this.month+1):this.month+1)+"-"+(s<10?"0"+s:s)+"-YYYY",h=this.caldata[c],l="MM-"+(s<10?"0"+s:s)+"-"+this.year,p=this.caldata[l],d=this.caldata["MM-"+(s<10?"0"+s:s)+"-YYYY"],c=(this.month+1<10?"0"+(this.month+1):this.month+1)+"-DD-"+this.year,l=this.caldata[c],c=(this.month+1<10?"0"+(this.month+1):this.month+1)+"-DD-YYYY",c=this.caldata[c],m&&this.caldata.TODAY&&(f+=this._parseDataToDay(this.caldata.TODAY,s)),r&&(f+=this._parseDataToDay(r,s)),p&&(f+=this._parseDataToDay(p,s)),l&&(f+=this._parseDataToDay(l,s,!0)),c&&(f+=this._parseDataToDay(c,s,!0)),d&&(f+=this._parseDataToDay(d,s)),h&&(f+=this._parseDataToDay(h,s)),""!==f&&(y+='<div class="fc-calendar-events">'+f+"</div>"),++s):m=!1;m=m?"fc-today ":"";m+=u?"fc-past ":"fc-future ",""!==f&&(m+="fc-content"),i+=(""!==m?'<div class="'+m.trim()+'">':"<div>")+y+"</div>"}if(e<s){this.rowTotal=n+1;break}i+='</div><div class="fc-row">'}return i+"</div></div>"},_move:function(t,e,a){"previous"===e?"month"===t?(this.year=0<this.month?this.year:--this.year,this.month=0<this.month?--this.month:11):"year"===t&&(this.year=--this.year):"next"===e&&("month"===t?(this.year=this.month<11?this.year:++this.year,this.month=this.month<11?++this.month:0):"year"===t&&(this.year=++this.year)),this._generateTemplate(!1,a)},option:function(t,e){if(!e)return this.options[t];this.options[t]=e},getYear:function(){return this.year},getMonth:function(){return this.month+1},getMonthName:function(){return(this.options.displayMonthAbbr?this.options.monthabbrs:this.options.months)[this.month]},getCell:function(t){var e=Math.floor((t+this.startingDay-this.options.startIn-1)/7),t=t+this.startingDay-this.options.startIn-7*e-1;return this.$cal.find("div.fc-body").children("div.fc-row").eq(e).children("div").eq(t)},setData:function(t,e){t=this._processCaldata(t),e?this.caldata=t:n.extend(this.caldata,t),this._generateTemplate(!1)},gotoNow:function(t){this.month=this.today.getMonth(),this.year=this.today.getFullYear(),this._generateTemplate(!1,t)},gotoMonth:function(t,e,a){this.month=t-1,this.year=e,this._generateTemplate(!1,a)},gotoPreviousMonth:function(t){this._move("month","previous",t)},gotoPreviousYear:function(t){this._move("year","previous",t)},gotoNextMonth:function(t){this._move("month","next",t)},gotoNextYear:function(t){this._move("year","next",t)},feed:function(e){n.post(this.options.feedParser,{dates:this.caldata}).always(function(t){e&&e.call(this,JSON.parse(t).hevent)})},version:function(){return this.VERSION}};function i(t){throw new Error(t)}n.fn.calendario=function(t){var e,a=n.data(this,"calendario");return"string"==typeof t?(e=Array.prototype.slice.call(arguments,1),this.each(function(){a?(n.isFunction(a[t])&&"_"!==t.charAt(0)||i("No such method '"+t+"' for calendario instance."),a[t].apply(a,e)):i("Cannot call methods on calendario prior to initialization; Attempted to call method '"+t+"'")})):this.each(function(){a?a._init():a=n.data(this,"calendario",new n.Calendario(t,this))}),a.$el.trigger(n.Event("shown.calendar.calendario"),[a]),a}}(jQuery,void window);
+/**
+ * jquery.calendario.js v3.2.0
+ * http://www.codrops.com
+ *
+ * Licensed under the MIT license.
+ * http://www.opensource.org/licenses/mit-license.php
+ *
+ * Copyright 2014, Codrops
+ * http://www.codrops.com
+ *
+ * || Notable Changes ||
+ * Calendario gets more flexible : Boží Ďábel (https://github.com/deviprsd21) (https://github.com/codrops/Calendario/pull/11)
+ * Multiple Events : Mattias Lyckne (https://github.com/olyckne) (https://github.com/codrops/Calendario/pull/22)
+ * Flexibility In-built : Boží Ďábel (https://github.com/deviprsd21) (https://github.com/codrops/Calendario/pull/23)
+ * Now with Time : Boží Ďábel (https://github.com/deviprsd21) (https://github.com/codrops/Calendario/pull/25)
+ */
+;(function($, window, undefined){
+  'use strict';
+
+  $.Calendario = function(options, element){
+	this.$el = $(element);
+	this._init(options);
+  };
+
+  // the options
+  $.Calendario.defaults = {
+	/*
+	  you can also pass:
+	  month : initialize calendar with this month (1-12). Default is today.
+	  year : initialize calendar with this year. Default is today.
+	  caldata : initial data/content for the calendar.
+	  caldata format:
+	  {
+		'MM-DD-YYYY' : 'HTML Content',
+		'MM-DD-YYYY' : 'HTML Content',
+		  ...
+	  }
+	*/
+	weeks : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+	weekabbrs : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+	months : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+	monthabbrs : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+	displayWeekAbbr : false, // choose between values in options.weeks or options.weekabbrs
+	displayMonthAbbr : false, // choose between values in options.months or options.monthabbrs
+	startIn : 1, // left most day in the calendar (0 - Sunday, 1 - Monday, ... , 6 - Saturday)
+	events: 'click',
+	fillEmpty: true,
+	feedParser: './feed/',
+	zone: '00:00', // Ex: IST zone time is '+05:30' by default it is GMT, Sign is important.
+	format: 'MM-DD-YYYY',
+	checkUpdate: false //Check if any new version of Calendario is released (Details will be in the browser console)
+  };
+
+  $.Calendario.prototype = {
+	_init : function(options){
+	  // options
+	  this.VERSION = '3.2.0';
+	  this.UNIQUE = '%{unique}%'; //UNIQUE helps us differentiate your js from others and help us keep a track of run time.
+	  this.options = $.extend(true, {}, $.Calendario.defaults, options);
+	  this.today = new Date();
+	  this.month = (isNaN(this.options.month) || this.options.month === null) ? this.today.getMonth() : this.options.month - 1;
+	  this.year = (isNaN(this.options.year) || this.options.year === null) ? this.today.getFullYear() : this.options.year;
+	  this.caldata = this._processCaldata(this.options.caldata);
+	  // if hover is passed as an event then throw error if jQuery is 1.9 or above 1.9, because, hover psuedo name isn't supported
+	  if(parseFloat($().jquery) >= 1.9 && this.options.events.indexOf('hover') != -1)
+		this.logError('\'hover\' psuedo-name is not supported' + ' in jQuery 1.9+. Use \'mouseenter\' \'mouseleave\' events instead.');
+
+	  this.options.events = this.options.events.split(',');
+	  this.options.zone = this.options.zone.charAt(0) != '+' && this.options.zone.charAt(0) != '-' ? '+' + this.options.zone : this.options.zone;
+	  this._generateTemplate(true);
+	  this._initEvents();
+	},
+
+	_processCaldataObj: function(val, key){
+	  if(typeof val !== 'object') val = {content: val, startTime: '00:00', endTime: '23:59', allDay: true};
+	  if(!val.content) this.logError('Content is missing in date ' + key);
+	  if(val.startTime && !val.endTime) val.endTime = parseInt(val.startTime.split(':')[0]) + 1 + ':' + val.startTime.split(':')[1];
+	  if(!val.startTime && !val.endTime) val = $.extend({}, val, {startTime: '00:00', endTime: '23:59', allDay: true});
+	  if(val.startTime && val.endTime && val.allDay === undefined) val.allDay = false;
+	  if(/^\d{2}-DD-\d{4}/.test(key) || /^\d{2}-DD-YYYY/.test(key)) {
+		var det = /^(\d{2})-DD-(\d{4})/.exec(key) || /^(\d{2})-DD-YYYY/.exec(key), chkDate;
+		if(det.length == 3) chkDate = new Date(det[2], det[1], 0);
+		else if(det.length == 2) chkDate = new Date(this.year, det[1], 0)
+		if(!val.startDate) val.startDate = 1;
+		if(!val.endDate && chkDate.getDate() != 1) val.endDate = chkDate.getDate();
+		if(!val.endDate && chkDate.getDate() == 1 && det.length == 3) val.endDate = chkDate.getDate();
+	  }
+	  return val;
+	},
+
+	_processCaldata: function(caldata){
+	  var self = this;
+	  caldata = caldata || {};
+	  $.each(caldata, function(key, val){
+		if(/^\d{2}-\d{2}-\d{4}/.test(key) || /^\d{2}-\d{2}-YYYY/.test(key) || /^\d{2}-DD-YYYY/.test(key) || /^MM-\d{2}-YYYY/.test(key) ||
+		/^\d{2}-DD-YYYY/.test(key) || /^MM-\d{2}-\d{4}/.test(key) || /^\d{2}-DD-\d{4}/.test(key) || key == 'TODAY') {} else
+		  self.logError(key + ' is an Invalid Date. Date should not contain spaces, should be separated by \'-\' and should be in the ' +
+		  'format \'MM-DD-YYYY\'. That ain\'t that difficult!');
+		if(Array.isArray(val)) {
+		  $.each(val, function(i, c){
+			val[i] = self._processCaldataObj(c, key);
+		  });
+		  caldata[key] = val;
+		} else {
+		  caldata[key] = self._processCaldataObj(val, key);
+		}
+	  });
+	  return caldata;
+	},
+
+	_propDate: function($cell, event){
+	  var idx = $cell.index(),
+		  data = {allDay : [], content: [], endTime: [], startTime: []},
+		  dateProp = {
+			day : $cell.children('span.fc-date').text(),
+			month : this.month + 1,
+			monthname : this.options.displayMonthAbbr ? this.options.monthabbrs[this.month] : this.options.months[this.month],
+			year : this.year,
+			weekday : idx + this.options.startIn,
+			weekdayname : this.options.weeks[(idx==6?0:idx + this.options.startIn)]
+		  };
+
+	  $cell.children( 'div.fc-calendar-events').children('div.fc-calendar-event').each(function(i, e){
+		var $html = $('<div>' + $(e).html() + '</div>');
+		data.startTime[i] = new Date($html.find('time.fc-starttime').attr('datetime'));
+		data.endTime[i] = new Date($html.find('time.fc-endtime').attr('datetime'));
+		data.allDay[i] = $html.find('time.fc-allday').attr('datetime') === 'true' ? true : false;
+		$html.find('time').remove();
+		data.content[i] = $html.html();
+	  });
+
+	  if(dateProp.day) this.options[event]($cell, data, dateProp);
+	},
+
+	_initEvents : function() {
+	  var self = this, event = [], calendarioEventNameFormat = [];
+	  for(var i = 0; i < self.options.events.length; i++) {
+		event[i] = self.options.events[i].toLowerCase().trim();
+		calendarioEventNameFormat[i] = 'onDay' + event[i].charAt(0).toUpperCase() + event[i].slice(1);
+
+		if(this.options[calendarioEventNameFormat[i]] === undefined)
+		  this.options[calendarioEventNameFormat[i]] = function($el, $content, dateProperties) {return false;};
+
+		this.$el.on(event[i] + '.calendario', 'div.fc-row > div', function(e) {
+		  if(e.type == 'mouseenter' || e.type == 'mouseleave') e.type = $.inArray(e.type, event) == -1 ? 'hover' : e.type;
+		  self._propDate($(this), calendarioEventNameFormat[$.inArray(e.type, event)]);
+		});
+	  }
+	  this.$el.on('shown.calendar.calendario', function(e, instance){
+		// If check update set to true, then contact calendario's update servers for details. We didn't want to slow down your code. So we
+		// check after the calendar is rendered.
+		if(instance && instance.options.checkUpdate) self._checkUpdate();
+	  });
+	  // newday trigger. This trigger is exactly triggered at 00:00 hours the next day with an uncertainty of 6ms.
+	  this.$el.delay(new Date(this.today.getFullYear(), this.today.getMonth(), this.today.getDate() + 1, 0, 0, 0) - new Date().getTime())
+	  .queue(function(){
+		self.today = new Date();
+		if(self.today.getMonth() == self.month || self.today.getMonth() + 1 == self.month) self._generateTemplate(true);
+		self.$el.trigger($.Event('newday.calendar.calendario'));
+	  });
+	},
+
+	_checkUpdate : function() {
+	  var self = this;
+	  $.getScript("js/cal-update.js")
+	  .done(function(script, textStatus){
+		if(calendario.current != self.version() && parseFloat(calendario.current) >= parseFloat(self.version()))
+		  console.info(calendario.msg);
+	  })
+	  .fail(function(jqxhr, settings, exception){
+		console.error(exception);
+	  });
+	},
+
+	// Calendar logic based on http://jszen.blogspot.pt/2007/03/how-to-build-simple-calendar-with.html
+	_generateTemplate : function(firstRun, callback) {
+	  var head = this._getHead(),
+		  body = this._getBody(),
+		  rowClass;
+
+	  switch(this.rowTotal) {
+		case 4 : rowClass = 'fc-four-rows'; break;
+		case 5 : rowClass = 'fc-five-rows'; break;
+		case 6 : rowClass = 'fc-six-rows'; break;
+	  }
+
+	  this.$cal = $('<div class="fc-calendar ' + rowClass + '">').append(head, body);
+	  this.$el.find('div.fc-calendar').remove().end().append(this.$cal);
+	  this.$el.find('.fc-emptydate').parent().css({'background':'transparent', 'cursor':'default'});
+
+	  if(!firstRun) this.$el.trigger($.Event('shown.calendario'));
+	  if(callback) callback.call();
+	},
+
+	_getHead : function() {
+	  var html = '<div class="fc-head">';
+	  for(var i = 0; i <= 6; i++){
+		var pos = i + this.options.startIn,
+			j = pos > 6 ? pos - 6 - 1 : pos;
+			html += '<div>' + (this.options.displayWeekAbbr ? this.options.weekabbrs[j] : this.options.weeks[j]) + '</div>';
+	  }
+	  return html + '</div>';
+	},
+
+	_parseDataToDay : function (data, day, other) {
+	  var content = '';
+	  if(!other){
+		if(Array.isArray(data)) content = this._convertDayArray(data, day);
+		else content = this._wrapDay(data, day, true);
+	  }else{
+		if (!Array.isArray(data)) data = [data];
+		for(var i = 0; i < data.length; i++){
+		  if(this.month != 1 && (day >= data[i].startDate) && (day <= data[i].endDate)) content += this._wrapDay(data[i], day, true);
+		  else if(this.month == 1 && (day >= data[i].startDate)){
+			if(data[i].endDate && (day <= data[i].endDate)) content += this._wrapDay(data[i], day, true);
+			else if(!data[i].endDate) content += this._wrapDay(data[i], day, true);
+		  }
+		}
+	  }
+	  return content;
+	},
+
+	_toDateTime : function(time, day, start) {
+	  var zoneH = parseInt(this.options.zone.split(':')[0]),
+		  zoneM = parseInt(this.options.zone.charAt(0) + this.options.zone.split(':')[1]),
+		  hour = parseInt(time.split(':')[0]) - zoneH,
+		  minutes = parseInt(time.split(':')[1]) - zoneM,
+		  d = new Date(Date.UTC(this.year, this.month, day, hour, minutes, 0, 0));
+	  if(start) {
+		var hStart = parseInt(start.split(':')[0]) - zoneH,
+			mStart = parseInt(start.split(':')[1]) - zoneM;
+		if(d.getTime() - new Date(Date.UTC(this.year, this.month, day, hStart, mStart, 0, 0)).getTime() < 0)
+			d =  new Date(Date.UTC(this.year, this.month, day + 1, hour, minutes, 0, 0));
+	  }
+	  return d.toISOString();
+	},
+
+	_timeHtml : function(day, date){
+	  var content = day.content;
+	  content += '<time class="fc-allday" datetime="' + day.allDay + '"></time>';
+	  content += '<time class="fc-starttime" datetime="' + this._toDateTime(day.startTime, date) + '">' + day.startTime + '</time>';
+	  content += '<time class="fc-endtime" datetime="' + this._toDateTime(day.endTime, date, day.startTime) + '">' + day.endTime + '</time>';
+	  return content;
+	},
+
+	_wrapDay: function (day, date, wrap) {
+	  if(date){
+		if(wrap) return '<div class="fc-calendar-event">' + this._timeHtml(day, date) + '</div>';
+		else return this._timeHtml(day, date);
+	  } else return '<div class="fc-calendar-event">' + day + '</div>';
+	},
+
+	_convertDayArray: function (day, date) {
+	  var wrap_days = []
+	  for(var i = 0; i < day.length; i++){
+		wrap_days[i] = this._wrapDay(day[i], date, false);
+	  }
+	  return this._wrapDay(wrap_days.join('</div><div class="fc-calendar-event">'));
+	},
+
+	_getBody : function() {
+	  var d = new Date(this.year, this.month + 1, 0),
+		  monthLength = d.getDate(), // number of days in the month
+		  firstDay = new Date(this.year, d.getMonth(), 1),
+		  pMonthLength = new Date(this.year, this.month, 0).getDate();
+
+	  // day of the week
+	  this.startingDay = firstDay.getDay();
+
+	  var html = '<div class="fc-body"><div class="fc-row">',
+		  day = 1; // fill in the days
+
+	  for (var i = 0; i < 7; i++){ // this loop is for weeks (rows)
+		for (var j = 0; j <= 6; j++) { // this loop is for weekdays (cells)
+		  var pos = this.startingDay - this.options.startIn,
+			  p = pos < 0 ? 6 + pos + 1 : pos,
+			  inner = '',
+			  today = this.month === this.today.getMonth() && this.year === this.today.getFullYear() && day === this.today.getDate(),
+			  past = this.year < this.today.getFullYear() || this.month < this.today.getMonth() && this.year === this.today.getFullYear() ||
+					 this.month === this.today.getMonth() && this.year === this.today.getFullYear() && day < this.today.getDate(),
+			  content = '';
+
+		  if(this.options.fillEmpty && (j < p || i > 0)){
+			if(day > monthLength) {
+			  inner = '<span class="fc-date fc-emptydate">' + (day - monthLength) + '</span><span class="fc-weekday">';
+			  ++day;
+			} else if (day == 1) {
+			  inner = '<span class="fc-date fc-emptydate">' + (pMonthLength - p + 1) + '</span><span class="fc-weekday">';
+			  ++pMonthLength;
+			}
+			inner += this.options.weekabbrs[j + this.options.startIn > 6 ? j + this.options.startIn - 6 - 1 : j + this.options.startIn] + '</span>';
+		  }
+		  if (day <= monthLength && (i > 0 || j >= p)){
+			inner = '<span class="fc-date">' + day + '</span><span class="fc-weekday">' + this.options.weekabbrs[j +
+					this.options.startIn > 6 ? j + this.options.startIn - 6 - 1 : j + this.options.startIn ] + '</span>';
+
+			var strdate = (this.month + 1 < 10 ? '0' + (this.month + 1) : this.month + 1) + '-' + (day < 10 ? '0' + day : day) + '-' + this.year,
+				dayData = this.caldata[strdate],
+				strdateyear = (this.month + 1 < 10 ? '0' + (this.month + 1) : this.month + 1) + '-' + (day < 10 ? '0' + day : day) + '-YYYY',
+				dayDataYear = this.caldata[strdateyear],
+				strdatemonth = 'MM-' + (day < 10 ? '0' + day : day) + '-' + this.year,
+				dayDataMonth = this.caldata[strdatemonth],
+				strdatemonthyear = 'MM' + '-' + (day < 10 ? '0' + day : day) + '-YYYY',
+				dayDataMonthYear = this.caldata[strdatemonthyear],
+				strdatemonthlyyear = (this.month + 1 < 10 ? '0' + (this.month + 1) : this.month + 1) + '-DD-' + this.year,
+				dayDataMonthlyYear = this.caldata[strdatemonthlyyear],
+				strdatemonthly = (this.month + 1 < 10 ? '0' + (this.month + 1) : this.month + 1) + '-DD-YYYY',
+				dayDataMonthly = this.caldata[strdatemonthly];
+
+			if(today && this.caldata.TODAY) content += this._parseDataToDay(this.caldata.TODAY, day);
+			if(dayData) content += this._parseDataToDay(dayData, day);
+			if(dayDataMonth) content += this._parseDataToDay(dayDataMonth, day);
+			if(dayDataMonthlyYear) content += this._parseDataToDay(dayDataMonthlyYear, day, true);
+			if(dayDataMonthly) content += this._parseDataToDay(dayDataMonthly, day, true);
+			if(dayDataMonthYear) content += this._parseDataToDay( dayDataMonthYear, day );
+			if(dayDataYear) content += this._parseDataToDay( dayDataYear, day );
+			if(content !== '') inner += '<div class="fc-calendar-events">' + content + '</div>';
+			++day;
+		  } else {
+			today = false;
+		  }
+
+		  var cellClasses = today ? 'fc-today ' : '';
+
+		  if(past) cellClasses += 'fc-past ';
+		  else cellClasses += 'fc-future ';
+
+		  if(content !== '') cellClasses += 'fc-content';
+
+		  html += (cellClasses !== '' ? '<div class="' + cellClasses.trim() + '">' : '<div>') + inner + '</div>';
+		}
+
+		if(day > monthLength){ // stop making rows if we've run out of days
+		  this.rowTotal = i + 1;
+		  break;
+		} else {
+		  html += '</div><div class="fc-row">';
+		}
+	  }
+	  return html + '</div></div>';
+	},
+
+	_move : function(period, dir, callback){
+	  if(dir === 'previous'){
+		if(period === 'month'){
+		  this.year = this.month > 0 ? this.year : --this.year;
+		  this.month = this.month > 0 ? --this.month : 11;
+		} else if(period === 'year') this.year = --this.year;
+	  }
+	  else if(dir === 'next'){
+		if(period === 'month'){
+		  this.year = this.month < 11 ? this.year : ++this.year;
+		  this.month = this.month < 11 ? ++this.month : 0;
+		} else if(period === 'year') this.year = ++this.year;
+	  }
+	  this._generateTemplate(false, callback);
+	},
+
+	/*************************
+	***** PUBLIC METHODS *****
+	**************************/
+	option : function(option, value) {
+	  if(value) this.options[option] = value;
+	  else return this.options[option];
+	},
+	getYear : function(){
+	  return this.year;
+	},
+	getMonth : function(){
+	  return this.month + 1;
+	},
+	getMonthName : function(){
+	  return this.options.displayMonthAbbr ? this.options.monthabbrs[this.month] : this.options.months[this.month];
+	},
+	// gets the cell's content div associated to a day of the current displayed month
+	// day : 1 - [28||29||30||31]
+	getCell : function(day){
+	  var row = Math.floor((day + this.startingDay - this.options.startIn - 1) / 7),
+		  pos = day + this.startingDay - this.options.startIn - (row * 7) - 1;
+	  return this.$cal.find('div.fc-body').children('div.fc-row').eq(row).children('div').eq(pos);
+	},
+	setData : function(caldata, clear) {
+	  caldata = this._processCaldata(caldata);
+	  if(clear) this.caldata = caldata;
+	  else $.extend(this.caldata, caldata);
+	  this._generateTemplate(false);
+	},
+	// goes to today's month/year
+	gotoNow : function(callback) {
+	  this.month = this.today.getMonth();
+	  this.year = this.today.getFullYear();
+	  this._generateTemplate(false, callback);
+	},
+	// goes to month/year
+	gotoMonth : function(month, year, callback){
+	  this.month = month - 1;
+	  this.year = year;
+	  this._generateTemplate(false, callback);
+	},
+	gotoPreviousMonth : function(callback){
+	  this._move('month', 'previous', callback);
+	},
+	gotoPreviousYear : function(callback){
+	  this._move('year', 'previous', callback);
+	},
+	gotoNextMonth : function(callback){
+	  this._move('month', 'next', callback);
+	},
+	gotoNextYear : function(callback){
+	  this._move('year', 'next', callback);
+	},
+	feed : function(callback){
+	  var self = this;
+	  $.post(self.options.feedParser, {dates: this.caldata})
+	  .always(function(data){
+		if(callback) callback.call(this, JSON.parse(data).hevent);
+	  });
+	},
+	version : function() {
+	  return this.VERSION;
+	}
+  };
+
+  var logError = function(message){
+	throw new Error(message);
+  };
+
+  $.fn.calendario = function(options) {
+	var instance = $.data(this, 'calendario');
+	if(typeof options === 'string'){
+	  var args = Array.prototype.slice.call(arguments, 1);
+	  this.each(function(){
+		if(!instance){
+		  logError("Cannot call methods on calendario prior to initialization; Attempted to call method '" + options + "'");
+		  return;
+		}
+		if (typeof instance[options] !== 'function' || options.charAt(0) === "_"){
+		  logError("No such method '" + options + "' for calendario instance.");
+		}
+		instance[options].apply(instance, args);
+	  });
+	} else {
+	  this.each(function(){
+		if (instance) instance._init();
+		else instance = $.data(this, 'calendario', new $.Calendario(options, this));
+	  });
+	}
+	instance.$el.trigger($.Event('shown.calendar.calendario'), [instance]);
+	return instance;
+  };
+})(jQuery, window);

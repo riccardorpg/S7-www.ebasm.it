@@ -1,0 +1,1022 @@
+/* ----------------------------------------------------------------
+	Canvas: Hr
+-----------------------------------------------------------------*/
+
+  /* ─── Fonts ─────────────────────────────────────────── */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:ital,wght@0,700;1,600&display=swap');
+
+  /* ─── Theme Tokens ───────────────────────────────────── */
+  :root {
+    --cnvs-themecolor: #1D4ED8;
+    --cnvs-themecolor-rgb: 29, 78, 216;
+    --pf-dark:        #0F172A;
+    --pf-dark-card:   #1E293B;
+    --pf-light-bg:    #EFF6FF;
+    --pf-gray-bg:     #F8FAFC;
+    --pf-sky:         #0EA5E9;
+    --pf-amber:       #F59E0B;
+    --pf-text:        #0F172A;
+    --pf-body:        #334155;
+    --pf-muted:       #64748B;
+    --pf-border:      #E2E8F0;
+    --pf-primary-dark: #1E3A8A;
+    --font-head:      'Fraunces', Georgia, serif;
+    --font-body:      'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  /* ─── Base ───────────────────────────────────────────── */
+  body { font-family: var(--font-body); color: var(--pf-body); }
+
+  /* ─── Eyebrow Labels ─────────────────────────────────── */
+  .pf-label {
+    display: inline-block;
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--cnvs-themecolor);
+    margin-bottom: 1rem;
+  }
+  .pf-label-white { color: rgba(255,255,255,0.7); }
+
+  /* ─── Headings ───────────────────────────────────────── */
+  h1.pf-hero-title {
+    font-family: var(--font-head);
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: #FFFFFF;
+    margin-bottom: 1.5rem;
+  }
+  h2.pf-section-title {
+    font-family: var(--font-body);
+    font-size: clamp(1.875rem, 4vw, 2.625rem);
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    color: var(--pf-text);
+    margin-bottom: 1.25rem;
+  }
+  h2.pf-section-title.text-white { color: #FFFFFF; }
+  h3.pf-card-title {
+    font-family: var(--font-body);
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--pf-text);
+    margin-bottom: 0.5rem;
+  }
+
+  /* ─── Section Spacing ────────────────────────────────── */
+  .pf-section { padding: 100px 0; }
+  .pf-section-sm { padding: 72px 0; }
+
+  /* ─── Buttons ──────────────────────────────────────────
+     Un solo sistema per tutti i bottoni della landing:
+       .pf-btn-primary    azione principale — pieno, blu del brand
+       .pf-btn-secondary  azione alternativa — solo contorno
+                          (blu su fondo chiaro, bianco dentro .dark)
+       .pf-btn-block      a piena larghezza (bottoni dentro le card)
+     Metriche condivise: stessa altezza, stesso raggio, stesso testo.
+     Il bordo c'è anche sul pieno, così pieno e contorno sono alti uguale. */
+  .pf-btn-primary,
+  .pf-btn-secondary {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    font-family: var(--font-body);
+    font-weight: 600; font-size: 0.9375rem; line-height: 1.25;
+    padding: 13px 28px;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    text-decoration: none; cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.15s;
+  }
+
+  .pf-btn-primary {
+    background: var(--cnvs-themecolor);
+    border-color: var(--cnvs-themecolor);
+    color: #fff !important;
+  }
+  .pf-btn-primary:hover {
+    background: var(--pf-primary-dark);
+    border-color: var(--pf-primary-dark);
+    transform: translateY(-1px);
+  }
+
+  .pf-btn-secondary {
+    background: transparent;
+    border-color: var(--cnvs-themecolor);
+    color: var(--cnvs-themecolor) !important;
+  }
+  .pf-btn-secondary:hover {
+    background: var(--cnvs-themecolor);
+    color: #fff !important;
+    transform: translateY(-1px);
+  }
+
+  /* Su fondo scuro il contorno diventa bianco */
+  .dark .pf-btn-secondary {
+    border-color: rgba(255,255,255,0.35);
+    color: #fff !important;
+  }
+  .dark .pf-btn-secondary:hover {
+    background: rgba(255,255,255,0.10);
+    border-color: rgba(255,255,255,0.70);
+    color: #fff !important;
+  }
+
+  /* A piena larghezza: usato dai bottoni in fondo alle card prezzi */
+  .pf-btn-block { display: flex; width: 100%; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pf-btn-primary, .pf-btn-secondary { transition: background 0.2s, border-color 0.2s, color 0.2s; }
+    .pf-btn-primary:hover, .pf-btn-secondary:hover { transform: none; }
+  }
+
+  /* ─── Cards ──────────────────────────────────────────── */
+  .pf-card {
+    position: relative;
+    background: #fff;
+    border: 1px solid var(--pf-border);
+    border-radius: 14px;
+    padding: 32px;
+    overflow: hidden;
+    isolation: isolate;
+    transition: box-shadow 0.3s cubic-bezier(0.4,0,0.2,1),
+                transform 0.3s cubic-bezier(0.4,0,0.2,1),
+                border-color 0.3s ease;
+  }
+  /* Barra d'accento superiore che si estende all'hover */
+  .pf-card::before {
+    content: "";
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--cnvs-themecolor), #60A5FA);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+    z-index: 1;
+  }
+  /* Alone luminoso diffuso, invisibile a riposo */
+  .pf-card::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: radial-gradient(120% 90% at 50% 0%, rgba(29,78,216,0.05), transparent 60%);
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    z-index: -1;
+  }
+  .pf-card:hover {
+    box-shadow: 0 18px 48px rgba(29,78,216,0.14);
+    transform: translateY(-6px);
+    border-color: rgba(29,78,216,0.28);
+  }
+  .pf-card:hover::before { transform: scaleX(1); }
+  .pf-card:hover::after  { opacity: 1; }
+
+  /* ─── Feature Icon Badge ─────────────────────────────── */
+  .pf-icon-wrap {
+    width: 52px; height: 52px; border-radius: 50%;
+    background: #EFF6FF;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 1.25rem;
+    transition: background 0.3s ease, transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .pf-icon-wrap i {
+    color: var(--cnvs-themecolor);
+    font-size: 1.25rem;
+    transition: color 0.3s ease, transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .pf-card:hover .pf-icon-wrap {
+    background: var(--cnvs-themecolor);
+    transform: scale(1.08);
+  }
+  .pf-card:hover .pf-icon-wrap i {
+    color: #fff;
+    transform: rotate(-8deg) scale(1.05);
+  }
+
+  /* Rispetta le preferenze di riduzione del movimento */
+  @media (prefers-reduced-motion: reduce) {
+    .pf-card, .pf-card::before, .pf-card::after,
+    .pf-icon-wrap, .pf-icon-wrap i { transition: none; }
+    .pf-card:hover { transform: none; }
+  }
+
+  /* ─── Section Label Color Variants ──────────────────────*/
+  .dark .pf-label { color: var(--pf-sky); }
+
+  /* ─── Chi siamo · griglia di 4 card (mission e vision) ──────────────
+     Le card riusano `.pf-card` / `.pf-icon-wrap`: qui restano solo la
+     filigrana di sfondo e la pill del tag sopra il titolo. */
+
+  /* Filigrana brand di sfondo */
+  #progetto .cs-watermark {
+    position: absolute; right: -60px; top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.03; pointer-events: none; z-index: 0; line-height: 1;
+    color: var(--cnvs-themecolor);
+  }
+  #progetto .cs-watermark .eb-ico { width: 460px; height: 460px; stroke-width: 1; }
+
+  /* Pill del tag (Mission, Vision, …) sopra il titolo della card */
+  #progetto .cs-badge__tag {
+    display: inline-block;
+    background: #DCFCE7; color: #16A34A;
+    font-size: 0.6875rem; font-weight: 700;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    border-radius: 20px; padding: 3px 10px;
+  }
+  #progetto .cs-badge__tag.is-blue { background: #DBEAFE; color: var(--cnvs-themecolor); }
+
+  @media (max-width: 575.98px) {
+    #progetto .cs-watermark { display: none; }
+  }
+
+
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  :root {
+    --cnvs-themecolor: #1D4ED8;
+    --cnvs-themecolor-rgb: 29, 78, 216;
+  }
+  #header {
+    --cnvs-header-bg: transparent;
+    --cnvs-header-sticky-bg: #ffffff;
+    --cnvs-primary-menu-font: 'Inter', system-ui, -apple-system, sans-serif;
+    --cnvs-primary-menu-font-weight: 600;
+    --cnvs-primary-menu-font-size: 0.9375rem;
+    --cnvs-primary-menu-tt: none;
+    --cnvs-primary-menu-ls: 0;
+    --cnvs-primary-menu-color: rgba(255, 255, 255, 0.85);
+    --cnvs-primary-menu-hover-color: #ffffff;
+  }
+
+  /* Header sticky (allo scroll lo sfondo diventa bianco): voci di menu, logo e
+     icone passano al nero, altrimenti resterebbero bianchi su bianco. */
+  #header.sticky-header {
+    --cnvs-primary-menu-color: #0F172A;
+    --cnvs-primary-menu-hover-color: var(--cnvs-themecolor);
+    --cnvs-primary-menu-active-color: var(--cnvs-themecolor);
+    --cnvs-primary-menu-submenu-bg: #ffffff;
+    --cnvs-primary-menu-submenu-color: #0F172A;
+    --cnvs-primary-menu-submenu-hover-color: var(--cnvs-themecolor);
+    --cnvs-header-misc-icons-color: #0F172A;
+    color: #0F172A;
+  }
+  /* Il logo bianco (#header.dark → brightness(0) invert(1)) torna nella versione scura. */
+  #header.dark.sticky-header #logo img { filter: none; }
+  #header.sticky-header .cnvs-hamburger .cnvs-hamburger-inner,
+  #header.sticky-header .cnvs-hamburger .cnvs-hamburger-inner::before,
+  #header.sticky-header .cnvs-hamburger .cnvs-hamburger-inner::after { background-color: #0F172A; }
+
+
+    @media (max-width: 991px) {
+      .hero-screenshot-wrap .floating-badge { display: none !important; }
+      #hero h1 { font-size: 2.25rem !important; }
+    }
+    #hero a[style*="background:#1D4ED8"]:hover {
+      background: #1E3A8A !important;
+      transform: translateY(-1px);
+    }
+    #hero a[style*="border:2px solid rgba(255,255,255,0.28)"]:hover {
+      border-color: rgba(255,255,255,0.6) !important;
+      background: rgba(255,255,255,0.06) !important;
+    }
+  
+
+    #features .pf-card {
+      background: #fff;
+      border: 1px solid #E2E8F0;
+      border-radius: 16px;
+      padding: 36px 32px;
+      transition: box-shadow 0.25s, transform 0.25s;
+      height: 100%;
+    }
+    #features .pf-card:hover {
+      box-shadow: 0 8px 40px rgba(29,78,216,0.10);
+      transform: translateY(-3px);
+    }
+    #features .pf-icon-wrap {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: #EFF6FF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.25rem;
+      transition: background 0.25s;
+    }
+    #features .pf-icon-wrap i {
+      color: var(--cnvs-themecolor);
+      font-size: 1.25rem;
+      transition: color 0.25s;
+    }
+    #features .pf-card:hover .pf-icon-wrap {
+      background: #DBEAFE;
+    }
+    #features .pf-card:hover .pf-icon-wrap i {
+      color: #1E3A8A;
+    }
+    #features .pf-card-title {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: #0F172A;
+      margin-bottom: 0.5rem;
+    }
+    #features .pf-card-desc {
+      color: #334155;
+      font-size: 0.9375rem;
+      line-height: 1.7;
+      margin-bottom: 1.25rem;
+    }
+    #features .pf-learn-more {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--cnvs-themecolor);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: gap 0.2s;
+    }
+    #features .pf-learn-more:hover {
+      gap: 8px;
+    }
+    #features .pf-section-label {
+      display: inline-block;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--cnvs-themecolor);
+      margin-bottom: 1rem;
+    }
+    #features .pf-section-title {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-size: clamp(1.875rem, 4vw, 2.625rem);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.01em;
+      color: #0F172A;
+      margin-bottom: 0;
+    }
+  
+
+    #casestudy .cs-company-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: #F1F5F9;
+      border-radius: 8px;
+      padding: 8px 16px;
+      margin-bottom: 2rem;
+    }
+    #casestudy .cs-company-icon {
+      width: 32px;
+      height: 32px;
+      background: #1D4ED8;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    #casestudy .cs-company-name {
+      font-weight: 700;
+      font-size: 0.9375rem;
+      color: #0F172A;
+      font-family: 'Inter', system-ui, sans-serif;
+    }
+    #casestudy .cs-company-meta {
+      font-size: 0.8125rem;
+      color: #64748B;
+    }
+    #casestudy .cs-pull-quote {
+      border-left: 4px solid #1D4ED8;
+      padding-left: 28px;
+      margin-bottom: 2.5rem;
+    }
+    #casestudy .cs-pull-quote blockquote {
+      font-family: 'Fraunces', Georgia, serif;
+      font-style: italic;
+      font-size: 1.5rem;
+      font-weight: 600;
+      line-height: 1.5;
+      color: #0F172A;
+      margin: 0 0 1.5rem;
+    }
+    #casestudy .cs-attribution {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    #casestudy .cs-attribution img {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #EFF6FF;
+      flex-shrink: 0;
+    }
+    #casestudy .cs-attribution-name {
+      font-weight: 700;
+      color: #0F172A;
+      font-size: 0.9375rem;
+      font-family: 'Inter', system-ui, sans-serif;
+    }
+    #casestudy .cs-attribution-title {
+      color: #64748B;
+      font-size: 0.875rem;
+      font-family: 'Inter', system-ui, sans-serif;
+    }
+    #casestudy .cs-metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    #casestudy .cs-metric-card {
+      background: #F8FAFC;
+      border-radius: 14px;
+      padding: 28px 24px;
+      border: 1px solid #E2E8F0;
+      transition: box-shadow 0.25s, transform 0.25s;
+    }
+    #casestudy .cs-metric-card:hover {
+      box-shadow: 0 4px 24px rgba(29,78,216,0.08);
+      transform: translateY(-2px);
+    }
+    #casestudy .cs-metric-number {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #1D4ED8;
+      font-family: 'Inter', system-ui, sans-serif;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    #casestudy .cs-metric-desc {
+      font-size: 0.9375rem;
+      color: #334155;
+      font-weight: 500;
+      line-height: 1.4;
+      font-family: 'Inter', system-ui, sans-serif;
+    }
+    @media (max-width: 575px) {
+      #casestudy .cs-metrics-grid {
+        grid-template-columns: 1fr;
+      }
+      #casestudy .cs-pull-quote blockquote {
+        font-size: 1.25rem;
+      }
+    }
+  
+
+    /* ── Pricing Toggle ───────────────────────────────── */
+    #pricing .pf-toggle-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: #1E293B;
+      border-radius: 50px;
+      padding: 6px 20px;
+      margin-bottom: 52px;
+    }
+    #pricing .pf-toggle-label {
+      font-family: var(--font-body, 'Inter', sans-serif);
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: rgba(255,255,255,0.5);
+      transition: color 0.2s;
+    }
+    #pricing .pf-toggle-label.active { color: #fff; }
+    #pricing .pf-toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      cursor: pointer;
+    }
+    #pricing .pf-toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+    #pricing .pf-toggle-track {
+      position: absolute;
+      inset: 0;
+      background: #1D4ED8;
+      border-radius: 50px;
+      transition: background 0.2s;
+    }
+    #pricing .pf-toggle-thumb {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 18px;
+      height: 18px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+    #pricing .pf-toggle-switch input:checked ~ .pf-toggle-track { background: #1D4ED8; }
+    #pricing .pf-toggle-switch input:checked ~ .pf-toggle-thumb { transform: translateX(20px); }
+    #pricing .pf-save-badge {
+      font-family: var(--font-body, 'Inter', sans-serif);
+      font-size: 0.6875rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #0F172A;
+      background: #F59E0B;
+      border-radius: 50px;
+      padding: 3px 9px;
+      margin-left: 4px;
+    }
+
+    /* ── Pricing Cards ────────────────────────────────── */
+    #pricing .pf-price-card {
+      background: #1E293B;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 40px 36px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      transition: transform 0.25s, box-shadow 0.25s;
+    }
+    #pricing .pf-price-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+    }
+    #pricing .pf-price-card.highlighted {
+      background: #fff;
+      border: 2px solid #1D4ED8;
+      box-shadow: 0 0 0 2px #1D4ED8, 0 24px 64px rgba(29,78,216,0.22);
+    }
+    #pricing .pf-price-card.highlighted:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 0 0 2px #1D4ED8, 0 32px 80px rgba(29,78,216,0.28);
+    }
+
+    /* Badge */
+    #pricing .pf-popular-badge {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1D4ED8;
+      color: #fff;
+      font-family: var(--font-body, 'Inter', sans-serif);
+      font-size: 0.6875rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 5px 18px;
+      border-radius: 50px;
+      white-space: nowrap;
+    }
+
+    /* Plan name */
+    #pricing .pf-plan-name {
+      font-family: var(--font-body, 'Inter', sans-serif);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #0EA5E9;
+      margin-bottom: 12px;
+    }
+    #pricing .pf-price-card.highlighted .pf-plan-name { color: #1D4ED8; }
+
+    /* Price */
+    #pricing .pf-price-num {
+      font-family: var(--font-body, 'Inter', sans-serif);
+      font-size: 2.75rem;
+      font-weight: 800;
+      line-height: 1;
+      color: #fff;
+      margin-bottom: 0;
+    }
+    #pricing .pf-price-card.highlighted .pf-price-num { color: #0F172A; }
+    #pricing .pf-price-unit {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: rgba(255,255,255,0.45);
+      margin-top: 4px;
+    }
+    #pricing .pf-price-card.highlighted .pf-price-unit { color: #64748B; }
+    #pricing .pf-price-custom {
+      font-family: var(--font-body, 'Inter', sans-serif);
+      font-size: 2rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1;
+    }
+
+    /* Description */
+    #pricing .pf-plan-desc {
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.5);
+      line-height: 1.6;
+      margin-top: 8px;
+      margin-bottom: 28px;
+    }
+    #pricing .pf-price-card.highlighted .pf-plan-desc { color: #64748B; }
+
+    /* Divider */
+    #pricing .pf-card-hr {
+      border: none;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      margin: 0 0 24px;
+    }
+    #pricing .pf-price-card.highlighted .pf-card-hr { border-color: #E2E8F0; }
+
+    /* Feature list */
+    #pricing .pf-feature-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 32px;
+      flex: 1;
+    }
+    #pricing .pf-feature-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-family: var(--font-body, 'Inter', sans-serif);
+      font-size: 0.9375rem;
+      color: rgba(255,255,255,0.7);
+      padding: 6px 0;
+    }
+    #pricing .pf-price-card.highlighted .pf-feature-list li { color: #334155; }
+    #pricing .pf-feature-list li i {
+      color: #1D4ED8;
+      font-size: 0.875rem;
+      margin-top: 3px;
+      flex-shrink: 0;
+    }
+    #pricing .pf-price-card:not(.highlighted) .pf-feature-list li i { color: #0EA5E9; }
+
+    /* I bottoni delle card usano il sistema comune (.pf-btn-* + .pf-btn-block) */
+
+    /* Footer note */
+    #pricing .pf-footer-note {
+      font-family: var(--font-body, 'Inter', sans-serif);
+      font-size: 0.875rem;
+      color: rgba(255,255,255,0.35);
+      margin-top: 48px;
+      text-align: center;
+    }
+    #pricing .pf-footer-note i { color: #0EA5E9; margin-right: 6px; }
+
+    /* Annual price data */
+    .pf-price-annual { display: none; }
+    .billing-annual .pf-price-monthly { display: none; }
+    .billing-annual .pf-price-annual { display: block; }
+  
+
+    @media (max-width: 767px) {
+      #security [style*="grid-template-columns:1fr 1fr 1fr"] {
+        grid-template-columns: 1fr 1fr !important;
+      }
+    }
+    @media (max-width: 479px) {
+      #security [style*="grid-template-columns:1fr 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+      }
+    }
+  
+
+    #testimonials .pf-testi-card {
+      background: #ffffff;
+      border: 1px solid #E2E8F0;
+      border-radius: 16px;
+      padding: 36px 32px;
+      box-shadow: 0 2px 16px rgba(29,78,216,0.055);
+      transition: box-shadow 0.25s, transform 0.25s;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    #testimonials .pf-testi-card:hover {
+      box-shadow: 0 8px 40px rgba(29,78,216,0.11);
+      transform: translateY(-3px);
+    }
+    #testimonials .pf-testi-quote {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 0.9875rem;
+      line-height: 1.78;
+      color: #334155;
+      flex-grow: 1;
+      margin-bottom: 1.75rem;
+    }
+    #testimonials .pf-testi-stars {
+      display: flex;
+      gap: 3px;
+      margin-bottom: 1.25rem;
+    }
+    #testimonials .pf-testi-stars i {
+      font-size: 0.875rem;
+      color: #F59E0B;
+    }
+    #testimonials .pf-testi-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #EFF6FF;
+      flex-shrink: 0;
+    }
+    #testimonials .pf-testi-name {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 0.9375rem;
+      font-weight: 700;
+      color: #0F172A;
+      margin-bottom: 2px;
+    }
+    #testimonials .pf-testi-role {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 0.8125rem;
+      color: #64748B;
+      line-height: 1.4;
+    }
+    #testimonials .pf-logo-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 0;
+      margin-bottom: 64px;
+      padding: 28px 0 32px;
+      border-top: 1px solid #E2E8F0;
+      border-bottom: 1px solid #E2E8F0;
+    }
+    #testimonials .pf-logo-item {
+      padding: 0 28px;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 0.9375rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      color: #CBD5E1;
+      white-space: nowrap;
+      transition: color 0.2s;
+      border-right: 1px solid #E2E8F0;
+    }
+    #testimonials .pf-logo-item:last-child {
+      border-right: none;
+    }
+    #testimonials .pf-logo-item:hover {
+      color: #94A3B8;
+    }
+    @media (max-width: 767px) {
+      #testimonials .pf-logo-item {
+        border-right: none;
+        padding: 8px 16px;
+      }
+    }
+
+  /* ─── Set di icone SVG (sostituisce le Bootstrap Icons) ──────────
+     Gli SVG usano width/height = 1em e stroke = currentColor, così
+     ereditano font-size e color esattamente come facevano le <i>.     */
+  .eb-ico {
+    width: 1em; height: 1em;
+    fill: none; stroke: currentColor;
+    stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round;
+    vertical-align: -0.125em; flex-shrink: 0;
+  }
+
+  /* Punti di forza · icona tonda */
+  .pf-icon-wrap .eb-ico {
+    color: var(--cnvs-themecolor); font-size: 1.25rem;
+    transition: color 0.3s ease, transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .pf-card:hover .pf-icon-wrap .eb-ico { color: #fff; transform: rotate(-8deg) scale(1.05); }
+  .eb-ico--semaforo { stroke-width: 1.6; }               /* il semaforo resta multicolore anche in hover */
+  .pf-card:hover .pf-icon-wrap .eb-ico--semaforo { transform: rotate(-8deg) scale(1.05); }
+
+  /* Chi siamo · card colorate */
+  #progetto .pf-cc-brand .eb-ico { font-size: 1.05rem; }
+  #progetto .pf-cc-icon .eb-ico { font-size: 3.25rem; stroke-width: 1.5; }
+  #progetto .pf-cc-link .eb-ico { transition: transform 0.25s ease; }
+  #progetto .pf-color-card:hover .pf-cc-link .eb-ico { transform: translate(3px,-3px); }
+
+  /* Pricing · liste e nota finale */
+  #pricing .pf-feature-list li .eb-ico { color: #1D4ED8; font-size: 0.875rem; margin-top: 3px; }
+  #pricing .pf-price-card:not(.highlighted) .pf-feature-list li .eb-ico { color: #0EA5E9; }
+  #pricing .pf-footer-note .eb-ico { color: #0EA5E9; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .eb-ico, .pf-icon-wrap .eb-ico, #progetto .pf-cc-link .eb-ico { transition: none; }
+    .pf-card:hover .pf-icon-wrap .eb-ico { transform: none; }
+  }
+
+  /* ─── Contatti · scelta del form ───────────────────────
+     Due card-bottone affiancate: si clicca quella desiderata e
+     sotto compare solo il modulo dedicato. La card scelta resta
+     evidenziata; l'altra si attenua. */
+  #contatti .eb-form-picker {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  #contatti .eb-choice {
+    position: relative;
+    font: inherit;
+    appearance: none; -webkit-appearance: none;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 28px 26px;
+    text-align: left;
+    background: #fff;
+    border: 1px solid var(--pf-border);
+    border-radius: 18px;
+    box-shadow: 0 4px 20px rgba(15,23,42,0.05);
+    cursor: pointer;
+    overflow: hidden;
+    isolation: isolate;
+    transition: box-shadow 0.3s ease, transform 0.3s ease,
+                border-color 0.3s ease, opacity 0.3s ease;
+  }
+  /* Accento superiore: uguale per entrambe le scelte (blu del brand) */
+  #contatti .eb-choice::before {
+    content: "";
+    position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    background: linear-gradient(90deg, var(--cnvs-themecolor), #60A5FA);
+    z-index: 3;
+  }
+
+  #contatti .eb-choice__icon {
+    flex: 0 0 auto;
+    width: 52px; height: 52px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--pf-light-bg); color: var(--cnvs-themecolor);
+    font-size: 1.4rem;
+    transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  #contatti .eb-choice__title {
+    display: block;
+    font-family: var(--font-body);
+    font-size: 1.2rem; font-weight: 700; line-height: 1.2;
+    color: var(--pf-text);
+  }
+  #contatti .eb-choice__sub {
+    display: block;
+    margin-top: 5px;
+    font-size: 0.875rem; line-height: 1.45;
+    color: var(--pf-muted);
+  }
+  #contatti .eb-choice__cta {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 0.8125rem; font-weight: 700;
+    letter-spacing: 0.03em; text-transform: uppercase;
+    color: var(--cnvs-themecolor);
+  }
+  #contatti .eb-choice__cta .eb-ico { transition: transform 0.25s ease; }
+
+  #contatti .eb-choice__badge {
+    position: absolute; top: 16px; right: 16px; z-index: 4;
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 11px; border-radius: 999px;
+    font-family: var(--font-body); font-size: 0.7rem; font-weight: 700;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    background: var(--cnvs-themecolor); color: #fff;
+    box-shadow: 0 4px 12px rgba(29,78,216,0.30);
+  }
+
+  #contatti .eb-choice:hover,
+  #contatti .eb-choice:focus-visible {
+    transform: translateY(-3px);
+    border-color: var(--cnvs-themecolor);
+    box-shadow: 0 22px 50px rgba(29,78,216,0.16);
+    outline: none;
+  }
+  #contatti .eb-choice:hover .eb-choice__icon { transform: rotate(-8deg) scale(1.05); }
+  #contatti .eb-choice:hover .eb-choice__cta .eb-ico { transform: translate(3px,-3px); }
+
+  /* Card scelta: resta evidenziata mentre si compila il modulo */
+  #contatti .eb-choice.is-active {
+    border-color: var(--cnvs-themecolor);
+    box-shadow: 0 18px 40px rgba(29,78,216,0.18);
+  }
+  #contatti .eb-form-picker.has-selection .eb-choice:not(.is-active) {
+    opacity: 0.5;
+    filter: saturate(0.85);
+  }
+  #contatti .eb-form-picker.has-selection .eb-choice:not(.is-active):hover {
+    opacity: 1;
+    filter: none;
+  }
+
+  /* ─── Contatti · pannelli con i moduli ─────────────────
+     Visibile solo il modulo corrispondente alla card cliccata. */
+  #contatti .eb-form-panels { max-width: 900px; margin: 0 auto; }
+  #contatti .eb-form-panel { margin-top: 2rem; }
+  #contatti .eb-form-panel[hidden] { display: none; }
+  #contatti .eb-form-panel:not([hidden]) {
+    animation: ebPanelIn 0.35s cubic-bezier(0.16,1,0.3,1) both;
+  }
+  @keyframes ebPanelIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  /* Pulsante di chiusura nell'intestazione del modulo */
+  #contatti .eb-form-card__close {
+    margin-left: auto;
+    flex: 0 0 auto;
+    width: 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: transparent; border: 1px solid var(--pf-border);
+    color: var(--pf-muted); font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+  #contatti .eb-form-card__close:hover {
+    background: var(--pf-light-bg);
+    border-color: var(--cnvs-themecolor);
+    color: var(--cnvs-themecolor);
+  }
+
+  /* ─── Contatti · i due form ───────────────────────────
+     Stessa intestazione (chiara, accento blu del brand) per entrambi:
+     li distingue il contenuto, non il colore della banda. */
+  #contatti .eb-form-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #fff;
+    border: 1px solid var(--pf-border);
+    border-radius: 18px;
+    overflow: hidden;
+    isolation: isolate;
+    box-shadow: 0 4px 20px rgba(15,23,42,0.05);
+    transition: box-shadow 0.3s ease, transform 0.3s ease,
+                border-color 0.3s ease, opacity 0.3s ease;
+  }
+  /* Accento superiore, uguale su entrambe le card */
+  #contatti .eb-form-card::before {
+    content: "";
+    position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    background: linear-gradient(90deg, var(--cnvs-themecolor), #60A5FA);
+    z-index: 3;
+  }
+
+  /* Intestazione */
+  #contatti .eb-form-card__head {
+    display: flex; align-items: center; gap: 15px;
+    padding: 24px 28px;
+    border-bottom: 1px solid var(--pf-border);
+  }
+  #contatti .eb-form-card__icon {
+    flex: 0 0 auto;
+    width: 48px; height: 48px; border-radius: 13px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.35rem;
+  }
+  #contatti .eb-form-card__title {
+    font-family: var(--font-body);
+    font-size: 1.2rem; font-weight: 700; margin: 0;
+    line-height: 1.2;
+  }
+  #contatti .eb-form-card__sub {
+    margin: 3px 0 0; font-size: 0.85rem; line-height: 1.35;
+  }
+  #contatti .eb-form-card__body { padding: 28px; }
+
+  /* Colori dell'intestazione — chiara con accento blu, uguali per contatto e demo */
+  #contatti .eb-form-card__head { background: var(--pf-light-bg); }
+  #contatti .eb-form-card__icon { background: var(--cnvs-themecolor); color: #fff; }
+  #contatti .eb-form-card__title { color: var(--pf-text); }
+  #contatti .eb-form-card__sub { color: var(--pf-muted); }
+
+  /* Il modulo aperto risalta mentre lo si compila */
+  #contatti .eb-form-card:focus-within {
+    border-color: var(--cnvs-themecolor);
+    box-shadow: 0 22px 50px rgba(29,78,216,0.20);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #contatti .eb-choice,
+    #contatti .eb-choice__icon,
+    #contatti .eb-choice__cta .eb-ico { transition: none; }
+    #contatti .eb-choice:hover,
+    #contatti .eb-choice:focus-visible { transform: none; }
+    #contatti .eb-choice:hover .eb-choice__icon { transform: none; }
+    #contatti .eb-form-panel:not([hidden]) { animation: none; }
+  }
+
+  /* Su mobile le card sono impilate: nessuna attenuazione, sempre leggibili */
+  @media (max-width: 767px) {
+    #contatti .eb-form-picker {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1rem;
+    }
+    #contatti .eb-form-picker.has-selection .eb-choice:not(.is-active) {
+      opacity: 1; filter: none;
+    }
+    #contatti .eb-choice { padding: 22px 20px; }
+  }

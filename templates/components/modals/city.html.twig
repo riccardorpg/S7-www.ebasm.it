@@ -22,7 +22,7 @@
                         {% for c in cities|default([]) %}
                             <tr>
                                 <td>{{ c.name }} ({{ c.province ? c.province.sign : '—' }})</td>
-                                <td class="txt_a_c"><a href='javascript:citySelect{{ number }}({{ c.id }}, "{{ c.name|e('js') }} ({{ c.province ? c.province.sign : '—' }})", "{{ c.displayZips }}")' data-bs-toggle="tooltip" title="Seleziona"><img class="icon_action icon_green" src="{{ asset(path_graphics ~ '/icons/select.png') }}" alt="Seleziona"></a></td>
+                                <td class="txt_a_c"><a href='javascript:citySelect{{ number }}({{ c.id }}, "{{ c.name|e('js') }} ({{ c.province ? c.province.sign : '—' }})", "{{ c.displayZips }}")' data-bs-toggle="tooltip" title="Seleziona"><img class="icon_action icon_green" src="{{ asset(PATH_GRAPHICS ~ 'icons/select.png') }}" alt="Seleziona"></a></td>
                             </tr>
                         {% endfor %}
                     </tbody>

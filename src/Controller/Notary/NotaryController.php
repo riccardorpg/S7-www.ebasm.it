@@ -37,7 +37,7 @@ class NotaryController extends AbstractController
     #[Route('', name: 'notary_index', methods: ['GET'])]
     public function index(): Response
     {
-        return $this->render('notary/index.html.twig', [
+        return $this->render('role/notary/index.html.twig', [
             'companies' => $this->allowedCompanies(),
             'current' => $this->companyService->getCurrentCompany(),
         ]);
@@ -125,7 +125,7 @@ class NotaryController extends AbstractController
             ]
         );
 
-        return $this->render('notary/practices/index.html.twig', [
+        return $this->render('role/notary/practices/index.html.twig', [
             'company' => $company,
             'records' => $records,
             'filters' => $filters,
@@ -144,7 +144,7 @@ class NotaryController extends AbstractController
             throw $this->createNotFoundException('Pratica non trovata.');
         }
 
-        return $this->render('notary/practices/show.html.twig', [
+        return $this->render('role/notary/practices/show.html.twig', [
             'company' => $company,
             'practice' => $practice,
         ]);

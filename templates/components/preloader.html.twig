@@ -1,0 +1,19 @@
+{# ===========================================================================
+   PLACEHOLDER — overlay di caricamento dell'area privata.
+
+   role/base.html.twig lo include in {% block preloader %}, ma il partial non
+   era mai stato creato: mancando, tutte le pagine di admin/agenzia/notaio
+   rispondevano 500 (Twig LoaderError).
+
+   È volutamente INERTE: display:none, nessuno script lo mostra. Va mostrato
+   a mano (es. durante una chiamata AJAX) impostando display:flex, oppure
+   sostituito con l'implementazione definitiva.
+   Classi .css3-spinner* sono quelle del tema Canvas (public/css/style.css).
+   =========================================================================== #}
+<div id="preloader" class="d-none" aria-hidden="true">
+    <div class="css3-spinner">
+        <div class="css3-spinner-bounce1"></div>
+        <div class="css3-spinner-bounce2"></div>
+        <div class="css3-spinner-bounce3"></div>
+    </div>
+</div>

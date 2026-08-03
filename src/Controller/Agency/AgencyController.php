@@ -15,7 +15,7 @@ class AgencyController extends AbstractController
     #[Route('', name: 'agency_index', methods: ['GET'])]
     public function index(CompanyService $companyService): Response
     {
-        return $this->render('agency/index.html.twig', [
+        return $this->render('role/agency/index.html.twig', [
             'company' => $companyService->getCurrentCompany(),
         ]);
     }

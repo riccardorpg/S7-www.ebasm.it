@@ -14,9 +14,9 @@
         var actualField = {{ actualSort|default('')|json_encode|raw }};
         var actualDir = ({{ actualDirection|default('')|json_encode|raw }} || '').toLowerCase();
         var icons = {
-            sort: "{{ asset(path_graphics ~ '/icons/arrow_sort.png') }}",
-            up:   "{{ asset(path_graphics ~ '/icons/arrow_up.png') }}",
-            down: "{{ asset(path_graphics ~ '/icons/arrow_down.png') }}"
+            sort: "{{ asset(PATH_GRAPHICS ~ 'icons/arrow_sort.png') }}",
+            up:   "{{ asset(PATH_GRAPHICS ~ 'icons/arrow_up.png') }}",
+            down: "{{ asset(PATH_GRAPHICS ~ 'icons/arrow_down.png') }}"
         };
 
         window.setSort1 = function (field) {

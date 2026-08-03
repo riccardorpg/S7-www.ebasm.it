@@ -1,0 +1,411 @@
+{% extends 'base.html.twig' %}
+{% import 'components/icons.html.twig' as ico %}
+
+{% block title %} - Il gestionale documentale per agenzie immobiliari e notai{% endblock %}
+
+{# `transparent-header` copre solo il menu espanso (>= 992px): sotto quella soglia
+   Canvas usa `transparent-header-responsive`. Senza la seconda classe l'hero non
+   scorreva sotto l'header su tablet e telefono. #}
+{% block header_class %}transparent-header transparent-header-responsive dark{% endblock %}
+
+{% block page_stylesheets %}
+    <link rel="stylesheet" href="{{ asset('css/hr.css') }}">
+{% endblock %}
+
+{% block content %}
+
+    <section id="hero" class="vh-100 d-flex align-items-center dark include-header" style="position:relative; overflow:hidden; min-height:700px; background:linear-gradient(100deg, rgba(15,23,42,0.94) 0%, rgba(15,23,42,0.80) 44%, rgba(15,23,42,0.55) 100%), url('{{ asset(PATH_GRAPHICS~ 'defaults/Gemini_Generated_Image_exd1i1exd1i1exd1.png') }}') center/cover no-repeat;">
+
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse 60% 55% at 0% 45%, rgba(29,78,216,0.28) 0%, transparent 70%);pointer-events:none;z-index:0;"></div>
+
+        <div class="container" style="position:relative;z-index:2;">
+            <div class="row">
+                <div class="col-lg-7">
+                    <div style="display:inline-flex;align-items:center;gap:10px;margin-bottom:1.5rem;">
+                        <span style="display:inline-block;width:28px;height:2px;background:#1D4ED8;border-radius:2px;"></span>
+                        <span style="font-family:'Inter',system-ui,sans-serif;font-size:0.6875rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#93C5FD;">Gestionale in cloud · Immobiliare &amp; Notarile</span>
+                    </div>
+
+                    <h1 style="font-family:'Fraunces',Georgia,serif;font-size:clamp(2.375rem,5vw,4rem);font-weight:700;line-height:1.08;letter-spacing:-0.025em;color:#FFFFFF;margin-bottom:1.5rem;">
+                        I documenti della compravendita,<br>
+                        <em style="font-style:italic;color:#93C5FD;">sempre in ordine.</em>
+                    </h1>
+
+                    <p style="font-family:'Inter',system-ui,sans-serif;font-size:1.0625rem;line-height:1.75;color:rgba(255,255,255,0.82);max-width:560px;margin-bottom:2.5rem;">
+                        EBASM è il gestionale dove agenzie immobiliari e notai caricano e condividono i documenti
+                        di ogni pratica. Tutto archiviato e ritrovabile in un attimo, con un indicatore di stato a colori
+                        che dice subito cosa manca e cosa è a posto.
+                    </p>
+
+                    <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:2.5rem;">
+                        <a href="#demo" class="pf-btn-primary">{{ ico.svg('play-circle') }} Guarda il video demo</a>
+                        <a href="#contatti" class="pf-btn-secondary" data-eb-open="contact">{{ ico.svg('chat') }} Contattaci</a>
+                    </div>
+
+                    <div style="display:flex;flex-wrap:wrap;gap:24px;padding-top:1.5rem;border-top:1px solid rgba(255,255,255,0.15);">
+                        <div style="display:flex;align-items:center;gap:8px;color:#93C5FD;">{{ ico.svg('semaforo') }}<span style="font-family:'Inter',system-ui,sans-serif;font-size:0.8125rem;font-weight:500;color:rgba(255,255,255,0.85);">Stato rosso / giallo / verde</span></div>
+                        <div style="display:flex;align-items:center;gap:8px;color:#93C5FD;">{{ ico.svg('cloud') }}<span style="font-family:'Inter',system-ui,sans-serif;font-size:0.8125rem;font-weight:500;color:rgba(255,255,255,0.85);">Tutto in cloud</span></div>
+                        <div style="display:flex;align-items:center;gap:8px;color:#93C5FD;">{{ ico.svg('shield') }}<span style="font-family:'Inter',system-ui,sans-serif;font-size:0.8125rem;font-weight:500;color:rgba(255,255,255,0.85);">Dati al sicuro</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="content"><div class="content-wrap py-0">
+
+    <section id="progetto" class="section pf-section my-0" style="background:#FFFFFF;position:relative;overflow:hidden;">
+
+        <div class="cs-watermark" aria-hidden="true">{{ ico.svg('boxes') }}</div>
+
+        <div class="container" style="position:relative;z-index:1;">
+            <div class="text-center mb-5" style="max-width:640px;margin-left:auto;margin-right:auto;">
+                <span class="pf-label">Chi siamo</span>
+                <h2 class="pf-section-title" style="margin-bottom:1.25rem;">Il progetto EBASM</h2>
+                <p style="color:var(--pf-body);font-size:1rem;line-height:1.75;margin:0;">
+                    EBASM nasce per mettere ordine nello scambio di documenti tra agenzie immobiliari e studi notarili.
+                    Ecco dove vogliamo arrivare.
+                </p>
+            </div>
+
+            <div class="row row-cols-1 row-cols-md-2 g-4">
+                {% set purpose = [
+                    {icon: 'target',       tag: 'Mission',       name: 'Un unico posto',        text: 'Dare ad agenti immobiliari e notai un solo posto dove caricare, condividere e verificare i documenti di ogni pratica.'},
+                    {icon: 'eye',          tag: 'Vision',        name: 'Semplice e trasparente', text: 'Rendere la collaborazione tra chi vende e chi roga chiara in ogni passaggio, senza scambi di e-mail e messaggi.'},
+                    {icon: 'people',       tag: 'Collaborazione', name: 'Agenzia e notaio insieme', text: 'Una stessa pratica condivisa tra agenzia e studio notarile, ognuno con il proprio accesso e il proprio ruolo.'},
+                    {icon: 'folder-check', tag: 'Obiettivo',     name: 'Nulla manca all’atto',  text: 'Arrivare all’appuntamento dal notaio con tutti i documenti al loro posto, senza corse dell’ultimo minuto.'}
+                ] %}
+                {% for p in purpose %}
+                    <div class="col">
+                        <div class="pf-card h-100">
+                            <div class="pf-icon-wrap">{{ ico.svg(p.icon) }}</div>
+                            <span class="cs-badge__tag{% if loop.index is odd %} is-blue{% endif %}">{{ p.tag }}</span>
+                            <h3 class="pf-card-title" style="margin-top:0.75rem;">{{ p.name }}</h3>
+                            <p class="pf-card-desc m-0">{{ p.text }}</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <section id="punti-di-forza" class="section pf-section my-0" style="background:#F8FAFC;">
+        <div class="container">
+            <div class="text-center mb-5" style="max-width:640px;margin-left:auto;margin-right:auto;">
+                <span class="pf-section-label">Perché EBASM</span>
+                <h2 class="pf-section-title">I nostri punti di forza</h2>
+            </div>
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                {% set strengths = [
+                    {icon: 'folder-check', name: 'Documenti sempre in ordine', text: 'Ogni pratica ha la sua cartella: carichi un documento ed è archiviato dove lo ritrovi sempre.'},
+                    {icon: 'semaforo', name: 'Stato sempre visibile', text: 'Rosso se manca qualcosa, giallo in verifica, verde quando è tutto corretto: lo stato è chiaro a colpo d’occhio.'},
+                    {icon: 'people', name: 'Agenzia e notaio, insieme', text: 'Agente immobiliare e studio notarile lavorano sulla stessa pratica, ognuno con il proprio accesso.'},
+                    {icon: 'search', name: 'Ritrovi tutto in un attimo', text: 'Cerchi per pratica, cliente o immobile e apri subito il documento giusto, senza frugare tra le e-mail.'},
+                    {icon: 'cloud', name: 'Tutto in cloud', text: 'Accedi da studio, agenzia o in mobilità: i documenti sono sempre a portata, senza installazioni.'},
+                    {icon: 'shield', name: 'Dati al sicuro', text: 'Backup automatici e dati separati per ogni studio: la riservatezza delle pratiche è protetta.'}
+                ] %}
+                {% for s in strengths %}
+                    <div class="col">
+                        <div class="pf-card">
+                            <div class="pf-icon-wrap">{{ ico.svg(s.icon) }}</div>
+                            <h3 class="pf-card-title">{{ s.name }}</h3>
+                            <p class="pf-card-desc m-0">{{ s.text }}</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <section id="pricing" class="section pf-section my-0 dark" style="background:#0F172A;">
+        <div class="container">
+            <div class="text-center mb-0">
+                <span class="pf-label">Prezzi</span>
+                <h2 class="pf-section-title text-white">Un costo base chiaro, espandibile</h2>
+                <p style="color:rgba(255,255,255,0.55);font-size:1rem;margin-bottom:2.5rem;max-width:520px;margin-left:auto;margin-right:auto;">
+                    Una licenza base con tutto l'essenziale, più pacchetti di spazio da aggiungere quando ti servono. <em>(prezzi placeholder)</em>
+                </p>
+            </div>
+
+            <div class="row g-4 align-items-stretch justify-content-center">
+
+                <div class="col-lg-5 col-md-10">
+                    <div class="pf-price-card highlighted">
+                        <div class="pf-popular-badge">Consigliata</div>
+                        <div class="pf-plan-name">Licenza base</div>
+                        <div>
+                            <div class="d-flex align-items-end gap-1">
+                                <span class="pf-price-num">€ 49</span>
+                                <span style="color:#64748B;font-size:0.9rem;font-weight:500;padding-bottom:6px;">/ mese</span>
+                            </div>
+                            <div class="pf-price-unit">per studio o agenzia, IVA esclusa</div>
+                        </div>
+                        <p class="pf-plan-desc">Tutto ciò che serve per gestire i documenti delle tue pratiche, senza sorprese.</p>
+                        <hr class="pf-card-hr">
+                        <ul class="pf-feature-list">
+                            <li>{{ ico.svg('check') }} Accesso completo al gestionale</li>
+                            <li>{{ ico.svg('check') }} Utenti illimitati del team</li>
+                            <li>{{ ico.svg('check') }} 5 GB di spazio incluso</li>
+                            <li>{{ ico.svg('check') }} Aggiornamenti e assistenza</li>
+                        </ul>
+                        <a href="#contatti" class="pf-btn-primary pf-btn-block" data-eb-open="demo">Richiedi la demo</a>
+                    </div>
+                </div>
+
+                <div class="col-lg-5 col-md-10">
+                    <div class="pf-price-card">
+                        <div class="pf-plan-name">Espansioni di memoria</div>
+                        <div>
+                            <div class="pf-price-custom">+ Spazio</div>
+                            <div class="pf-price-unit" style="margin-top:6px;">Aggiungi GB quando ti servono</div>
+                        </div>
+                        <p class="pf-plan-desc">Amplia lo spazio della tua licenza in qualsiasi momento.</p>
+                        <hr class="pf-card-hr">
+                        <ul class="pf-feature-list">
+                            <li>{{ ico.svg('hdd') }} + 10 GB &nbsp;—&nbsp; € 9 / mese</li>
+                            <li>{{ ico.svg('hdd') }} + 50 GB &nbsp;—&nbsp; € 29 / mese</li>
+                            <li>{{ ico.svg('hdd') }} + 100 GB &nbsp;—&nbsp; € 49 / mese</li>
+                            <li>{{ ico.svg('hdd') }} + 500 GB &nbsp;—&nbsp; € 149 / mese</li>
+                        </ul>
+                        <a href="#contatti" class="pf-btn-secondary pf-btn-block" data-eb-open="contact">Parla con noi</a>
+                    </div>
+                </div>
+
+            </div>
+
+            <p class="pf-footer-note">
+                {{ ico.svg('check-circle') }} Nessun vincolo di durata.&nbsp;&nbsp;
+                {{ ico.svg('credit-card') }} Demo gratuita di 30 giorni.
+            </p>
+
+        </div>
+    </section>
+
+    <section id="demo" class="section pf-section my-0" style="background:#FFFFFF;">
+        <div class="container">
+            <div class="text-center mb-5" style="max-width:640px;margin-left:auto;margin-right:auto;">
+                <span class="pf-section-label">Demo</span>
+                <h2 class="pf-section-title">Guarda EBASM in azione</h2>
+                <p style="color:#64748B;font-size:1rem;margin-top:1rem;">Un breve video per vedere come agenzia e notaio gestiscono insieme i documenti di una pratica. <em>(video placeholder)</em></p>
+            </div>
+            <div class="eb-video-wrap">
+                <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="Video demo EBASM" allowfullscreen loading="lazy"></iframe>
+            </div>
+        </div>
+    </section>
+
+    <section id="contatti" class="section pf-section my-0" style="background:#F8FAFC;">
+        <div class="container">
+            <div class="text-center mb-5" style="max-width:640px;margin-left:auto;margin-right:auto;">
+                <span class="pf-section-label">Contatti</span>
+                <h2 class="pf-section-title">Parliamo del tuo lavoro</h2>
+                <p style="color:#64748B;font-size:1rem;margin-top:1rem;">Scegli come vuoi procedere: ti mostriamo solo il modulo che ti serve.</p>
+            </div>
+
+            <div class="eb-form-picker" role="group" aria-label="Scegli il tipo di richiesta">
+
+                <button type="button" class="eb-choice eb-choice--contact" data-eb-target="contact"
+                        aria-expanded="false" aria-controls="eb-panel-contact">
+                    <span class="eb-choice__icon">{{ ico.svg('envelope') }}</span>
+                    <span class="eb-choice__text">
+                        <span class="eb-choice__title">Richiedi informazioni</span>
+                        <span class="eb-choice__sub">Hai una domanda? Scrivici, ti rispondiamo al più presto.</span>
+                    </span>
+                    <span class="eb-choice__cta">Compila il modulo {{ ico.svg('arrow-up-right') }}</span>
+                </button>
+
+                <button type="button" class="eb-choice eb-choice--demo" data-eb-target="demo"
+                        aria-expanded="false" aria-controls="eb-panel-demo">
+                    <span class="eb-choice__badge">{{ ico.svg('check-circle', '', 'color:#fff') }} 30 giorni gratis</span>
+                    <span class="eb-choice__icon">{{ ico.svg('rocket') }}</span>
+                    <span class="eb-choice__text">
+                        <span class="eb-choice__title">Attiva la demo</span>
+                        <span class="eb-choice__sub">Crea il tuo account di prova, senza impegno.</span>
+                    </span>
+                    <span class="eb-choice__cta">Compila il modulo {{ ico.svg('arrow-up-right') }}</span>
+                </button>
+
+            </div>
+
+            <div class="eb-form-panels" id="ebFormPanels">
+
+                <div class="eb-form-panel" id="eb-panel-contact" hidden>
+                    <div class="eb-form-card eb-form-card--contact">
+                        <div class="eb-form-card__head">
+                            <div class="eb-form-card__icon">{{ ico.svg('envelope', '', 'color:#fff') }}</div>
+                            <div>
+                                <h3 class="eb-form-card__title">Richiedi informazioni</h3>
+                                <p class="eb-form-card__sub">Hai una domanda? Scrivici, ti rispondiamo al più presto.</p>
+                            </div>
+                            <button type="button" class="eb-form-card__close" data-eb-close aria-label="Chiudi il modulo">{{ ico.svg('x') }}</button>
+                        </div>
+                        <div class="eb-form-card__body">
+                        <form method="post" action="{{ path('contact_submit') }}" novalidate>
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('contact') }}">
+                            <div class="row g-3">
+                                <div class="col-md-6"><label class="form-label">Nome *</label><input type="text" name="name" class="form-control" required></div>
+                                <div class="col-md-6"><label class="form-label">Cognome *</label><input type="text" name="surname" class="form-control" required></div>
+                                <div class="col-12"><label class="form-label">E-mail *</label><input type="email" name="email" class="form-control" required></div>
+                                <div class="col-12"><label class="form-label">Messaggio *</label><textarea name="message" rows="4" class="form-control" required></textarea></div>
+                                <div class="col-12"><div class="g-recaptcha" data-sitekey="RECAPTCHA_SITE_KEY"></div></div>
+                                <div class="col-12"><button type="submit" class="pf-btn-primary">Invia richiesta</button></div>
+                            </div>
+                        </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="eb-form-panel" id="eb-panel-demo" hidden>
+                    <div class="eb-form-card eb-form-card--demo">
+                        <div class="eb-form-card__head">
+                            <div class="eb-form-card__icon">{{ ico.svg('rocket', '', 'color:#fff') }}</div>
+                            <div>
+                                <h3 class="eb-form-card__title">Attiva la demo</h3>
+                                <p class="eb-form-card__sub">Crea il tuo account di prova, senza impegno.</p>
+                            </div>
+                            <button type="button" class="eb-form-card__close" data-eb-close aria-label="Chiudi il modulo">{{ ico.svg('x') }}</button>
+                        </div>
+                        <div class="eb-form-card__body">
+                        <form method="post" action="{{ path('demo_request_submit') }}" novalidate id="demoForm">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('demo') }}">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label d-block">Tipo di account *</label>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="account_type" id="acc_az" value="aziendale" checked>
+                                        <label class="form-check-label" for="acc_az">Aziendale</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="account_type" id="acc_pro" value="professionista">
+                                        <label class="form-check-label" for="acc_pro">Professionista</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6"><label class="form-label">E-mail per la registrazione *</label><input type="email" name="email" class="form-control" required></div>
+                                <div class="col-md-6"><label class="form-label">Verifica e-mail *</label><input type="email" name="email_confirm" class="form-control" required></div>
+                                <div class="col-12"><label class="form-label" id="labelRagioneSociale">Ragione sociale *</label><input type="text" name="business_name" class="form-control" required></div>
+                                <div class="col-md-9"><label class="form-label">Indirizzo *</label><input type="text" name="address" class="form-control" required></div>
+                                <div class="col-md-3"><label class="form-label">Civico *</label><input type="text" name="civic" class="form-control" required></div>
+                                <div class="col-md-8"><label class="form-label">Città *</label><input type="text" name="city" class="form-control" required></div>
+                                <div class="col-md-4"><label class="form-label">CAP *</label><input type="text" name="zip" class="form-control" maxlength="5" required></div>
+                                <div class="col-md-6"><label class="form-label">Codice SDI</label><input type="text" name="sdi" class="form-control" maxlength="7"></div>
+                                <div class="col-md-6"><label class="form-label">PEC</label><input type="email" name="pec" class="form-control"></div>
+                                <div class="col-12"><div class="g-recaptcha" data-sitekey="RECAPTCHA_SITE_KEY"></div></div>
+                                <div class="col-12"><button type="submit" class="pf-btn-primary">Attiva la demo gratuita</button></div>
+                            </div>
+                        </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    </div></section>
+{% endblock %}
+
+{% block page_javascripts %}
+    {% if section is defined and section %}
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var target = document.getElementById({{ section|json_encode|raw }});
+                if (target) {
+                    setTimeout(function () { target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 250);
+                }
+            });
+        </script>
+    {% endif %}
+
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
+    <script>
+        (function () {
+            var picker = document.querySelector('#contatti .eb-form-picker');
+            var panels = document.getElementById('ebFormPanels');
+            if (!picker || !panels) return;
+
+            var choices = Array.prototype.slice.call(picker.querySelectorAll('.eb-choice'));
+
+            function panelOf(key) { return document.getElementById('eb-panel-' + key); }
+
+            function close() {
+                choices.forEach(function (c) {
+                    c.classList.remove('is-active');
+                    c.setAttribute('aria-expanded', 'false');
+                    var p = panelOf(c.dataset.ebTarget);
+                    if (p) p.hidden = true;
+                });
+                picker.classList.remove('has-selection');
+            }
+
+            function open(key, scroll) {
+                var panel = panelOf(key);
+                if (!panel) return;
+                var alreadyOpen = !panel.hidden;
+                close();
+                if (alreadyOpen) return;
+
+                panel.hidden = false;
+                picker.classList.add('has-selection');
+                choices.forEach(function (c) {
+                    if (c.dataset.ebTarget !== key) return;
+                    c.classList.add('is-active');
+                    c.setAttribute('aria-expanded', 'true');
+                });
+
+                if (scroll !== false) {
+                    panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                var first = panel.querySelector('input:not([type="hidden"]), textarea');
+                if (first) setTimeout(function () { first.focus({ preventScroll: true }); }, 350);
+            }
+
+            choices.forEach(function (c) {
+                c.addEventListener('click', function () { open(c.dataset.ebTarget); });
+            });
+
+            panels.querySelectorAll('[data-eb-close]').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    close();
+                    document.getElementById('contatti').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+            });
+
+            document.querySelectorAll('[data-eb-open]').forEach(function (link) {
+                link.addEventListener('click', function () {
+                    setTimeout(function () { open(link.dataset.ebOpen, false); }, 400);
+                });
+            });
+
+            var hash = (window.location.hash || '').replace('#contatti-', '');
+            if (hash === 'demo' || hash === 'contact') {
+                open(hash, false);
+                var panel = panelOf(hash);
+                var body = panel ? panel.querySelector('.eb-form-card__body') : null;
+                var notices = document.querySelectorAll('#noticesContainer .alert');
+                if (body && notices.length) {
+                    Array.prototype.slice.call(notices).reverse().forEach(function (n) {
+                        body.insertBefore(n, body.firstChild);
+                    });
+                }
+                if (panel) {
+                    setTimeout(function () {
+                        panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 150);
+                }
+            }
+        })();
+    </script>
+
+    <script>
+        (function () {
+            var form = document.getElementById('demoForm');
+            if (!form) return;
+            var label = document.getElementById('labelRagioneSociale');
+            form.querySelectorAll('input[name="account_type"]').forEach(function (r) {
+                r.addEventListener('change', function () {
+                    label.textContent = (this.value === 'professionista') ? 'Nome e cognome *' : 'Ragione sociale *';
+                });
+            });
+        })();
+    </script>
+{% endblock %}

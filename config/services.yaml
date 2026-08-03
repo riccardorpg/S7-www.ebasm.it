@@ -17,11 +17,11 @@ parameters:
     # --- Firewall /script (SQL runner) ---
     password_script: '%env(SCRIPT_PASSWORD)%'
 
-    # --- IUBENDA (cookie/privacy/termini) — vuoti = disattivato, fallback pagine interne ---
-    iubenda_site_id: '%env(IUBENDA_SITE_ID)%'
-    iubenda_cookie_policy_id: '%env(IUBENDA_COOKIE_POLICY_ID)%'
-    iubenda_privacy_policy_id: '%env(IUBENDA_PRIVACY_POLICY_ID)%'
-    iubenda_terms_id: '%env(IUBENDA_TERMS_ID)%'
+    # IUBENDA 
+    iubenda_it: '00000000'
+    iubenda_site: '00000000'
+    # iubenda_it: '38526742'
+    # iubenda_site: '4626295'
 
     # --- Multi-tenant: prefisso e coordinate del server che ospita i DB agenzia (slave) ---
     # Solo il NOME del database varia per agenzia (Company.dbName); host/port/user/password

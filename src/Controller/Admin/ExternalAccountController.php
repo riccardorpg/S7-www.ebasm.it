@@ -57,7 +57,7 @@ class ExternalAccountController extends AbstractController
             'sortFieldAllowList' => ['a.name', 'a.surname', 'a.email', 'a.phone', 'co.name'],
         ]);
 
-        return $this->render('admin/external/index.html.twig', [
+        return $this->render('role/admin/external/index.html.twig', [
             'records' => $records,
             'filters' => $filters,
             'companies' => $companies->findBy([], ['name' => 'ASC']),

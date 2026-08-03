@@ -26,13 +26,18 @@ class SecurityController extends AbstractController
     // ================= 2. ACCEDI — step 1: codice personale (agenzia) =================
 
     #[Route('/accedi', name: 'login', methods: ['GET'])]
-    public function login(): Response
+    public function login(AuthenticationUtils $utils): Response
     {
         if ($this->getUser() !== null) {
             return $this->redirectByRole();
         }
 
-        return $this->render('security/login_code.html.twig');
+        // La pagina ospita anche il form credenziali (staff): serve l'esito dell'ultimo
+        // tentativo, perché getLoginUrl() rimanda qui i POST senza "codice" né "staff".
+        return $this->render('security/login.html.twig', [
+            'last_username' => $utils->getLastUsername(),
+            'error' => $utils->getLastAuthenticationError(),
+        ]);
     }
 
     #[Route('/accedi', name: 'login_code_submit', methods: ['POST'])]
