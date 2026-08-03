@@ -5,13 +5,13 @@
 {% block role_menu %}
     {% set activeCompany = current_company() %}
     <li class="menu-item{{ app.request.attributes.get('_route') == 'notary_index' ? ' current' : '' }}">
-        <a class="menu-link" href="{{ path('notary_index') }}"><div><i class="bi-speedometer2"></i> Scrivania</div></a>
+        <a class="menu-link" href="{{ path('notary_index') }}"><div>Scrivania</div></a>
     </li>
 
     {% if activeCompany %}
         {# Cambia agenzia subito sotto la scrivania #}
         <li class="menu-item">
-            <a class="menu-link" href="{{ path('notary_deselect_agency') }}"><div><i class="bi-arrow-left-right"></i> Cambia agenzia</div></a>
+            <a class="menu-link" href="{{ path('notary_deselect_agency') }}"><div>Cambia agenzia</div></a>
         </li>
 
         {# Agenzia selezionata: label non cliccabile (stile "azienda attiva" di venanzieffe) #}
@@ -27,13 +27,13 @@
         </li>
 
         <li class="menu-item{{ app.request.attributes.get('_route') starts with 'notary_practi' ? ' current' : '' }}">
-            <a class="menu-link" href="{{ path('notary_practices') }}"><div><i class="bi-folder2-open"></i> Gestione pratiche</div></a>
+            <a class="menu-link" href="{{ path('notary_practices') }}"><div>Gestione pratiche</div></a>
         </li>
         <li class="menu-item"><hr class="d-none d-lg-block"></li>
     {% endif %}
 
     <li class="menu-item">
-        <a class="menu-link" href="{{ path('logout') }}"><div><i class="bi-box-arrow-right"></i> Esci</div></a>
+        <a class="menu-link" href="{{ path('logout') }}"><div>Esci</div></a>
     </li>
 {% endblock %}
 

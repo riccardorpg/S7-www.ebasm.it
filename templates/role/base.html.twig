@@ -39,7 +39,9 @@
                 <div class="header-row">
                     <div id="logo" class="p_tb_15p">
                         <a href="{% block home_path %}{{ path('login') }}{% endblock %}">
-                            <img src="{{ asset(PATH_GRAPHICS ~ 'logo.png') }}" alt="EBASM" style="max-height:40px;">
+                            {# Header dell'area privata a fondo pieno (brand nel tema chiaro, quasi
+                               nero nello scuro): serve il marchio bianco su trasparente. #}
+                            <img src="{{ asset(PATH_GRAPHICS ~ 'logo-mono-white.svg') }}" alt="EBASM" style="max-height:40px;">
                         </a>
                     </div>
                     <div class="primary-menu-trigger">

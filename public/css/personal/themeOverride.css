@@ -42,18 +42,18 @@ input[type="number"],
 
 /* ===== Override .bg-primary / .btn-primary su colore brand 00a19c ===== */
 .bg-primary {
-    background-color: #1ABC9C !important;
+    background-color: var(--eb-brand) !important;
 }
 .text-primary {
-    color: #1ABC9C !important;
+    color: var(--eb-brand) !important;
 }
 .border-primary {
-    border-color: #1ABC9C !important;
+    border-color: var(--eb-brand) !important;
 }
 .btn-primary,
 .button-3d.button-pr {
-    background-color: #1ABC9C !important;
-    border-color: #1ABC9C !important;
+    background-color: var(--eb-brand) !important;
+    border-color: var(--eb-brand) !important;
     color: #ffffff !important;
 }
 .btn-primary:hover,
@@ -61,27 +61,27 @@ input[type="number"],
 .btn-primary:active,
 .btn-primary.active,
 .button-3d.button-pr:hover {
-    background-color: #007f7a !important;
-    border-color: #007f7a !important;
+    background-color: var(--eb-brand-dark) !important;
+    border-color: var(--eb-brand-dark) !important;
     color: #ffffff !important;
 }
 .btn-outline-primary {
-    color: #1ABC9C !important;
-    border-color: #1ABC9C !important;
+    color: var(--eb-brand) !important;
+    border-color: var(--eb-brand) !important;
 }
 .btn-outline-primary:hover,
 .btn-outline-primary:focus,
 .btn-outline-primary:active {
-    background-color: #1ABC9C !important;
+    background-color: var(--eb-brand) !important;
     color: #ffffff !important;
 }
 .alert-primary {
-    background-color: rgba(0, 161, 156, 0.12) !important;
-    color: #00504e !important;
-    border-color: rgba(0, 161, 156, 0.4) !important;
+    background-color: rgba(var(--eb-brand-rgb), 0.12) !important;
+    color: #12276b !important;
+    border-color: rgba(var(--eb-brand-rgb), 0.4) !important;
 }
 .link-primary {
-    color: #1ABC9C !important;
+    color: var(--eb-brand) !important;
 }
 
 
@@ -96,16 +96,16 @@ input[type="number"],
     --dm-border-strong: #c8ccd1;
     --dm-text: #1f2328;
     --dm-text-muted: #6b7280;
-    --dm-link: #1ABC9C;
-    --dm-link-hover: #006d6a;
-    --dm-header-bg: #1ABC9C;
+    --dm-link: var(--eb-brand);
+    --dm-link-hover: var(--eb-brand-dark);
+    --dm-header-bg: var(--eb-brand);
     --dm-header-text: #ffffff;
-    --dm-menu-active: rgba(0, 161, 156, 0.12);
+    --dm-menu-active: rgba(var(--eb-brand-rgb), 0.12);
     --dm-table-stripe: #f3f4f6;
     --dm-input-bg: #ffffff;
     --dm-input-text: #1f2328;
     --dm-input-border: #c8ccd1;
-    --dm-input-focus-border: #1ABC9C;
+    --dm-input-focus-border: var(--eb-brand);
     --dm-modal-overlay: rgba(0, 0, 0, 0.5);
     --dm-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     --dm-card-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
@@ -121,16 +121,16 @@ input[type="number"],
     --dm-border-strong: #3a4356;
     --dm-text: #e6e8ee;
     --dm-text-muted: #9aa3b2;
-    --dm-link: #4cd6cf;
-    --dm-link-hover: #80e1dc;
+    --dm-link: var(--eb-brand-light);
+    --dm-link-hover: #A8C2FF;
     --dm-header-bg: #0f1218;
     --dm-header-text: #e6e8ee;
-    --dm-menu-active: rgba(76, 214, 207, 0.18);
+    --dm-menu-active: rgba(125, 162, 255, 0.18);
     --dm-table-stripe: #232a39;
     --dm-input-bg: #1c2230;
     --dm-input-text: #e6e8ee;
     --dm-input-border: #3a4356;
-    --dm-input-focus-border: #4cd6cf;
+    --dm-input-focus-border: var(--eb-brand-light);
     --dm-modal-overlay: rgba(0, 0, 0, 0.7);
     --dm-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
     --dm-card-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
@@ -180,18 +180,30 @@ hr {
     /* Custom properties Canvas: dimensioni e colori del menu laterale (font: standard Canvas) */
     --cnvs-primary-menu-font-size: 0.9rem;
     --cnvs-primary-menu-submenu-font-size: 0.8rem;
+    /* Canvas spazia le voci di 1px: nelle label lunghe ("Account esterni",
+       "Gestione pratiche") allarga troppo la colonna. */
+    --cnvs-primary-menu-ls: 0px;
+    --cnvs-primary-menu-submenu-spacing: 0px;
     --cnvs-primary-menu-color: #ffffff;
     --cnvs-primary-menu-hover-color: #d4d4d4;
     --cnvs-primary-menu-active-color: #ffffff;
     --cnvs-primary-menu-submenu-bg: var(--dm-header-bg);
     --cnvs-primary-menu-submenu-color: #ffffff;
+    /* Il bordo di default è scuro: sul fondo brand i separatori fra le voci
+       di sottomenu sparirebbero. */
+    --cnvs-primary-menu-submenu-border: 1px solid rgba(255, 255, 255, 0.12);
     --cnvs-primary-menu-submenu-hover-color: #d4d4d4;
     --cnvs-primary-menu-submenu-hover-bg: rgba(255, 255, 255, 0.06);
     --cnvs-header-misc-icons-color: #ffffff;
 }
 
+/* Il terzo selettore ricalca quello di Canvas (`.sub-menu-container .menu-item >
+   .menu-link`), che cabla `color: var(--cnvs-contrast-900)` — quasi nero — invece
+   di leggere --cnvs-primary-menu-submenu-color. Senza pari specificità le voci di
+   sottomenu resterebbero nere sul fondo brand dell'header. */
 .menu-container .menu-link,
-.sub-menu-container .menu-link {
+.sub-menu-container .menu-link,
+.sub-menu-container .menu-item > .menu-link {
     color: #ffffff;
 }
 
@@ -299,7 +311,7 @@ hr {
 [data-theme-resolved="dark"] .icon_action {
     background: transparent;
 }
-.icon_pr { border: 1px solid #1ABC9C; }
+.icon_pr { border: 1px solid var(--eb-brand); }
 .icon_red { border: 1px solid #c02942; }
 .icon_green { border: 1px solid #59ba41; }
 .icon_amber { border: 1px solid #eb9c4d; }
@@ -326,14 +338,14 @@ hr {
     transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
 }
 .rpg_customer_card:hover {
-    border-color: #1ABC9C;
+    border-color: var(--eb-brand);
     box-shadow: 0 8px 20px -10px rgba(0, 0, 0, .15);
     transform: translateY(-2px);
     color: #333;
 }
 .rpg_customer_card.is-current {
-    border-color: #1ABC9C;
-    box-shadow: 0 0 0 2px rgba(26, 188, 156, .25);
+    border-color: var(--eb-brand);
+    box-shadow: 0 0 0 2px rgba(var(--eb-brand-rgb), .25);
 }
 .rpg_customer_card .rpg_logo_box {
     height: 96px;
@@ -346,7 +358,7 @@ hr {
     width: 72px;
     height: 72px;
     border-radius: 50%;
-    background: #1ABC9C;
+    background: var(--eb-brand);
     color: #fff;
     display: flex;
     align-items: center;
@@ -357,7 +369,7 @@ hr {
 .rpg_customer_card .rpg_business {
     font-size: 18px;
     font-weight: 600;
-    color: #1ABC9C;
+    color: var(--eb-brand);
     margin-bottom: 6px;
     line-height: 1.2;
 }
@@ -384,7 +396,7 @@ hr {
 
 /* ===== Input file: bottone "Scegli file" colorato col primario ===== */
 input[type="file"].form-control::file-selector-button {
-    background-color: #1ABC9C !important;
+    background-color: var(--eb-brand) !important;
     color: #ffffff !important;
     border: none !important;
     border-radius: 3px;
@@ -396,12 +408,12 @@ input[type="file"].form-control::file-selector-button {
 }
 input[type="file"].form-control:hover::file-selector-button,
 input[type="file"].form-control::file-selector-button:hover {
-    background-color: #006d6a !important;
+    background-color: var(--eb-brand-dark) !important;
     color: #ffffff !important;
 }
 /* Vendor prefix per Safari/Chrome più vecchi */
 input[type="file"].form-control::-webkit-file-upload-button {
-    background-color: #1ABC9C !important;
+    background-color: var(--eb-brand) !important;
     color: #ffffff !important;
     border: none !important;
     border-radius: 3px;
@@ -412,7 +424,7 @@ input[type="file"].form-control::-webkit-file-upload-button {
 }
 input[type="file"].form-control:hover::-webkit-file-upload-button,
 input[type="file"].form-control::-webkit-file-upload-button:hover {
-    background-color: #006d6a !important;
+    background-color: var(--eb-brand-dark) !important;
     color: #ffffff !important;
 }
 
@@ -539,7 +551,7 @@ label.error {
     background-color: var(--dm-surface-alt);
 }
 .table > thead th {
-    background-color: #1ABC9C !important; /* bg_pr */
+    background-color: var(--eb-brand) !important; /* bg_pr */
     color: #fff !important;               /* color_w */
     border-bottom-color: var(--dm-border-strong);
 }
@@ -574,7 +586,7 @@ input.form-control {
     background-color: var(--dm-input-bg);
     color: var(--dm-input-text);
     border-color: var(--dm-input-focus-border);
-    box-shadow: 0 0 0 0.2rem rgba(0, 161, 156, 0.2);
+    box-shadow: 0 0 0 0.2rem rgba(var(--eb-brand-rgb), 0.2);
 }
 .form-control:disabled,
 .form-control[readonly],
@@ -661,9 +673,9 @@ input.form-control {
     border-color: rgba(203, 12, 15, 0.4);
 }
 [data-theme-resolved="dark"] .alert-info {
-    background-color: rgba(0, 161, 156, 0.15);
+    background-color: rgba(var(--eb-brand-rgb), 0.15);
     color: #b9ebe9;
-    border-color: rgba(0, 161, 156, 0.35);
+    border-color: rgba(var(--eb-brand-rgb), 0.35);
 }
 /* Notice fluttuanti: sfondo pieno e opaco (niente trasparenza) perché stanno sopra il contenuto */
 [data-theme-resolved="dark"] .notices .notice.alert-success {
@@ -704,11 +716,11 @@ input.form-control {
     color: #fff;
 }
 [data-theme-resolved="dark"] .badge.bg-info {
-    background-color: #006d6a !important;
+    background-color: var(--eb-brand-dark) !important;
     color: #fff;
 }
 [data-theme-resolved="dark"] .badge.bg-primary {
-    background-color: #006d6a !important;
+    background-color: var(--eb-brand-dark) !important;
 }
 
 /* ===== Accordion custom (dm-accordion) — evita il conflitto con l'accordion del tema Canvas ===== */
@@ -727,8 +739,8 @@ input.form-control {
     justify-content: space-between;
     gap: 10px;
     padding: 12px 16px;
-    background: rgba(0, 161, 156, 0.08);
-    color: #1ABC9C;
+    background: rgba(var(--eb-brand-rgb), 0.08);
+    color: var(--eb-brand);
     border: 0;
     font-weight: 600;
     font-size: 15px;
@@ -736,7 +748,7 @@ input.form-control {
     cursor: pointer;
 }
 .dm-acc-header:hover {
-    background: rgba(0, 161, 156, 0.14);
+    background: rgba(var(--eb-brand-rgb), 0.14);
 }
 .dm-acc-chevron {
     transition: transform .2s ease;
@@ -750,10 +762,10 @@ input.form-control {
 }
 [data-theme-resolved="dark"] .dm-acc-header {
     background: var(--dm-surface-alt);
-    color: #4cd6cf;
+    color: var(--eb-brand-light);
 }
 [data-theme-resolved="dark"] .dm-acc-header:hover {
-    background: rgba(0, 161, 156, 0.18);
+    background: rgba(var(--eb-brand-rgb), 0.18);
 }
 
 /* ===== List group (checklist mansionario) ===== */
@@ -872,12 +884,12 @@ input.form-control {
 /* ===== Pulsante apertura menu laterale (tema Canvas) =====
    Mantiene il colore primario brand in light e dark. */
 #header-trigger {
-    background-color: #1ABC9C !important;
+    background-color: var(--eb-brand) !important;
     color: #ffffff;
     border-radius: 4px;
 }
 #header-trigger:hover {
-    background-color: #007f7a !important;
+    background-color: var(--eb-brand-dark) !important;
 }
 #header-trigger i {
     color: #ffffff !important;
@@ -929,19 +941,19 @@ input.form-control {
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 .dm-switch input:checked + .dm-switch-slider {
-    background-color: #1ABC9C;
+    background-color: var(--eb-brand);
 }
 .dm-switch input:checked + .dm-switch-slider::before {
     transform: translateX(20px);
 }
 .dm-switch input:focus-visible + .dm-switch-slider {
-    box-shadow: 0 0 0 0.2rem rgba(0, 161, 156, 0.25);
+    box-shadow: 0 0 0 0.2rem rgba(var(--eb-brand-rgb), 0.25);
 }
 [data-theme-resolved="dark"] .dm-switch-slider {
     background-color: #3a4356;
 }
 [data-theme-resolved="dark"] .dm-switch input:checked + .dm-switch-slider {
-    background-color: #4cd6cf;
+    background-color: var(--eb-brand-light);
 }
 
 /* ===================================================================
@@ -949,7 +961,7 @@ input.form-control {
    =================================================================== */
 .modal-header {
     border-bottom: none;
-    background: #1ABC9C;
+    background: var(--eb-brand);
     border-radius: 0;
     padding: 14px 20px;
 }
@@ -962,7 +974,7 @@ input.form-control {
     font-weight: 600;
 }
 .modal-stripe {
-    background: #1ABC9C71;
+    background: rgba(var(--eb-brand-rgb), 0.44);
     height: 8px;
     border: 0;
 }
@@ -1029,13 +1041,13 @@ input.form-control {
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 .form-check-input[type="checkbox"]:not(.form-check-input-classic):checked {
-    background-color: #1ABC9C;
+    background-color: var(--eb-brand);
 }
 .form-check-input[type="checkbox"]:not(.form-check-input-classic):checked::before {
     transform: translateX(18px);
 }
 .form-check-input[type="checkbox"]:not(.form-check-input-classic):focus-visible {
-    box-shadow: 0 0 0 0.2rem rgba(0, 161, 156, 0.25);
+    box-shadow: 0 0 0 0.2rem rgba(var(--eb-brand-rgb), 0.25);
 }
 .form-check-input[type="checkbox"]:not(.form-check-input-classic):disabled {
     opacity: 0.6;
@@ -1081,7 +1093,7 @@ form {
     flex-shrink: 0;
 }
 .form-check-input[type="radio"]:not(.form-check-input-classic):checked {
-    border-color: #1ABC9C;
+    border-color: var(--eb-brand);
     background-color: #ffffff;
 }
 .form-check-input[type="radio"]:not(.form-check-input-classic):checked::before {
@@ -1090,13 +1102,13 @@ form {
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background: #1ABC9C;
+    background: var(--eb-brand);
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
 }
 .form-check-input[type="radio"]:not(.form-check-input-classic):focus-visible {
-    box-shadow: 0 0 0 0.2rem rgba(0, 161, 156, 0.25);
+    box-shadow: 0 0 0 0.2rem rgba(var(--eb-brand-rgb), 0.25);
 }
 [data-theme-resolved="dark"] .form-check-input[type="radio"]:not(.form-check-input-classic):checked {
     background-color: var(--dm-bg);
@@ -1107,7 +1119,7 @@ form {
     background-color: #3a4356;
 }
 [data-theme-resolved="dark"] .form-check-input[type="checkbox"]:not(.form-check-input-classic):checked {
-    background-color: #4cd6cf;
+    background-color: var(--eb-brand-light);
 }
 
 /* ===================================================================
@@ -1270,4 +1282,26 @@ form {
         flex-direction: column;
         min-width: 220px;
     }
+}
+
+/* =====================================================================
+   13.1.3 Riordino con drag & drop (tipi di documento).
+   La riga trascinata resta visibile ma sbiadita, come nei mansionari di
+   DualMoto; il cursore "grabbing" vale su tutta la riga durante il trascinamento.
+   ===================================================================== */
+.doc-type-row.is-dragging {
+    opacity: .45;
+    cursor: grabbing;
+}
+.doc-type-row .drag-handle:active {
+    cursor: grabbing;
+}
+
+/* =====================================================================
+   Datepicker (bootstrap-datepicker): il CSS del componente non dichiara
+   z-index, così dentro un modale (z-index 1055) il calendario finirebbe
+   sotto. Lo alziamo sopra al modale; vale anche per i picker fuori dai modali.
+   ===================================================================== */
+.datepicker.datepicker-dropdown {
+    z-index: 1085 !important;
 }

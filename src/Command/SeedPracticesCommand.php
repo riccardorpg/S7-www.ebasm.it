@@ -2,6 +2,7 @@
 
 namespace App\Command;
 
+use App\Entity\Slave\Customer;
 use App\Entity\Slave\Document;
 use App\Entity\Slave\Practice;
 use App\Service\CompanyService;
@@ -57,17 +58,18 @@ class SeedPracticesCommand extends Command
         $baseDir = $this->uploadsBaseDir((string) $company->getDbName());
 
         $types = ['Compravendita', 'Successione', 'Donazione', 'Mutuo'];
+        // [nome, cognome/ragione sociale, CF o P.IVA, email, telefono, indirizzo, città, CAP]
         $buyers = [
-            ['Rossi Mario', 'RSSMRA80A01H501U', 'mario.rossi@example.com', '3401112223', 'Via Roma 1, Milano'],
-            ['Bianchi Srl', '01234567890', 'info@bianchisrl.example', '025556677', 'Corso Italia 22, Milano'],
-            ['Verdi Anna', 'VRDNNA85M41F205X', 'anna.verdi@example.com', '3487778889', 'Via Dante 9, Torino'],
-            ['Neri Luca', 'NRELCU78T10L219K', 'luca.neri@example.com', '3391234567', 'Via Po 4, Torino'],
+            ['Mario', 'Rossi', 'RSSMRA80A01H501U', 'mario.rossi@example.com', '3401112223', 'Via Roma 1', 'Milano', '20121'],
+            ['', 'Bianchi Srl', '01234567890', 'info@bianchisrl.example', '025556677', 'Corso Italia 22', 'Milano', '20122'],
+            ['Anna', 'Verdi', 'VRDNNA85M41F205X', 'anna.verdi@example.com', '3487778889', 'Via Dante 9', 'Torino', '10122'],
+            ['Luca', 'Neri', 'NRELCU78T10L219K', 'luca.neri@example.com', '3391234567', 'Via Po 4', 'Torino', '10124'],
         ];
         $sellers = [
-            ['Immobiliare Sole Spa', '09876543210', 'vendite@sole.example', '0287654321', 'Viale Europa 100, Milano'],
-            ['Gialli Giuseppe', 'GLLGPP60E05H501Z', 'g.gialli@example.com', '3405550001', 'Via Verdi 3, Monza'],
-            ['Costruzioni Alfa Srl', '05555512345', 'alfa@costruzioni.example', '0311122334', 'Via Milano 50, Como'],
-            ['Ferrari Paola', 'FRRPLA72C48A794T', 'paola.ferrari@example.com', '3399998887', 'Via Torino 12, Bergamo'],
+            ['', 'Immobiliare Sole Spa', '09876543210', 'vendite@sole.example', '0287654321', 'Viale Europa 100', 'Milano', '20126'],
+            ['Giuseppe', 'Gialli', 'GLLGPP60E05H501Z', 'g.gialli@example.com', '3405550001', 'Via Verdi 3', 'Monza', '20900'],
+            ['', 'Costruzioni Alfa Srl', '05555512345', 'alfa@costruzioni.example', '0311122334', 'Via Milano 50', 'Como', '22100'],
+            ['Paola', 'Ferrari', 'FRRPLA72C48A794T', 'paola.ferrari@example.com', '3399998887', 'Via Torino 12', 'Bergamo', '24121'],
         ];
 
         $created = 0;
@@ -76,13 +78,13 @@ class SeedPracticesCommand extends Command
             $practice->setNumber(sprintf('P-%04d/%d', $i + 1, 2026))
                 ->setType($types[$i % count($types)])
                 ->setSubject('Immobile sito in Via Esempio ' . ($i + 1) . ' — foglio ' . (10 + $i) . ', particella ' . (100 + $i))
+                ->setAddress('Via Esempio ' . ($i + 1) . ', Milano')
                 ->setStatus(Practice::STATUS_APERTA)
                 ->setNotaryEmail($notaryEmail);
 
-            [$bn, $bf, $be, $bp, $ba] = $buyers[$i % count($buyers)];
-            $practice->getBuyer()->setName($bn)->setFiscalCode($bf)->setEmail($be)->setPhone($bp)->setAddress($ba);
-            [$sn, $sf, $se, $sp, $sa] = $sellers[$i % count($sellers)];
-            $practice->getSeller()->setName($sn)->setFiscalCode($sf)->setEmail($se)->setPhone($sp)->setAddress($sa);
+            // Le parti sono clienti dell'agenzia (11): riusa l'anagrafica se il CF c'è già.
+            $practice->setBuyer($this->resolveCustomer($em, $buyers[$i % count($buyers)]));
+            $practice->setSeller($this->resolveCustomer($em, $sellers[$i % count($sellers)]));
 
             $em->persist($practice);
             $em->flush(); // serve l'id per il percorso file
@@ -124,6 +126,43 @@ class SeedPracticesCommand extends Command
         $io->success(sprintf('Create %d pratiche demo nel DB "%s" (agenzia %s).', $created, $company->getDbName(), $code));
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * Cliente demo: se il codice fiscale è già in anagrafica lo riusa, altrimenti lo crea.
+     *
+     * @param array{0: string, 1: string, 2: string, 3: string, 4: string, 5: string, 6: string, 7: string} $data
+     */
+    private function resolveCustomer(\Doctrine\ORM\EntityManagerInterface $em, array $data): Customer
+    {
+        [$name, $surname, $fiscalCode, $email, $phone, $address, $city, $zip] = $data;
+
+        /** @var \App\Repository\Slave\CustomerRepository $repo */
+        $repo = $em->getRepository(Customer::class);
+        $existing = $repo->findOneByFiscalCode($fiscalCode);
+        if ($existing !== null) {
+            return $existing;
+        }
+
+        $customer = (new Customer())
+            ->setName($name)
+            ->setSurname($surname)
+            ->setFiscalCode($fiscalCode)
+            ->setEmail($email)
+            ->setPhone($phone)
+            ->setAddress($address)
+            ->setCity($city)
+            ->setZip($zip);
+
+        // Le aziende demo hanno una P. IVA di 11 cifre al posto del codice fiscale.
+        if (preg_match('/^\d{11}$/', $fiscalCode) === 1) {
+            $customer->setVatNumber($fiscalCode);
+        }
+
+        $em->persist($customer);
+        $em->flush();
+
+        return $customer;
     }
 
     private function uploadsBaseDir(string $dbName): string

@@ -58,7 +58,8 @@
 
                                     <div id="logo">
                                         <a href="{% block home_path %}{{ path('homepage') }}{% endblock %}">
-                                            <img src="{{ asset(PATH_GRAPHICS ~ 'logo.png') }}" alt="EBASM" style="max-height:44px;">
+                                            {# Marchio scuro: su hero/header .dark viene reso bianco dal filtro in custom.css. #}
+                                            <img src="{{ asset(PATH_GRAPHICS ~ 'logos/ebasm-mono-nero.svg') }}" alt="EBASM" style="max-height:44px;">
                                         </a>
                                     </div>
 

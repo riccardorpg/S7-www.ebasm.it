@@ -122,6 +122,10 @@
 /* OVERFLOW */
 .overflow_a{ overflow:auto!important }
 
+/* OPACITY — usata per i testi secondari ("Nessun record", note sotto ai campi). */
+.op_05 { opacity: .5 }
+.op_07 { opacity: .7 }
+
 /* PADDING */
 .p_0p{ padding: 0px 0px 0px 0px !important }
 .p_10p { padding: 10px!important }
@@ -131,6 +135,8 @@
 .p_80p { padding: 80px!important }
 .p_b_0p { padding-bottom: 0px !important }
 .p_t_5p{ padding-top:5px }
+.p_t_15p{ padding-top:15px }
+.p_t_20p{ padding-top:20px }
 .p_t_30p{ padding-top:30px }
 .p_t_40p{ padding-top:40px }
 .p_t_50p{ padding-top:50px }
@@ -148,6 +154,7 @@
 
 .p_tb_5p {padding-top:5px!important; padding-bottom: 5px!important }
 .p_tb_10p {padding-top:10px!important; padding-bottom: 10px!important }
+.p_tb_15p {padding-top:15px!important; padding-bottom: 15px!important }
 .p_tb_20p {padding-top:20px!important; padding-bottom: 20px!important }
 .p_tb_40p {padding-top:40px; padding-bottom: 40px }
 .p_tb_50p { padding-top:50px; padding-bottom: 50px }
@@ -542,15 +549,27 @@ ul.navbar-nav li.nav-item a.nav-link:hover { background-color: rgba(0, 0, 0, 0.1
    [4] STILI INLINE — base.html.twig  (ex blocco <style> nel <head>)
    ============================================================================= */
 
-/* Colore primary del brand EBASM (blu, allineato alla landing). */
-:root { --eb-brand:#1D4ED8; --eb-brand-dark:#1739A8; --eb-dark:#12181f; }
+/* Colore primary del brand EBASM (blu, allineato alla landing).
+   --eb-brand-rgb serve alle rgba() (niente color-mix dove non è supportato);
+   --eb-brand-light è la variante per fondo scuro (tema dark dell'area privata).
+   Ridefiniamo anche --cnvs-themecolor di Canvas: così bottoni, link, tab e tutti
+   i componenti del tema seguono il brand senza toccare css/style.css (vendor). */
+:root {
+    --eb-brand:#1D4ED8;
+    --eb-brand-rgb:29, 78, 216;
+    --eb-brand-dark:#1739A8;
+    --eb-brand-light:#7DA2FF;
+    --eb-dark:#12181f;
+    --cnvs-themecolor:var(--eb-brand);
+    --cnvs-themecolor-rgb:var(--eb-brand-rgb);
+}
 #header.transparent-header:not(.sticky-header) { background:transparent; }
 /* Logo bianco quando l'header è scuro/trasparente (es. hero della homepage). */
 #header.dark #logo img { filter:brightness(0) invert(1); }
 /* Immagine di testata (1.2.1): sostituire il gradiente con una foto mettendo il file
    in public/images/graphics/hero.jpg e aggiungendo url('...') come primo layer. */
 .eb-hero { position:relative; min-height:88vh; display:flex; align-items:center;
-    background:radial-gradient(1200px 600px at 75% 10%, rgba(0,161,156,.35), transparent 60%),
+    background:radial-gradient(1200px 600px at 75% 10%, rgba(var(--eb-brand-rgb),.35), transparent 60%),
                linear-gradient(135deg, #0b1620 0%, #12303a 55%, #0b1620 100%); color:#fff; }
 .eb-hero h1 { font-size:clamp(2rem,5vw,3.6rem); font-weight:700; line-height:1.1; }
 .eb-brand-color { color:var(--eb-brand); }
@@ -577,7 +596,7 @@ ul.navbar-nav li.nav-item a.nav-link:hover { background-color: rgba(0, 0, 0, 0.1
 .eb-feature { text-align:center; padding:26px 18px; height:100%; }
 .eb-feature .eb-feature-icon { font-size:2.4rem; color:var(--eb-brand); margin-bottom:14px; display:inline-block; }
 .eb-pricing { border:1px solid #e6e9ec; border-radius:14px; padding:34px 26px; text-align:center; height:100%; background:#fff; }
-.eb-pricing.featured { border-color:var(--eb-brand); box-shadow:0 12px 40px rgba(0,161,156,.15); }
+.eb-pricing.featured { border-color:var(--eb-brand); box-shadow:0 12px 40px rgba(var(--eb-brand-rgb),.15); }
 .eb-price { font-size:2.6rem; font-weight:700; color:var(--eb-dark); }
 .eb-price small { font-size:1rem; font-weight:400; color:#7a828a; }
 .eb-footer { background:var(--eb-brand); color:#fff; padding:50px 0 30px; }
@@ -619,5 +638,4 @@ ul.navbar-nav li.nav-item a.nav-link:hover { background-color: rgba(0, 0, 0, 0.1
    [5] STILI LANDING — index.html.twig  (ex blocco <style> in page_stylesheets)
    ============================================================================= */
 
-/* Allinea il brand EBASM al blu della landing (usato anche dal footer del base). */
-:root { --eb-brand:#1D4ED8; }
+/* Il brand è definito una volta sola nel blocco [4]: qui niente ridefinizioni. */

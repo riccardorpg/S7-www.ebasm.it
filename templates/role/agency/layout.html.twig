@@ -3,9 +3,38 @@
 {% block home_path %}{{ path('agency_index') }}{% endblock %}
 
 {% block role_menu %}
-    <li class="menu-item{{ app.request.attributes.get('_route') == 'agency_index' ? ' current' : '' }}">
-        <a class="menu-link" href="{{ path('agency_index') }}"><div>Dashboard</div></a>
+    {% set r = app.request.attributes.get('_route') %}
+    <li class="menu-item{{ r == 'agency_index' ? ' current' : '' }}">
+        <a class="menu-link" href="{{ path('agency_index') }}"><div>Scrivania</div></a>
     </li>
+    {# 10.1.5 Le voci compaiono solo a chi ha almeno la lettura sulla sezione. #}
+    {% if is_granted('view', 'staff') %}
+        <li class="menu-item{{ r starts with 'agency_staff' ? ' current' : '' }}">
+            <a class="menu-link" href="{{ path('agency_staff') }}"><div>Staff</div></a>
+        </li>
+    {% endif %}
+    {% if is_granted('view', 'customers') %}
+        <li class="menu-item{{ r starts with 'agency_customer' ? ' current' : '' }}">
+            <a class="menu-link" href="{{ path('agency_customers') }}"><div>Clienti</div></a>
+        </li>
+    {% endif %}
+    {# 13. Configurazioni: una voce di sottomenu per pagina. #}
+    {% if is_granted('view', 'configurations') %}
+        <li class="menu-item{{ r starts with 'agency_document_type' or r starts with 'agency_practice_' ? ' current' : '' }}">
+            <a class="menu-link" href="{{ path('agency_document_types') }}"><div>Configurazioni</div></a>
+            <ul class="sub-menu-container">
+                <li class="menu-item{{ r starts with 'agency_document_type' ? ' current' : '' }}">
+                    <a class="menu-link" href="{{ path('agency_document_types') }}">Tipi di documento</a>
+                </li>
+                <li class="menu-item{{ r starts with 'agency_practice_mark' ? ' current' : '' }}">
+                    <a class="menu-link" href="{{ path('agency_practice_marks') }}">Contrassegni pratiche</a>
+                </li>
+                <li class="menu-item{{ r starts with 'agency_practice_tag' ? ' current' : '' }}">
+                    <a class="menu-link" href="{{ path('agency_practice_tags') }}">Tag pratiche</a>
+                </li>
+            </ul>
+        </li>
+    {% endif %}
     <li class="menu-item">
         <a class="menu-link" href="{{ path('logout') }}"><div>Esci</div></a>
     </li>

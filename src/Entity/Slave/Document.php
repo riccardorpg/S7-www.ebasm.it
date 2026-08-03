@@ -27,6 +27,15 @@ class Document
     #[ORM\JoinColumn(name: 'practice_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private ?Practice $practice = null;
 
+    /**
+     * 13.1 Tipo di documento del catalogo dell'agenzia da cui nasce questo allegato.
+     * Nullable: restano validi i documenti aggiunti a mano, fuori catalogo. Il vincolo
+     * RESTRICT è ciò che rende un tipo "già utilizzato" e quindi non eliminabile (13.1.5).
+     */
+    #[ORM\ManyToOne(targetEntity: DocumentType::class)]
+    #[ORM\JoinColumn(name: 'document_type_id', referencedColumnName: 'id', nullable: true, onDelete: 'RESTRICT')]
+    private ?DocumentType $documentType = null;
+
     /** 17.1.1.1.5.2.1 Nome allegato. */
     #[ORM\Column(type: 'string', length: 190)]
     private string $name = '';
@@ -68,6 +77,18 @@ class Document
     public function setPractice(?Practice $practice): static
     {
         $this->practice = $practice;
+
+        return $this;
+    }
+
+    public function getDocumentType(): ?DocumentType
+    {
+        return $this->documentType;
+    }
+
+    public function setDocumentType(?DocumentType $documentType): static
+    {
+        $this->documentType = $documentType;
 
         return $this;
     }

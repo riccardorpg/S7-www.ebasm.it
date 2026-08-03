@@ -1,0 +1,241 @@
+{% extends 'role/agency/layout.html.twig' %}
+{% import 'components/action_icons.html.twig' as ico %}
+
+{% block title %} - {{ customer.fullName }}{% endblock %}
+{% block role_page_title_inner %}{{ customer.fullName }}{% endblock %}
+
+{% block role_page_title_breadcrumb %}
+    <li class="breadcrumb-item"><a href="{{ path('agency_index') }}">Agenzia</a></li>
+    <li class="breadcrumb-item"><a href="{{ path('agency_customers') }}">Clienti</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{ customer.fullName }}</li>
+{% endblock %}
+
+{% block sub_menu_left %}
+    <li class="nav-item"><a class="nav-link" href="{{ path('agency_customers') }}">Torna all'elenco</a></li>
+{% endblock %}
+
+{% block sub_menu_right %}
+    {% if is_granted('edit', 'customers') %}
+        <li class="nav-item"><a class="nav-link" href="javascript:customerEditOpen()">Modifica</a></li>
+    {% endif %}
+{% endblock %}
+
+{% block role_content %}
+    <section class="content-wrap">
+        <div class="container">
+            <ul class="nav nav-tabs canvas-alt-tabs tabs-tb" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-anagrafica" type="button">Anagrafica</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-pratiche" type="button">
+                        Pratiche <span class="badge bg-secondary">{{ practices|length }}</span>
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content p_t_20p">
+
+                {# ===== 11.2.1 / 11.2.2 Anagrafica e dati fiscali ===== #}
+                <div class="tab-pane fade show active" id="tab-anagrafica">
+                    <h6 class="m_b_10p">Dati anagrafici</h6>
+                    <table class="table align-middle m_b_none">
+                        <tr><th style="width:25%">Nome</th><td>{{ customer.name ?: '—' }}</td></tr>
+                        <tr><th>Cognome / Ragione sociale</th><td>{{ customer.surname }}</td></tr>
+                        <tr><th>Luogo di nascita</th><td>{{ customer.birthPlace ?: '—' }}</td></tr>
+                        <tr><th>Data di nascita</th><td>{{ customer.birthDate ? customer.birthDate|date('d/m/Y') : '—' }}</td></tr>
+                        <tr><th>Indirizzo</th><td>{{ customer.address ?: '—' }}</td></tr>
+                        <tr><th>Città</th><td>{{ customer.city ? (customer.zip ? customer.zip ~ ' ' : '') ~ customer.city : '—' }}</td></tr>
+                        <tr><th>E-mail</th><td>{{ customer.email ?: '—' }}</td></tr>
+                        <tr><th>Telefono</th><td>{{ customer.phone ?: '—' }}</td></tr>
+                    </table>
+
+                    <h6 class="p_t_20p m_b_10p">Dati fiscali</h6>
+                    <table class="table align-middle m_b_none">
+                        <tr><th style="width:25%">Codice fiscale</th><td>{{ customer.fiscalCode ?: '—' }}</td></tr>
+                        <tr><th>Partita IVA</th><td>{{ customer.vatNumber ?: '—' }}</td></tr>
+                        <tr><th>PEC</th><td>{{ customer.pec ?: '—' }}</td></tr>
+                        <tr><th>Codice SDI</th><td>{{ customer.sdi ?: '—' }}</td></tr>
+                        <tr><th>Note</th><td>{{ customer.notes ? customer.notes|nl2br : '—' }}</td></tr>
+                    </table>
+                </div>
+
+                {# ===== 11.2.3 Elenco pratiche del cliente =====
+                   Le pratiche di un cliente sono poche e già tutte in pagina: il filtro
+                   lavora in JS sulle righe, senza ricaricare. #}
+                <div class="tab-pane fade" id="tab-pratiche">
+                    <table class="table table-hover table-bordered align-middle m_b_none">
+                        <thead>
+                            {# Un filtro per campo: ogni input lavora sulla propria colonna
+                               tramite i data-* della riga (vedi JS in fondo alla pagina). #}
+                            <tr class="tr_filter">
+                                <td>
+                                    <select class="form-select form-select-sm practice-filter" data-field="status">
+                                        <option value="">Tutti</option>
+                                        <option value="aperta">Aperta</option>
+                                        <option value="completata">Completata</option>
+                                        <option value="archiviabile">Archiviabile</option>
+                                    </select>
+                                </td>
+                                <td><input type="text" class="form-control form-control-sm practice-filter" data-field="date" placeholder="Filtra" autocomplete="off"></td>
+                                <td><input type="text" class="form-control form-control-sm practice-filter" data-field="type" placeholder="Filtra" autocomplete="off"></td>
+                                <td><input type="text" class="form-control form-control-sm practice-filter" data-field="seller" placeholder="Filtra" autocomplete="off"></td>
+                                <td><input type="text" class="form-control form-control-sm practice-filter" data-field="buyer" placeholder="Filtra" autocomplete="off"></td>
+                                <td><input type="text" class="form-control form-control-sm practice-filter" data-field="number" placeholder="Filtra" autocomplete="off"></td>
+                                <td><input type="text" class="form-control form-control-sm practice-filter" data-field="address" placeholder="Filtra" autocomplete="off"></td>
+                                <td class="txt_a_c text-nowrap">
+                                    <button type="button" class="btn p-0 border-0 bg-transparent" id="practiceFilterReset"
+                                            data-bs-toggle="tooltip" data-bs-title="Azzera filtri">
+                                        <img src="{{ asset(PATH_GRAPHICS ~ 'icons/close.png') }}" class="icon_action icon_red" alt="Azzera filtri">
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="td_w_120p">Stato</th>
+                                <th class="td_w_120p">Data creazione</th>
+                                <th class="td_w_150p">Tipo</th>
+                                <th>Venditore</th>
+                                <th>Acquirente</th>
+                                <th class="td_w_150p">Codice</th>
+                                <th>Indirizzo</th>
+                                <th class="td_w_100p txt_a_c">Scheda</th>
+                            </tr>
+                        </thead>
+                        <tbody id="practiceRows">
+                        {% for p in practices %}
+                            <tr class="practice-row"
+                                data-status="{{ p.status }}"
+                                data-date="{{ p.createdAt ? p.createdAt|date('d/m/Y') : '' }}"
+                                data-type="{{ p.type }}"
+                                data-seller="{{ p.seller ? p.seller.fullName : '' }}"
+                                data-buyer="{{ p.buyer ? p.buyer.fullName : '' }}"
+                                data-number="{{ p.number }}"
+                                data-address="{{ p.address }}">
+                                <td><span class="badge {{ p.status == 'completata' ? 'bg-success' : (p.status == 'archiviabile' ? 'bg-info' : 'bg-secondary') }}">{{ p.statusLabel }}</span></td>
+                                <td>{{ p.createdAt ? p.createdAt|date('d/m/Y') : '—' }}</td>
+                                <td>{{ p.type ?: '—' }}</td>
+                                <td>
+                                    {{ p.seller ? p.seller.fullName : '—' }}
+                                    {% if p.seller and p.seller.id == customer.id %}<span class="badge bg-light text-dark">questo cliente</span>{% endif %}
+                                </td>
+                                <td>
+                                    {{ p.buyer ? p.buyer.fullName : '—' }}
+                                    {% if p.buyer and p.buyer.id == customer.id %}<span class="badge bg-light text-dark">questo cliente</span>{% endif %}
+                                </td>
+                                <td>{{ p.number }}</td>
+                                <td>{{ p.address ?: '—' }}</td>
+                                {# 11.2.3.8 Link alla scheda: la scheda pratica lato agenzia arriva col punto 12. #}
+                                <td class="txt_a_c">{{ ico.disabled('view-grey', 'La scheda pratica lato agenzia non è ancora disponibile') }}</td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="8" class="op_07 text-center">Nessuna pratica collegata a questo cliente.</td></tr>
+                        {% endfor %}
+                        {# Mostrata dal JS quando il filtro non trova nulla. #}
+                        <tr id="practiceNoMatch" class="d-none"><td colspan="8" class="op_07 text-center">Nessuna pratica corrisponde al filtro.</td></tr>
+                        </tbody>
+                    </table>
+                    {% if practices|length %}
+                        <small class="op_07" id="practiceCount"></small>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block modals %}
+    {% if is_granted('edit', 'customers') %}
+        {% embed 'components/modals/form_modal.html.twig' with {type: 'customerEdit', title: 'Modifica cliente', action: path('agency_customer_edit', {id: customer.id}), size: 'modal-lg'} %}
+            {% block modalBody %}{{ include('role/agency/customers/_form_fields.html.twig', {prefix: 'customerEdit'}) }}{% endblock %}
+        {% endembed %}
+    {% endif %}
+{% endblock %}
+
+{% block page_javascripts %}
+{# 11.2.3 Filtro delle pratiche lato client, un campo per colonna: lo stato è a
+   corrispondenza esatta (select), gli altri per sottostringa sul valore della colonna. #}
+<script>
+    (function () {
+        var body = document.getElementById('practiceRows');
+        if (!body) return;
+        var rows = Array.prototype.slice.call(body.querySelectorAll('.practice-row'));
+        if (!rows.length) return;
+
+        var filters = Array.prototype.slice.call(document.querySelectorAll('.practice-filter'));
+        var noMatch = document.getElementById('practiceNoMatch');
+        var counter = document.getElementById('practiceCount');
+
+        // Valori normalizzati una volta sola: il filtro non rilegge il DOM a ogni tasto.
+        rows.forEach(function (row) {
+            row.filterValues = {};
+            filters.forEach(function (input) {
+                var field = input.dataset.field;
+                row.filterValues[field] = (row.dataset[field] || '').toLowerCase();
+            });
+        });
+
+        function apply() {
+            var visible = 0;
+
+            rows.forEach(function (row) {
+                var ok = filters.every(function (input) {
+                    var needle = (input.value || '').trim().toLowerCase();
+                    if (needle === '') return true;
+                    var value = row.filterValues[input.dataset.field];
+                    // Lo stato arriva da una select: deve combaciare, non contenere.
+                    return input.dataset.field === 'status'
+                        ? value === needle
+                        : value.indexOf(needle) !== -1;
+                });
+                row.classList.toggle('d-none', !ok);
+                if (ok) visible++;
+            });
+
+            noMatch.classList.toggle('d-none', visible > 0);
+            if (counter) {
+                counter.textContent = visible === rows.length
+                    ? rows.length + (rows.length === 1 ? ' pratica' : ' pratiche')
+                    : visible + ' di ' + rows.length + ' pratiche';
+            }
+        }
+
+        filters.forEach(function (input) {
+            input.addEventListener(input.tagName === 'SELECT' ? 'change' : 'input', apply);
+        });
+        document.getElementById('practiceFilterReset').addEventListener('click', function () {
+            filters.forEach(function (input) { input.value = ''; });
+            apply();
+        });
+
+        apply();
+    })();
+</script>
+{% if is_granted('edit', 'customers') %}
+<script>
+    function customerEditOpen() {
+        var v = {{ {
+            name: customer.name,
+            surname: customer.surname,
+            birth_place: customer.birthPlace,
+            birth_date: customer.birthDate ? customer.birthDate|date('d-m-Y') : '',
+            address: customer.address,
+            city: customer.city,
+            zip: customer.zip,
+            email: customer.email,
+            phone: customer.phone,
+            fiscal_code: customer.fiscalCode,
+            vat_number: customer.vatNumber,
+            pec: customer.pec,
+            sdi: customer.sdi,
+            notes: customer.notes
+        }|json_encode|raw }};
+        Object.keys(v).forEach(function (field) {
+            var el = document.getElementById('customerEdit_' + field);
+            if (el) { el.value = v[field] || ''; }
+        });
+        customerEditShow();
+    }
+</script>
+{% endif %}
+{% endblock %}

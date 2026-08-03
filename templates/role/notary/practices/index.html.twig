@@ -79,12 +79,12 @@
                                 {% if p.subject %}<div class="op_07 small">{{ p.subject|length > 70 ? p.subject|slice(0, 70) ~ '…' : p.subject }}</div>{% endif %}
                             </td>
                             <td>
-                                {{ p.buyer.name ?: '—' }}
-                                {% if p.buyer.fiscalCode %}<div class="op_07 small">{{ p.buyer.fiscalCode }}</div>{% endif %}
+                                {{ p.buyer ? p.buyer.fullName : '—' }}
+                                {% if p.buyer and p.buyer.fiscalCode %}<div class="op_07 small">{{ p.buyer.fiscalCode }}</div>{% endif %}
                             </td>
                             <td>
-                                {{ p.seller.name ?: '—' }}
-                                {% if p.seller.fiscalCode %}<div class="op_07 small">{{ p.seller.fiscalCode }}</div>{% endif %}
+                                {{ p.seller ? p.seller.fullName : '—' }}
+                                {% if p.seller and p.seller.fiscalCode %}<div class="op_07 small">{{ p.seller.fiscalCode }}</div>{% endif %}
                             </td>
                             <td class="txt_a_c">
                                 <span data-bs-toggle="tooltip" data-bs-title="Caricati / Richiesti">

@@ -47,7 +47,8 @@
                             <form method="post" action="{{ path('login_code_submit') }}" class="d-flex flex-column flex-grow-1">
                                 <div class="form-group mb-3">
                                     <label class="form-label" for="codice">Codice personale</label>
-                                    <input type="text" id="codice" name="codice"
+                                    {# name="code": è il campo che legge login_code_submit. #}
+                                    <input type="text" id="codice" name="code"
                                            class="form-control form-control-lg text-center"
                                            placeholder="ES. AG001"
                                            maxlength="64"

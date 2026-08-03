@@ -54,6 +54,11 @@ services:
         tags:
             - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest, priority: 100 }
 
+    # Pulizia del cookie con il tenant quando l'utente esce.
+    App\EventListener\TenantCookieLogoutListener:
+        tags:
+            - { name: kernel.event_listener, event: Symfony\Component\Security\Http\Event\LogoutEvent, method: onLogout }
+
     # Impersonazione tenant-aware: quando un ROLE_ADMIN impersona un'agenzia, ri-punta
     # lo slave al DB dell'agenzia impersonata.
     App\EventListener\SwitchUserSubscriber:

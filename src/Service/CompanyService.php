@@ -21,6 +21,15 @@ class CompanyService
     public const SESSION_COMPANY_ID = 'companyId';
     public const SESSION_COMPANY_DB = 'companyDbName';
 
+    /**
+     * Cookie con il CODICE dell'agenzia, di durata pari al remember-me.
+     * Serve quando la sessione è scaduta ma il cookie "resta collegato" è ancora valido:
+     * senza tenant la connessione slave resterebbe sul database master e il caricamento
+     * dell'utente agenzia fallirebbe. Contiene solo il codice, che è già pubblico
+     * (compare nell'URL /accedi/{code}); non è una credenziale.
+     */
+    public const COOKIE_TENANT = 'eb_tenant';
+
     public function __construct(
         private readonly ManagerRegistry $registry,
         private readonly ParameterBagInterface $params,
@@ -78,16 +87,45 @@ class CompanyService
      */
     public function syncSlaveFromSession(): void
     {
-        $request = $this->requestStack->getCurrentRequest();
-        if ($request === null || !$request->hasSession()) {
-            return;
-        }
-
-        $session = $request->getSession();
-        $dbName = $session->get(self::SESSION_COMPANY_DB);
-        if (is_string($dbName) && $dbName !== '') {
+        $dbName = $this->currentTenantDbName();
+        if ($dbName !== null) {
             $this->pointSlaveToDbName($dbName);
         }
+    }
+
+    /**
+     * Database del tenant corrente: prima la sessione, poi il cookie del remember-me.
+     * Null se non c'è nessun contesto agenzia (utente master o visitatore anonimo).
+     */
+    public function currentTenantDbName(): ?string
+    {
+        $request = $this->requestStack->getCurrentRequest();
+        if ($request === null) {
+            return null;
+        }
+
+        if ($request->hasSession()) {
+            $dbName = $request->getSession()->get(self::SESSION_COMPANY_DB);
+            if (is_string($dbName) && $dbName !== '') {
+                return $dbName;
+            }
+        }
+
+        // Sessione scaduta ma "resta collegato" ancora valido: il tenant arriva dal cookie.
+        $code = (string) $request->cookies->get(self::COOKIE_TENANT, '');
+        if ($code === '') {
+            return null;
+        }
+
+        $company = $this->getCompanyByCode($code);
+        if ($company === null || !$company->isActive()) {
+            return null;
+        }
+
+        // Ripopola la sessione, così le richieste successive non ripassano dal cookie.
+        $this->storeInSession($company);
+
+        return (string) $company->getDbName();
     }
 
     /**

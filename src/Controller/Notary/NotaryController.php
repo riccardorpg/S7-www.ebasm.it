@@ -104,11 +104,16 @@ class NotaryController extends AbstractController
             $qb->andWhere('p.number LIKE :q OR p.type LIKE :q OR p.subject LIKE :q')
                 ->setParameter('q', '%' . $filters['q'] . '%');
         }
+        // Le parti sono clienti dell'agenzia (11): il filtro cerca su nome e cognome.
         if ($filters['buyer'] !== '') {
-            $qb->andWhere('p.buyer.name LIKE :b')->setParameter('b', '%' . $filters['buyer'] . '%');
+            $qb->leftJoin('p.buyer', 'bc')
+                ->andWhere("CONCAT(COALESCE(bc.name, ''), ' ', COALESCE(bc.surname, '')) LIKE :b")
+                ->setParameter('b', '%' . $filters['buyer'] . '%');
         }
         if ($filters['seller'] !== '') {
-            $qb->andWhere('p.seller.name LIKE :s')->setParameter('s', '%' . $filters['seller'] . '%');
+            $qb->leftJoin('p.seller', 'sc')
+                ->andWhere("CONCAT(COALESCE(sc.name, ''), ' ', COALESCE(sc.surname, '')) LIKE :s")
+                ->setParameter('s', '%' . $filters['seller'] . '%');
         }
         if ($filters['status'] !== '') {
             $qb->andWhere('p.status = :st')->setParameter('st', $filters['status']);

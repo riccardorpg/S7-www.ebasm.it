@@ -132,15 +132,19 @@
     </section>
 {% endblock %}
 
-{# Tabella anagrafica di una parte (acquirente/venditore). #}
-{% macro partyTable(party) %}
-    <table class="table align-middle m_b_none">
-        <tr><th style="width:35%">Denominazione</th><td>{{ party.name ?: '—' }}</td></tr>
-        <tr><th>CF / P.IVA</th><td>{{ party.fiscalCode ?: '—' }}</td></tr>
-        <tr><th>E-mail</th><td>{{ party.email ?: '—' }}</td></tr>
-        <tr><th>Telefono</th><td>{{ party.phone ?: '—' }}</td></tr>
-        <tr><th>Indirizzo</th><td>{{ party.address ?: '—' }}</td></tr>
-    </table>
+{# Tabella anagrafica di una parte: dal punto 11 le parti sono clienti dell'agenzia. #}
+{% macro partyTable(customer) %}
+    {% if customer is null %}
+        <p class="op_07 m_b_none">Parte non indicata.</p>
+    {% else %}
+        <table class="table align-middle m_b_none">
+            <tr><th style="width:35%">Denominazione</th><td>{{ customer.fullName ?: '—' }}</td></tr>
+            <tr><th>CF / P.IVA</th><td>{{ customer.fiscalCode ?: customer.vatNumber ?: '—' }}</td></tr>
+            <tr><th>E-mail</th><td>{{ customer.email ?: '—' }}</td></tr>
+            <tr><th>Telefono</th><td>{{ customer.phone ?: '—' }}</td></tr>
+            <tr><th>Indirizzo</th><td>{{ customer.fullAddress ?: '—' }}</td></tr>
+        </table>
+    {% endif %}
 {% endmacro %}
 
 {% block modals %}

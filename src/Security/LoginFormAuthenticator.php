@@ -6,6 +6,7 @@ use App\Entity\Master\User as MasterUser;
 use App\Entity\Slave\User as SlaveUser;
 use App\Service\CompanyService;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -138,6 +139,27 @@ class LoginFormAuthenticator extends AbstractLoginFormAuthenticator
             default                               => self::LOGIN_ROUTE,
         };
 
-        return new RedirectResponse($this->urlGenerator->generate($route));
+        $response = new RedirectResponse($this->urlGenerator->generate($route));
+
+        // Utente agenzia: ricorda il tenant per tutta la durata del "resta collegato".
+        // Se la sessione scade prima del cookie, il listener di request ritrova da qui il
+        // database su cui caricare l'utente (senza, la connessione slave resterebbe sul
+        // master e il ripristino da remember-me andrebbe in errore).
+        $code = trim((string) $request->request->get('code', ''));
+        if ($code !== '' && in_array('ROLE_AGENCY', $roles, true)) {
+            $response->headers->setCookie(Cookie::create(
+                CompanyService::COOKIE_TENANT,
+                $code,
+                new \DateTimeImmutable('+7 days'),
+                $request->getBasePath() ?: '/',
+                null,
+                $request->isSecure(),
+                true,
+                false,
+                Cookie::SAMESITE_LAX,
+            ));
+        }
+
+        return $response;
     }
 }

@@ -22,7 +22,8 @@
                         Inserisci la tua e-mail: ti invieremo un link per impostare una nuova password.
                     </p>
                     <input type="hidden" name="_csrf_token" value="{{ csrf_token('recover') }}">
-                    {% if codice %}<input type="hidden" name="codice" value="{{ codice }}">{% endif %}
+                    {# name="code": è il campo che legge password_recover. #}
+                    {% if codice %}<input type="hidden" name="code" value="{{ codice }}">{% endif %}
                     <div class="form-group mb-0">
                         <label class="form-label" for="recoverEmail">E-mail</label>
                         <input type="email" id="recoverEmail" name="email" class="form-control"

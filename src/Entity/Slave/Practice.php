@@ -40,6 +40,10 @@ class Practice
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $subject = null;
 
+    /** 11.2.3.7 Indirizzo dell'immobile oggetto della pratica. */
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $address = null;
+
     #[ORM\Column(type: 'string', length: 20)]
     private string $status = self::STATUS_APERTA;
 
@@ -47,11 +51,18 @@ class Practice
     #[ORM\Column(name: 'notary_email', type: 'string', length: 190, nullable: true)]
     private ?string $notaryEmail = null;
 
-    #[ORM\Embedded(class: Party::class, columnPrefix: 'buyer_')]
-    private Party $buyer;
+    /**
+     * 11. Le parti sono clienti dell'agenzia (anagrafica riutilizzabile), non più
+     * un'anagrafica ricopiata dentro la pratica. RESTRICT: un cliente con pratiche
+     * collegate non si può cancellare.
+     */
+    #[ORM\ManyToOne(targetEntity: Customer::class)]
+    #[ORM\JoinColumn(name: 'buyer_customer_id', referencedColumnName: 'id', nullable: true, onDelete: 'RESTRICT')]
+    private ?Customer $buyer = null;
 
-    #[ORM\Embedded(class: Party::class, columnPrefix: 'seller_')]
-    private Party $seller;
+    #[ORM\ManyToOne(targetEntity: Customer::class)]
+    #[ORM\JoinColumn(name: 'seller_customer_id', referencedColumnName: 'id', nullable: true, onDelete: 'RESTRICT')]
+    private ?Customer $seller = null;
 
     /** @var Collection<int, Document> */
     #[ORM\OneToMany(mappedBy: 'practice', targetEntity: Document::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
@@ -59,8 +70,6 @@ class Practice
 
     public function __construct()
     {
-        $this->buyer = new Party();
-        $this->seller = new Party();
         $this->documents = new ArrayCollection();
     }
 
@@ -100,6 +109,18 @@ class Practice
         return $this;
     }
 
+    public function getAddress(): ?string
+    {
+        return $this->address;
+    }
+
+    public function setAddress(?string $address): static
+    {
+        $this->address = $address;
+
+        return $this;
+    }
+
     public function getStatus(): string
     {
         return $this->status;
@@ -133,14 +154,28 @@ class Practice
         return $this;
     }
 
-    public function getBuyer(): Party
+    public function getBuyer(): ?Customer
     {
         return $this->buyer;
     }
 
-    public function getSeller(): Party
+    public function setBuyer(?Customer $buyer): static
+    {
+        $this->buyer = $buyer;
+
+        return $this;
+    }
+
+    public function getSeller(): ?Customer
     {
         return $this->seller;
+    }
+
+    public function setSeller(?Customer $seller): static
+    {
+        $this->seller = $seller;
+
+        return $this;
     }
 
     /** @return Collection<int, Document> */

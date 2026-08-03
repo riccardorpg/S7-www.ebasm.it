@@ -18,11 +18,10 @@ security:
                 class: App\Entity\Master\User
                 property: email
                 manager_name: master
+        # Provider dedicato: richiede un tenant attivo e non fa esplodere la richiesta
+        # quando la connessione slave non è puntata su un DB agenzia (vedi AgencyUserProvider).
         slave_provider:
-            entity:
-                class: App\Entity\Slave\User
-                property: email
-                manager_name: slave
+            id: App\Security\AgencyUserProvider
         script_provider:
             memory:
                 users:
