@@ -1,0 +1,475 @@
+{% extends 'role/agency/layout.html.twig' %}
+{% import 'components/action_icons.html.twig' as ico %}
+
+{% set canEdit = is_granted('edit', 'practices') and not practice.archived %}
+
+{% block title %} - Pratica {{ practice.number }}{% endblock %}
+{% block role_page_title_inner %}Pratica {{ practice.number }}{% endblock %}
+
+{% block role_page_title_breadcrumb %}
+    <li class="breadcrumb-item"><a href="{{ path('agency_index') }}">Agenzia</a></li>
+    <li class="breadcrumb-item"><a href="{{ path('agency_practices') }}">Pratiche</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{ practice.number }}</li>
+{% endblock %}
+
+{% block sub_menu_left %}
+    <li class="nav-item"><a class="nav-link" href="{{ path('agency_practices') }}">Torna all'elenco</a></li>
+{% endblock %}
+
+{% block sub_menu_right %}
+    {# 12.3.6 Scarica archivio #}
+    <li class="nav-item"><a class="nav-link" href="{{ path('agency_practice_archive_download', {id: practice.id}) }}">Scarica archivio</a></li>
+    {% if canEdit %}
+        <li class="nav-item"><a class="nav-link" href="javascript:practiceEditShow()">Modifica</a></li>
+        {# 12.3.5 Archivia pratica #}
+        <li class="nav-item"><a class="nav-link" href="javascript:practiceArchiveShow()">Archivia</a></li>
+    {% endif %}
+{% endblock %}
+
+{% block role_content %}
+    <section class="content-wrap">
+        <div class="container">
+            {% if practice.archived %}
+                <div class="alert alert-dark">
+                    <i class="bi-archive"></i> Pratica archiviata: i dati sono in sola lettura. Puoi ancora scaricare l'archivio.
+                </div>
+            {% endif %}
+
+            <ul class="nav nav-tabs canvas-alt-tabs tabs-tb" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-dati" type="button">Dati principali</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-documenti" type="button">
+                        Documenti <span class="badge bg-secondary">{{ practice.countUploaded }}/{{ practice.countRequested }}</span>
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-staff" type="button">
+                        Staff <span class="badge bg-secondary">{{ practice.staff|length }}</span>
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-avvisi" type="button">
+                        Avvisi <span class="badge bg-secondary">{{ practice.alerts|length }}</span>
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content p_t_20p">
+
+                {# ===== 12.3.1 Dati principali ===== #}
+                <div class="tab-pane fade show active" id="tab-dati">
+                    <table class="table align-middle m_b_none">
+                        <tr>
+                            <th style="width:25%">Stato</th>
+                            <td>
+                                <span class="badge {{ practice.status == 'completata' ? 'bg-success' : (practice.status == 'archiviabile' ? 'bg-info' : (practice.status == 'archiviata' ? 'bg-dark' : 'bg-secondary')) }}">{{ practice.statusLabel }}</span>
+                                {% if practice.status == 'archiviabile' %}
+                                    <span class="op_07 font_13">— il notaio ha dato il via libera all'archiviazione</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr><th>Codice</th><td>{{ practice.number }}</td></tr>
+                        <tr><th>Data creazione</th><td>{{ practice.createdAt ? practice.createdAt|date('d/m/Y') : '—' }}</td></tr>
+                        <tr><th>Tipo di pratica</th><td>{{ practice.typeLabel }}</td></tr>
+                        <tr>
+                            <th>Venditore</th>
+                            <td>
+                                {% if practice.seller %}
+                                    <a href="{{ path('agency_customer_show', {id: practice.seller.id}) }}">{{ practice.seller.fullName }}</a>
+                                    {% if practice.seller.fiscalCode %}<span class="op_07 font_13">— {{ practice.seller.fiscalCode }}</span>{% endif %}
+                                {% else %}—{% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Acquirente</th>
+                            <td>
+                                {% if practice.buyer %}
+                                    <a href="{{ path('agency_customer_show', {id: practice.buyer.id}) }}">{{ practice.buyer.fullName }}</a>
+                                    {% if practice.buyer.fiscalCode %}<span class="op_07 font_13">— {{ practice.buyer.fiscalCode }}</span>{% endif %}
+                                {% else %}—{% endif %}
+                            </td>
+                        </tr>
+                        <tr><th>Indirizzo</th><td>{{ practice.address ?: '—' }}</td></tr>
+                        <tr><th>Oggetto</th><td>{{ practice.subject ? practice.subject|nl2br : '—' }}</td></tr>
+                        <tr>
+                            <th>Contrassegno</th>
+                            <td>
+                                {% if practice.mark %}
+                                    <span class="badge" style="background:{{ practice.mark.color }}; color:{{ practice.mark.contrastColor }};">{{ practice.mark.value }}</span>
+                                {% else %}—{% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Tag</th>
+                            <td>
+                                {% for t in practice.tags %}
+                                    <span class="badge" style="background:{{ t.color }}; color:{{ t.contrastColor }};">{{ t.value }}</span>
+                                {% else %}—{% endfor %}
+                            </td>
+                        </tr>
+                        <tr><th>Spazio occupato</th><td>{{ practice.sizeMb > 0 ? practice.sizeMb|number_format(2, ',', '.') ~ ' MB' : '—' }}</td></tr>
+                    </table>
+                </div>
+
+                {# ===== 12.3.2 Gestione documentale ===== #}
+                <div class="tab-pane fade" id="tab-documenti">
+                    {% if canEdit %}
+                        <div class="d-flex justify-content-end m_b_10p">
+                            {# 12.3.2.7 Invia notifica aggiornamento file #}
+                            <a href="javascript:practiceNotifyShow()" class="button button-3d button-mini button-green m-0">Invia notifica</a>
+                        </div>
+                    {% endif %}
+
+                    <table class="table table-bordered align-middle m_b_none">
+                        <thead>
+                            <tr>
+                                <th>Documento</th>
+                                <th class="td_w_120p txt_a_c">Richiesto</th>
+                                <th class="td_w_150p txt_a_c">Stato</th>
+                                <th>Allegati</th>
+                                <th class="td_w_150p">Ultimo aggiornamento</th>
+                                <th class="td_w_100p txt_a_c">Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for row in practice.practiceDocuments %}
+                            <tr class="{{ row.visible ? '' : 'op_05' }}">
+                                <td>
+                                    <strong>{{ row.label }}</strong>
+                                    {% if row.documentType and row.documentType.mortgage %}
+                                        <div><span class="badge bg-light text-dark">solo con mutuo</span></div>
+                                    {% endif %}
+                                </td>
+                                {# 12.3.2.2 Mostra / Nascondi #}
+                                <td class="txt_a_c">
+                                    {% if canEdit %}
+                                        <form method="post" action="{{ path('agency_row_toggle', {id: practice.id, rid: row.id}) }}" class="d-inline">
+                                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('practiceRow') }}">
+                                            <button type="submit" class="btn p-0 border-0 bg-transparent" data-bs-toggle="tooltip"
+                                                    data-bs-title="Clicca per {{ row.visible ? 'nascondere' : 'mostrare' }} il documento">
+                                                <span class="badge {{ row.visible ? 'bg-primary' : 'bg-secondary' }}">{{ row.visible ? 'Sì' : 'No' }}</span>
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <span class="badge {{ row.visible ? 'bg-primary' : 'bg-secondary' }}">{{ row.visible ? 'Sì' : 'No' }}</span>
+                                    {% endif %}
+                                </td>
+                                {# 12.3.2.3 / 12.3.2.4 Stato e modifica stato #}
+                                <td class="txt_a_c">
+                                    {% if canEdit %}
+                                        <form method="post" action="{{ path('agency_row_status', {id: practice.id, rid: row.id}) }}">
+                                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('practiceRowStatus') }}">
+                                            <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                                                {% for value, label in documentStatuses %}
+                                                    <option value="{{ value }}"{{ row.status == value ? ' selected' : '' }}>{{ label }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </form>
+                                    {% else %}
+                                        <span class="badge {{ row.status == 'verificato' ? 'bg-success' : (row.status == 'da_caricare' ? 'bg-warning text-dark' : 'bg-secondary') }}">{{ row.statusLabel }}</span>
+                                    {% endif %}
+                                </td>
+                                {# 12.3.2.5 Elenco degli allegati #}
+                                <td>
+                                    {% for d in row.documents %}
+                                        <div class="d-flex align-items-center justify-content-between gap-2 {{ not loop.first ? 'p_t_5p' : '' }}">
+                                            <span>
+                                                <a href="{{ path('agency_document_download', {id: practice.id, did: d.id}) }}">{{ d.originalFilename ?: d.name }}</a>
+                                                {% if d.sizeBytes %}<span class="op_07 small">· {{ (d.sizeBytes / 1024)|round }} KB</span>{% endif %}
+                                                {% if d.agentNote %}<div class="op_07 font_13">Agente: {{ d.agentNote }}</div>{% endif %}
+                                                {% if d.notaryNote %}<div class="font_13">Notaio: {{ d.notaryNote }}</div>{% endif %}
+                                            </span>
+                                            {% if canEdit %}
+                                                <span class="text-nowrap">
+                                                    {{ ico.action("javascript:documentEditOpen(this)", 'edit', 'Modifica allegato', 'amber') }}
+                                                    <span class="d-none"
+                                                          data-doc-id="{{ d.id }}" data-doc-name="{{ d.name }}" data-doc-note="{{ d.agentNote }}"></span>
+                                                    {{ ico.action("javascript:documentDelete('" ~ path('agency_document_delete', {id: practice.id, did: d.id}) ~ "')", 'delete', 'Elimina allegato', 'red') }}
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">nessun file</span>
+                                    {% endfor %}
+                                </td>
+                                <td>{{ row.lastUpdate ? row.lastUpdate|date('d/m/Y H:i') : '—' }}</td>
+                                <td class="txt_a_c">
+                                    {% if canEdit %}
+                                        {{ ico.action("javascript:documentNewOpen(" ~ row.id ~ ", " ~ row.label|json_encode ~ ")", 'upload', 'Nuovo allegato', 'green') }}
+                                    {% else %}—{% endif %}
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="6" class="op_07 text-center">Nessun documento previsto: configura i tipi di documento.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {# ===== 12.3.3 Gestione dello staff ===== #}
+                <div class="tab-pane fade" id="tab-staff">
+                    <p class="op_07 font_13">
+                        Gli amministratori dell'agenzia accedono a tutte le pratiche. Qui scegli chi altro può aprire questa.
+                    </p>
+                    <form method="post" action="{{ path('agency_practice_staff', {id: practice.id}) }}">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token('practiceStaff') }}">
+                        <table class="table table-bordered align-middle m_b_none">
+                            <thead>
+                                <tr>
+                                    <th class="td_w_50p txt_a_c">Accesso</th>
+                                    <th>Cognome e nome</th>
+                                    <th>E-mail</th>
+                                    <th class="td_w_120p">Ruolo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for u in staffMembers %}
+                                <tr>
+                                    <td class="txt_a_c">
+                                        <input class="form-check-input" type="checkbox" name="staff[]" value="{{ u.id }}"
+                                               id="staff_{{ u.id }}"{{ u.id in assignedStaffIds ? ' checked' : '' }}{{ canEdit ? '' : ' disabled' }}>
+                                    </td>
+                                    <td><label class="m_b_none" for="staff_{{ u.id }}">{{ u.surname }} {{ u.name }}</label></td>
+                                    <td>{{ u.email }}</td>
+                                    <td><span class="badge bg-secondary">{{ u.staffRoleLabel }}</span></td>
+                                </tr>
+                            {% else %}
+                                <tr><td colspan="4" class="op_07 text-center">Nessun membro dello staff da abilitare: ci sono solo amministratori.</td></tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        {% if canEdit and staffMembers|length %}
+                            <div class="p_t_15p">
+                                <button type="submit" class="button button-3d button-small button-green m-0">Salva accessi</button>
+                            </div>
+                        {% endif %}
+                    </form>
+                </div>
+
+                {# ===== 12.3.4 Gestione degli avvisi ===== #}
+                <div class="tab-pane fade" id="tab-avvisi">
+                    {% if canEdit %}
+                        <div class="d-flex justify-content-end m_b_10p">
+                            <a href="javascript:alertNewOpen()" class="button button-3d button-mini button-green m-0">Nuovo avviso</a>
+                        </div>
+                    {% endif %}
+
+                    <table class="table table-bordered align-middle m_b_none">
+                        <thead>
+                            <tr>
+                                <th class="td_w_150p">Ricorda in data</th>
+                                <th>Messaggio</th>
+                                <th class="td_w_100p txt_a_c">Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for a in practice.alerts %}
+                            <tr>
+                                <td>
+                                    {{ a.remindAt|date('d/m/Y') }}
+                                    {% if a.due %}<span class="badge bg-danger">scaduto</span>{% endif %}
+                                </td>
+                                <td>{{ a.message|nl2br }}</td>
+                                <td class="txt_a_c text-nowrap">
+                                    {% if canEdit %}
+                                        <a href="javascript:void(0)" class="d-inline-block m_r_5p" data-bs-toggle="tooltip" data-bs-title="Modifica"
+                                           onclick="alertEditOpen(this)"
+                                           data-id="{{ a.id }}" data-date="{{ a.remindAt|date('d-m-Y') }}" data-message="{{ a.message }}">
+                                            <img src="{{ asset(PATH_GRAPHICS ~ 'icons/edit.png') }}" class="icon_action icon_amber" alt="Modifica">
+                                        </a>
+                                        {{ ico.action("javascript:alertDelete('" ~ path('agency_alert_delete', {id: practice.id, aid: a.id}) ~ "')", 'delete', 'Elimina', 'red') }}
+                                    {% else %}—{% endif %}
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="3" class="op_07 text-center">Nessun avviso inserito.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block modals %}
+    {% if canEdit %}
+        {# 12.3.1 Modifica dati principali #}
+        {% embed 'components/modals/form_modal.html.twig' with {
+            type: 'practiceEdit', title: 'Modifica pratica', action: path('agency_practice_edit', {id: practice.id}), size: 'modal-lg'
+        } %}
+            {% block modalBody %}
+                {{ include('role/agency/practices/_form_fields.html.twig', {
+                    prefix: 'practiceEdit', marks: marks, tags: tags, practice: practice, geoNumber: 1
+                }, with_context = false) }}
+            {% endblock %}
+        {% endembed %}
+
+        {# Ricerca comune per il picker Città/CAP dentro il modale di modifica #}
+        {% include 'components/modals/city.html.twig' with {number: 1, cities: []} only %}
+
+        {# 12.3.2.6 Nuovo allegato #}
+        {% embed 'components/modals/form_modal.html.twig' with {type: 'documentNew', title: 'Nuovo allegato', enctype: 'multipart/form-data'} %}
+            {% block modalBody %}
+                <p class="op_07 font_13" id="documentNew_target"></p>
+                <div class="row g-3">
+                    <div class="col-12"><label class="form-label" for="documentNew_file">File *</label><input type="file" id="documentNew_file" name="file" class="form-control" required></div>
+                    <div class="col-12"><label class="form-label" for="documentNew_note">Note dell'agente</label><textarea id="documentNew_note" name="agent_note" rows="3" class="form-control"></textarea></div>
+                </div>
+            {% endblock %}
+            {% block modalSubmit %}Carica{% endblock %}
+        {% endembed %}
+
+        {# 12.3.2.5.5 Modifica allegato #}
+        {% embed 'components/modals/form_modal.html.twig' with {type: 'documentEdit', title: 'Modifica allegato'} %}
+            {% block modalBody %}
+                <div class="row g-3">
+                    <div class="col-12"><label class="form-label" for="documentEdit_name">Nome allegato *</label><input type="text" id="documentEdit_name" name="name" class="form-control" required></div>
+                    <div class="col-12"><label class="form-label" for="documentEdit_note">Note dell'agente</label><textarea id="documentEdit_note" name="agent_note" rows="3" class="form-control"></textarea></div>
+                </div>
+            {% endblock %}
+        {% endembed %}
+
+        {# 12.3.2.7 Notifica aggiornamento file #}
+        {% embed 'components/modals/form_modal.html.twig' with {
+            type: 'practiceNotify', title: 'Invia notifica aggiornamento file', action: path('agency_practice_notify', {id: practice.id})
+        } %}
+            {% block modalBody %}
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label" for="practiceNotify_to">Destinatario *</label>
+                        <select id="practiceNotify_to" name="recipient" class="form-select" required>
+                            <option value="">Seleziona…</option>
+                            {% for email, label in recipients %}
+                                <option value="{{ email }}">{{ label }} — {{ email }}</option>
+                            {% endfor %}
+                        </select>
+                        {% if recipients is empty %}
+                            <small class="op_07">Nessun destinatario disponibile: servono e-mail su clienti, notaio o staff abilitato.</small>
+                        {% endif %}
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="practiceNotify_message">Messaggio *</label>
+                        <textarea id="practiceNotify_message" name="message" rows="4" class="form-control" required>I documenti della pratica {{ practice.number }} sono stati aggiornati.</textarea>
+                    </div>
+                </div>
+            {% endblock %}
+            {% block modalSubmit %}Invia{% endblock %}
+        {% endembed %}
+
+        {# 12.3.4.2 Nuovo avviso / modifica #}
+        {% embed 'components/modals/form_modal.html.twig' with {type: 'alertNew', title: 'Nuovo avviso', action: path('agency_alert_new', {id: practice.id})} %}
+            {% block modalBody %}{{ include('role/agency/practices/_alert_fields.html.twig', {prefix: 'alertNew'}) }}{% endblock %}
+            {% block modalSubmit %}Crea{% endblock %}
+        {% endembed %}
+
+        {% embed 'components/modals/form_modal.html.twig' with {type: 'alertEdit', title: 'Modifica avviso'} %}
+            {% block modalBody %}{{ include('role/agency/practices/_alert_fields.html.twig', {prefix: 'alertEdit'}) }}{% endblock %}
+        {% endembed %}
+
+        {% include 'components/modals/delete_modal.html.twig' with {type: 'document', title: 'Allegato', text: 'eliminerai l\'allegato selezionato e il relativo file'} only %}
+        {% include 'components/modals/delete_modal.html.twig' with {type: 'alert', title: 'Avviso', text: 'eliminerai l\'avviso selezionato'} only %}
+
+        {# 12.3.5.1 Alert sul processo di archiviazione #}
+        <div id="practiceArchiveModal" class="modal fade" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <form method="post" action="{{ path('agency_practice_archive', {id: practice.id}) }}">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token('practiceArchive') }}">
+                        <div class="modal-header"><h3 class="modal-title">Archivia pratica</h3></div>
+                        <div class="modal-stripe"></div>
+                        <div class="modal-body">
+                            {% if practice.canBeArchived %}
+                                <label class="modal_subtitle">Attenzione!</label>
+                                <p class="modal-paragraph">
+                                    Archiviando la pratica <strong>{{ practice.number }}</strong> la chiudi definitivamente:
+                                    non sarà più possibile modificare dati, documenti, staff e avvisi.
+                                    Gli allegati restano consultabili e scaricabili dall'archivio.
+                                </p>
+                                <p class="modal-paragraph">Sei sicuro di voler proseguire?</p>
+                            {% else %}
+                                {# 12.3.5.2 Verifica del via libera del notaio #}
+                                <label class="modal_subtitle">Non ancora archiviabile</label>
+                                <p class="modal-paragraph">
+                                    La pratica è in stato <strong>{{ practice.statusLabel }}</strong>.
+                                    Puoi archiviarla solo dopo che il notaio l'ha messa in <strong>archiviabile</strong>.
+                                </p>
+                            {% endif %}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="button button-3d button-small button-red f_left" data-bs-dismiss="modal">Annulla</button>
+                            {% if practice.canBeArchived %}
+                                <button type="submit" class="button button-3d button-small button-green f_right">Archivia</button>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <script>
+            (function () {
+                var el = document.getElementById('practiceArchiveModal');
+                if (!el) return;
+                var modal = new bootstrap.Modal(el, {backdrop: 'static', keyboard: false});
+                window.practiceArchiveShow = function () { modal.show(); };
+            })();
+        </script>
+    {% endif %}
+{% endblock %}
+
+{% block page_javascripts %}
+{% if canEdit %}
+{% include 'role/agency/practices/_customer_autocomplete.html.twig' %}
+{# Il picker città sta dentro il modale di modifica: al ritorno lo si riapre. #}
+{% include 'components/js/city_js.html.twig' with {number: 1, formName: 'practiceEdit', modalToClose: 'practiceEditModal'} only %}
+<script>
+    var PRACTICE_BASE = "{{ path('agency_practice_show', {id: practice.id}) }}";
+
+    /* 12.3.2.6 Nuovo allegato su una riga documentale. */
+    function documentNewOpen(rowId, label) {
+        var form = document.getElementById('documentNewForm');
+        form.reset();
+        form.action = PRACTICE_BASE + '/righe/' + rowId + '/allegati/nuovo';
+        document.getElementById('documentNew_target').textContent = 'Documento: ' + label;
+        documentNewShow();
+    }
+
+    /* 12.3.2.5.5 Modifica allegato: i dati stanno nello span nascosto accanto all'icona. */
+    function documentEditOpen(link) {
+        var data = link.parentNode.querySelector('[data-doc-id]');
+        var form = document.getElementById('documentEditForm');
+        form.action = PRACTICE_BASE + '/allegati/' + data.dataset.docId + '/modifica';
+        document.getElementById('documentEdit_name').value = data.dataset.docName || '';
+        document.getElementById('documentEdit_note').value = data.dataset.docNote || '';
+        documentEditShow();
+    }
+
+    function practiceNotifyOpen() { practiceNotifyShow(); }
+
+    /* 12.3.4 Avvisi. */
+    function alertNewOpen() {
+        document.getElementById('alertNewForm').reset();
+        alertNewShow();
+    }
+
+    function alertEditOpen(link) {
+        var form = document.getElementById('alertEditForm');
+        form.action = PRACTICE_BASE + '/avvisi/' + link.dataset.id + '/modifica';
+        document.getElementById('alertEdit_remind_at').value = link.dataset.date || '';
+        document.getElementById('alertEdit_message').value = link.dataset.message || '';
+        alertEditShow();
+    }
+
+    /* Riapre la tab indicata nell'ancora dopo un salvataggio (#tab-documenti, #tab-avvisi). */
+    document.addEventListener('DOMContentLoaded', function () {
+        var hash = window.location.hash;
+        if (!hash) return;
+        var trigger = document.querySelector('[data-bs-target="' + hash + '"]');
+        if (trigger && window.bootstrap) { bootstrap.Tab.getOrCreateInstance(trigger).show(); }
+    });
+</script>
+{% endif %}
+{% endblock %}

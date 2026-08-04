@@ -1,0 +1,34 @@
+{# =====================================================================
+   Picker Città/CAP sul catalogo geografico del Master.
+   Il campo città è di sola lettura e apre il modale di ricerca; il CAP è una select
+   popolata via AJAX con i CAP del comune scelto.
+
+   Variabili (include ... only):
+     formName : prefisso degli id dei campi
+     number   : suffisso del modale/JS (uno per picker nella pagina)
+     cityId, cityName, zipId : valori correnti (in modifica)
+     cityCols, zipCols       : (opz) larghezze bootstrap, default 8/4
+     required                : (opz) segna i campi come obbligatori. Attenzione: il campo
+                               città è readonly, e i campi readonly il browser non li
+                               valida — l'asterisco è indicativo, il controllo vero va
+                               fatto lato server.
+
+   Produce gli elementi attesi da components/js/city_js.html.twig:
+     {formName}_cityName (testo visibile), {formName}_city (hidden name=city_id),
+     {formName}_select_zips (select CAP), {formName}_zip (hidden name=zip_id).
+   Va abbinato a components/modals/city.html.twig e components/js/city_js.html.twig
+   con lo stesso `number`.
+   ===================================================================== #}
+{% set mandatory = required|default(false) %}
+<div class="col-md-{{ cityCols|default(8) }}">
+    <label class="form-label" for="{{ formName }}_cityName">Città{{ mandatory ? ' *' : '' }}</label>
+    <input type="text" id="{{ formName }}_cityName" class="form-control cursor_p" readonly
+           onclick="cityModal{{ number }}()" placeholder="Clicca per cercare il comune…"
+           autocomplete="off" value="{{ cityName|default('') }}">
+    <input type="hidden" id="{{ formName }}_city" name="city_id" value="{{ cityId|default('') }}">
+</div>
+<div class="col-md-{{ zipCols|default(4) }}">
+    <label class="form-label" for="{{ formName }}_select_zips">CAP{{ mandatory ? ' *' : '' }}</label>
+    <select id="{{ formName }}_select_zips" class="form-select" onchange="zipSet{{ number }}()"{{ mandatory ? ' required' : '' }}><option value=""></option></select>
+    <input type="hidden" id="{{ formName }}_zip" name="zip_id" value="{{ zipId|default('') }}">
+</div>

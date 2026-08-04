@@ -1,0 +1,54 @@
+{% extends 'role/agency/layout.html.twig' %}
+
+{% block title %} - Nuova pratica{% endblock %}
+{% block role_page_title_inner %}Nuova pratica{% endblock %}
+
+{% block role_page_title_breadcrumb %}
+    <li class="breadcrumb-item"><a href="{{ path('agency_index') }}">Agenzia</a></li>
+    <li class="breadcrumb-item"><a href="{{ path('agency_practices') }}">Pratiche</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Nuova</li>
+{% endblock %}
+
+{% block sub_menu_left %}
+    <li class="nav-item"><a class="nav-link" href="{{ path('agency_practices') }}">Torna all'elenco</a></li>
+{% endblock %}
+
+{% block role_content %}
+    <section class="content-wrap">
+        <div class="container">
+            {% if customers|length < 2 %}
+                <div class="alert alert-warning">
+                    Per aprire una pratica servono almeno due clienti in anagrafica (venditore e acquirente).
+                    <a href="{{ path('agency_customers') }}">Vai ai clienti</a>.
+                </div>
+            {% endif %}
+
+            <form method="post" action="{{ path('agency_practice_new') }}" novalidate>
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token('practiceNew') }}">
+
+                {% include 'role/agency/practices/_form_fields.html.twig' with {
+                    prefix: 'practiceNew', marks: marks, tags: tags, practice: null, geoNumber: 1
+                } only %}
+
+                {# Stessa disposizione dei modali: Annulla a sinistra, azione a destra. #}
+                <div class="d-flex justify-content-between align-items-center p_t_20p">
+                    <a href="{{ path('agency_practices') }}" class="button button-3d button-small button-red m-0">Annulla</a>
+                    {# 12.2.8 Crea la pratica e apre la scheda #}
+                    <button type="submit" class="button button-3d button-small button-green m-0"{{ customers|length < 2 ? ' disabled' : '' }}>
+                        Inserisci
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+{% endblock %}
+
+{% block modals %}
+    {# Ricerca comune per il picker Città/CAP #}
+    {% include 'components/modals/city.html.twig' with {number: 1, cities: []} only %}
+{% endblock %}
+
+{% block page_javascripts %}
+    {% include 'role/agency/practices/_customer_autocomplete.html.twig' %}
+    {% include 'components/js/city_js.html.twig' with {number: 1, formName: 'practiceNew', modalToClose: ''} only %}
+{% endblock %}

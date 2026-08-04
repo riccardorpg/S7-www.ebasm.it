@@ -105,5 +105,12 @@
         window.zipSet{{ number }} = function () {
             document.getElementById('{{ formName }}_zip').value = document.getElementById('{{ formName }}_select_zips').value;
         };
+
+        // In modifica il comune è già valorizzato ma la select dei CAP nasce vuota:
+        // la popoliamo subito preservando il CAP salvato. Vale anche per i picker dentro
+        // un modale, che a quel punto è già nel DOM (renderizzato in #divModals).
+        if (document.getElementById('{{ formName }}_city')?.value) {
+            zipUpdateSelect{{ number }}(true);
+        }
     });
 </script>

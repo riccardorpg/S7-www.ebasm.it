@@ -8,8 +8,10 @@ use App\Repository\Slave\DocumentRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * 17.1.1.1.5.2 Documento/allegato di una pratica.
- * Può esistere come "richiesto" senza file, oppure con file caricato.
+ * 12.3.2.5 Allegato di una riga documentale della pratica.
+ * Dal punto 12 gli allegati stanno sotto una {@see PracticeDocument} (il tipo di
+ * documento previsto per la pratica), non più direttamente sotto la pratica: lo stesso
+ * tipo può avere più file.
  */
 #[ORM\Entity(repositoryClass: DocumentRepository::class)]
 #[ORM\Table(name: 'eb_s_document')]
@@ -19,32 +21,18 @@ class Document
     use IdTrait;
     use TimestampsTrait;
 
-    // 17.1.1.1.5.2.5 Stato di verifica.
-    public const STATUS_DA_VERIFICARE = 'da_verificare';
-    public const STATUS_VERIFICATO = 'verificato';
+    #[ORM\ManyToOne(targetEntity: PracticeDocument::class, inversedBy: 'documents')]
+    #[ORM\JoinColumn(name: 'practice_document_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    private ?PracticeDocument $practiceDocument = null;
 
-    #[ORM\ManyToOne(targetEntity: Practice::class, inversedBy: 'documents')]
-    #[ORM\JoinColumn(name: 'practice_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
-    private ?Practice $practice = null;
-
-    /**
-     * 13.1 Tipo di documento del catalogo dell'agenzia da cui nasce questo allegato.
-     * Nullable: restano validi i documenti aggiunti a mano, fuori catalogo. Il vincolo
-     * RESTRICT è ciò che rende un tipo "già utilizzato" e quindi non eliminabile (13.1.5).
-     */
-    #[ORM\ManyToOne(targetEntity: DocumentType::class)]
-    #[ORM\JoinColumn(name: 'document_type_id', referencedColumnName: 'id', nullable: true, onDelete: 'RESTRICT')]
-    private ?DocumentType $documentType = null;
-
-    /** 17.1.1.1.5.2.1 Nome allegato. */
+    /** 12.3.2.5.1 Nome dell'allegato (di default il nome del file caricato). */
     #[ORM\Column(type: 'string', length: 190)]
     private string $name = '';
 
-    /** Nome file originale caricato. */
     #[ORM\Column(name: 'original_filename', type: 'string', length: 255, nullable: true)]
     private ?string $originalFilename = null;
 
-    /** Percorso relativo del file salvato (null = documento richiesto ma non ancora caricato). */
+    /** Percorso relativo del file salvato. */
     #[ORM\Column(name: 'storage_path', type: 'string', length: 255, nullable: true)]
     private ?string $storagePath = null;
 
@@ -54,43 +42,30 @@ class Document
     #[ORM\Column(name: 'size_bytes', type: 'bigint', nullable: true)]
     private ?int $sizeBytes = null;
 
-    /** 17.1.1.1.5.2.4 Richiesto / non richiesto. */
-    #[ORM\Column(type: 'boolean', options: ['default' => false])]
-    private bool $requested = false;
-
-    #[ORM\Column(type: 'string', length: 20)]
-    private string $status = self::STATUS_DA_VERIFICARE;
-
-    /** 17.1.1.1.5.2.2 Note dell'agente (impostate dall'agenzia). */
+    /** 12.3.2.5.3 / 12.2.6.2 Note dell'agente (agenzia). */
     #[ORM\Column(name: 'agent_note', type: 'text', nullable: true)]
     private ?string $agentNote = null;
 
-    /** 17.1.1.1.5.2.6 Note del notaio. */
+    /** 12.3.2.5.4 Note del notaio. */
     #[ORM\Column(name: 'notary_note', type: 'text', nullable: true)]
     private ?string $notaryNote = null;
 
+    public function getPracticeDocument(): ?PracticeDocument
+    {
+        return $this->practiceDocument;
+    }
+
+    public function setPracticeDocument(?PracticeDocument $practiceDocument): static
+    {
+        $this->practiceDocument = $practiceDocument;
+
+        return $this;
+    }
+
+    /** Scorciatoia: la pratica a cui appartiene l'allegato. */
     public function getPractice(): ?Practice
     {
-        return $this->practice;
-    }
-
-    public function setPractice(?Practice $practice): static
-    {
-        $this->practice = $practice;
-
-        return $this;
-    }
-
-    public function getDocumentType(): ?DocumentType
-    {
-        return $this->documentType;
-    }
-
-    public function setDocumentType(?DocumentType $documentType): static
-    {
-        $this->documentType = $documentType;
-
-        return $this;
+        return $this->practiceDocument?->getPractice();
     }
 
     public function getName(): string
@@ -151,40 +126,6 @@ class Document
         $this->sizeBytes = $sizeBytes;
 
         return $this;
-    }
-
-    public function isRequested(): bool
-    {
-        return $this->requested;
-    }
-
-    public function setRequested(bool $requested): static
-    {
-        $this->requested = $requested;
-
-        return $this;
-    }
-
-    public function getStatus(): string
-    {
-        return $this->status;
-    }
-
-    public function setStatus(string $status): static
-    {
-        $this->status = $status;
-
-        return $this;
-    }
-
-    public function isVerified(): bool
-    {
-        return $this->status === self::STATUS_VERIFICATO;
-    }
-
-    public function getStatusLabel(): string
-    {
-        return $this->isVerified() ? 'Verificato' : 'Da verificare';
     }
 
     public function getAgentNote(): ?string

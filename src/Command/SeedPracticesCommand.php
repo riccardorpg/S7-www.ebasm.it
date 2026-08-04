@@ -5,7 +5,9 @@ namespace App\Command;
 use App\Entity\Slave\Customer;
 use App\Entity\Slave\Document;
 use App\Entity\Slave\Practice;
+use App\Entity\Slave\PracticeDocument;
 use App\Service\CompanyService;
+use App\Service\PracticeDocumentSync;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -27,6 +29,7 @@ class SeedPracticesCommand extends Command
     public function __construct(
         private readonly CompanyService $companyService,
         private readonly ParameterBagInterface $params,
+        private readonly PracticeDocumentSync $documentSync,
     ) {
         parent::__construct();
     }
@@ -57,7 +60,6 @@ class SeedPracticesCommand extends Command
         $em = $this->companyService->pointSlaveToDbName((string) $company->getDbName());
         $baseDir = $this->uploadsBaseDir((string) $company->getDbName());
 
-        $types = ['Compravendita', 'Successione', 'Donazione', 'Mutuo'];
         // [nome, cognome/ragione sociale, CF o P.IVA, email, telefono, indirizzo, città, CAP]
         $buyers = [
             ['Mario', 'Rossi', 'RSSMRA80A01H501U', 'mario.rossi@example.com', '3401112223', 'Via Roma 1', 'Milano', '20121'],
@@ -76,7 +78,7 @@ class SeedPracticesCommand extends Command
         for ($i = 0; $i < $count; ++$i) {
             $practice = new Practice();
             $practice->setNumber(sprintf('P-%04d/%d', $i + 1, 2026))
-                ->setType($types[$i % count($types)])
+                ->setMortgage($i % 3 === 0)
                 ->setSubject('Immobile sito in Via Esempio ' . ($i + 1) . ' — foglio ' . (10 + $i) . ', particella ' . (100 + $i))
                 ->setAddress('Via Esempio ' . ($i + 1) . ', Milano')
                 ->setStatus(Practice::STATUS_APERTA)
@@ -89,34 +91,33 @@ class SeedPracticesCommand extends Command
             $em->persist($practice);
             $em->flush(); // serve l'id per il percorso file
 
-            // Documenti demo: alcuni caricati, alcuni solo richiesti.
-            $docSpecs = [
-                ['Atto di provenienza', true, true, 'Copia conforme fornita dall\'agente.'],
-                ['Visura catastale', true, false, 'Aggiornata al mese corrente.'],
-                ['Planimetria', true, false, null],
-                ['Documento identità acquirente', false, true, 'Da caricare a cura del cliente.'],
-                ['APE', false, true, null],
-            ];
-            foreach ($docSpecs as $idx => [$name, $uploaded, $requested, $agentNote]) {
-                $doc = new Document();
-                $doc->setName($name)
-                    ->setRequested($requested)
-                    ->setStatus($idx % 3 === 0 ? Document::STATUS_VERIFICATO : Document::STATUS_DA_VERIFICARE)
-                    ->setAgentNote($agentNote);
+            // 12.3.2.1 Righe documentali dal catalogo dell'agenzia (13.1), filtrate per mutuo.
+            $this->documentSync->sync($em, $practice);
+            $em->flush();
 
-                if ($uploaded) {
-                    $safe = preg_replace('/[^a-zA-Z0-9._-]+/', '_', strtolower($name)) . '.txt';
-                    $rel = $practice->getId() . '/' . uniqid('', false) . '_' . $safe;
-                    $abs = $baseDir . '/' . $rel;
-                    @mkdir(dirname($abs), 0775, true);
-                    file_put_contents($abs, "Documento demo: {$name}\nPratica: {$practice->getNumber()}\n");
-                    $doc->setOriginalFilename($safe)
-                        ->setStoragePath($rel)
-                        ->setMimeType('text/plain')
-                        ->setSizeBytes(filesize($abs) ?: null);
+            // Allegati demo: su una riga sì e una no, così si vedono entrambi gli stati.
+            $rowIndex = 0;
+            foreach ($practice->getPracticeDocuments() as $row) {
+                if ($rowIndex++ % 2 === 1) {
+                    continue; // riga lasciata "da caricare"
                 }
 
-                $practice->addDocument($doc);
+                $safe = preg_replace('/[^a-zA-Z0-9._-]+/', '_', strtolower($row->getLabel())) . '.txt';
+                $rel = $practice->getId() . '/' . uniqid('', false) . '_' . $safe;
+                $abs = $baseDir . '/' . $rel;
+                @mkdir(dirname($abs), 0775, true);
+                file_put_contents($abs, "Documento demo: {$row->getLabel()}\nPratica: {$practice->getNumber()}\n");
+
+                $doc = (new Document())
+                    ->setName($row->getLabel())
+                    ->setAgentNote('Caricato dall\'agente in fase di apertura pratica.')
+                    ->setOriginalFilename($safe)
+                    ->setStoragePath($rel)
+                    ->setMimeType('text/plain')
+                    ->setSizeBytes(filesize($abs) ?: null);
+
+                $row->addDocument($doc);
+                $row->setStatus($rowIndex % 3 === 0 ? PracticeDocument::STATUS_VERIFICATO : PracticeDocument::STATUS_DA_VERIFICARE);
                 $em->persist($doc);
             }
             $em->flush();

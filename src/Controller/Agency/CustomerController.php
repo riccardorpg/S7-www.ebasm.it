@@ -2,6 +2,7 @@
 
 namespace App\Controller\Agency;
 
+use App\Controller\Trait\ParsesDatesTrait;
 use App\Entity\Slave\Customer;
 use App\Entity\Slave\Practice;
 use Doctrine\ORM\EntityManagerInterface;
@@ -24,6 +25,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted(new Expression("is_granted('view', 'customers')"), message: 'Non hai accesso all\'anagrafica clienti.')]
 class CustomerController extends AbstractController
 {
+    use ParsesDatesTrait;
+
     private const PER_PAGE = 20;
 
     public function __construct(private readonly ManagerRegistry $registry)
@@ -146,28 +149,6 @@ class CustomerController extends AbstractController
         $em = $this->registry->getManager('slave');
 
         return $em;
-    }
-
-    /**
-     * Data dal datepicker (gg-mm-aaaa). Accetta anche aaaa-mm-gg, che è quello che
-     * manderebbe un input date nativo.
-     *
-     * @return \DateTimeImmutable|null|false null = campo vuoto, false = formato non valido
-     */
-    private function parseDate(string $value): \DateTimeImmutable|null|false
-    {
-        if ($value === '') {
-            return null;
-        }
-
-        foreach (['d-m-Y', 'Y-m-d'] as $format) {
-            $date = \DateTimeImmutable::createFromFormat('!' . $format, $value);
-            if ($date !== false && \DateTimeImmutable::getLastErrors() === false) {
-                return $date;
-            }
-        }
-
-        return false;
     }
 
     /** 11.2.1 / 11.2.2 Dati anagrafici e fiscali. */

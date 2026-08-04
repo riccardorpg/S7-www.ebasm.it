@@ -473,7 +473,9 @@ h3.slider_subtitle { font-size:60px }
 
 /* TAG */
 a { color: inherit }
-pre { font-family: "Lato"; font-size: 16px; word-wrap: break-word; white-space: pre-wrap }
+/* "Lato" non è fra i font caricati: usiamo IBM Plex Mono, che scarichiamo già. */
+pre, code, kbd, samp { font-family: "IBM Plex Mono", monospace }
+pre { font-size: 16px; word-wrap: break-word; white-space: pre-wrap }
 body { background: #fff!important }
 /* iframe { height: 170px!important } */
 img { color:#212529!important }
@@ -562,6 +564,13 @@ ul.navbar-nav li.nav-item a.nav-link:hover { background-color: rgba(0, 0, 0, 0.1
     --eb-dark:#12181f;
     --cnvs-themecolor:var(--eb-brand);
     --cnvs-themecolor-rgb:var(--eb-brand-rgb);
+
+    /* Font: Canvas dichiara "Inter" e "Playfair Display", che non carichiamo — l'interfaccia
+       ripiegava sul sans-serif di sistema. Le allineiamo alle famiglie che base.html.twig
+       scarica davvero da Google Fonts, così i pesi (300…700) sono quelli veri. */
+    --cnvs-body-font:"IBM Plex Sans", sans-serif;
+    --cnvs-primary-font:"IBM Plex Sans", sans-serif;
+    --cnvs-secondary-font:"PT Serif", serif;
 }
 #header.transparent-header:not(.sticky-header) { background:transparent; }
 /* Logo bianco quando l'header è scuro/trasparente (es. hero della homepage). */

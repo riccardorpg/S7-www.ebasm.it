@@ -5,6 +5,7 @@ namespace App\Controller\Notary;
 use App\Entity\Master\Company;
 use App\Entity\Slave\Document;
 use App\Entity\Slave\Practice;
+use App\Entity\Slave\PracticeDocument;
 use App\Service\CompanyService;
 use App\Service\DocumentStorage;
 use Doctrine\Persistence\ManagerRegistry;
@@ -101,7 +102,7 @@ class NotaryController extends AbstractController
         $qb = $repo->accessibleQueryBuilder(null);
 
         if ($filters['q'] !== '') {
-            $qb->andWhere('p.number LIKE :q OR p.type LIKE :q OR p.subject LIKE :q')
+            $qb->andWhere('p.number LIKE :q OR p.subject LIKE :q')
                 ->setParameter('q', '%' . $filters['q'] . '%');
         }
         // Le parti sono clienti dell'agenzia (11): il filtro cerca su nome e cognome.
@@ -126,7 +127,7 @@ class NotaryController extends AbstractController
             [
                 'defaultSortFieldName' => 'p.createdAt',
                 'defaultSortDirection' => 'desc',
-                'sortFieldAllowList' => ['p.number', 'p.type', 'p.status', 'p.createdAt'],
+                'sortFieldAllowList' => ['p.number', 'p.mortgage', 'p.status', 'p.createdAt'],
             ]
         );
 
@@ -215,32 +216,39 @@ class NotaryController extends AbstractController
         return $response;
     }
 
-    /** 17.1.1.1.5.2.4 Segna come richiesto / non richiesto. */
-    #[Route('/pratiche/{id}/documenti/{did}/richiesto', name: 'notary_doc_toggle_requested', requirements: ['id' => '\d+', 'did' => '\d+'], methods: ['POST'])]
-    public function docToggleRequested(int $id, int $did, Request $request): RedirectResponse
+    /**
+     * 17.1.1.1.5.2.4 Richiesto / non richiesto: dal punto 12 è la riga documentale
+     * (il tipo previsto per la pratica) a essere richiesta, non il singolo allegato.
+     */
+    #[Route('/pratiche/{id}/righe/{rid}/richiesto', name: 'notary_row_toggle_visible', requirements: ['id' => '\d+', 'rid' => '\d+'], methods: ['POST'])]
+    public function rowToggleVisible(int $id, int $rid, Request $request): RedirectResponse
     {
-        [$company, $practice, $doc] = $this->requireDocument($id, $did);
-        if ($doc === null) {
+        [$company, $practice, $row] = $this->requireRow($id, $rid);
+        if ($row === null) {
             return $this->redirectToRoute($company ? 'notary_practice_show' : 'notary_index', $company ? ['id' => $id] : []);
         }
         if ($this->isCsrfTokenValid('practice_doc_' . $practice->getId(), (string) $request->request->get('_csrf_token'))) {
-            $doc->setRequested(!$doc->isRequested());
+            $row->setVisible(!$row->isVisible());
             $this->registry->getManager('slave')->flush();
         }
 
         return $this->redirectToRoute('notary_practice_show', ['id' => $id]);
     }
 
-    /** 17.1.1.1.5.2.5 Modifica stato: Da verificare / Verificato. */
-    #[Route('/pratiche/{id}/documenti/{did}/stato', name: 'notary_doc_toggle_status', requirements: ['id' => '\d+', 'did' => '\d+'], methods: ['POST'])]
-    public function docToggleStatus(int $id, int $did, Request $request): RedirectResponse
+    /** 17.1.1.1.5.2.5 Modifica stato della riga documentale: Da verificare / Verificato. */
+    #[Route('/pratiche/{id}/righe/{rid}/stato', name: 'notary_row_status', requirements: ['id' => '\d+', 'rid' => '\d+'], methods: ['POST'])]
+    public function rowStatus(int $id, int $rid, Request $request): RedirectResponse
     {
-        [$company, $practice, $doc] = $this->requireDocument($id, $did);
-        if ($doc === null) {
+        [$company, $practice, $row] = $this->requireRow($id, $rid);
+        if ($row === null) {
             return $this->redirectToRoute($company ? 'notary_practice_show' : 'notary_index', $company ? ['id' => $id] : []);
         }
         if ($this->isCsrfTokenValid('practice_doc_' . $practice->getId(), (string) $request->request->get('_csrf_token'))) {
-            $doc->setStatus($doc->isVerified() ? Document::STATUS_DA_VERIFICARE : Document::STATUS_VERIFICATO);
+            $row->setStatus(
+                $row->getStatus() === PracticeDocument::STATUS_VERIFICATO
+                    ? PracticeDocument::STATUS_DA_VERIFICARE
+                    : PracticeDocument::STATUS_VERIFICATO
+            );
             $this->registry->getManager('slave')->flush();
         }
 
@@ -286,11 +294,21 @@ class NotaryController extends AbstractController
             return $this->redirectToRoute('notary_practice_show', ['id' => $id]);
         }
 
+        // L'allegato va appeso a una riga documentale della pratica (12.3.2.5).
+        $row = $this->findRow($practice, (int) $request->request->get('practice_document_id'));
+        if ($row === null) {
+            $this->addFlash('danger', 'Seleziona il documento a cui allegare il file.');
+
+            return $this->redirectToRoute('notary_practice_show', ['id' => $id]);
+        }
+
         $doc = new Document();
         $doc->setName($name !== '' ? $name : ($file->getClientOriginalName() ?: 'Allegato'))
-            ->setNotaryNote(trim((string) $request->request->get('note', '')) ?: null)
-            ->setStatus(Document::STATUS_DA_VERIFICARE);
-        $practice->addDocument($doc);
+            ->setNotaryNote(trim((string) $request->request->get('note', '')) ?: null);
+        $row->addDocument($doc);
+        if ($row->getStatus() === PracticeDocument::STATUS_DA_CARICARE) {
+            $row->setStatus(PracticeDocument::STATUS_DA_VERIFICARE);
+        }
 
         $em = $this->registry->getManager('slave');
         $em->persist($doc);
@@ -396,5 +414,31 @@ class NotaryController extends AbstractController
         }
 
         return [$company, $practice, $doc];
+    }
+
+    /**
+     * Carica pratica + riga documentale (12.3.2.1), verificando l'appartenenza.
+     *
+     * @return array{0: Company|null, 1: Practice|null, 2: PracticeDocument|null}
+     */
+    private function requireRow(int $id, int $rid): array
+    {
+        [$company, $practice] = $this->requirePractice($id);
+        if ($practice === null) {
+            return [$company, null, null];
+        }
+
+        return [$company, $practice, $this->findRow($practice, $rid)];
+    }
+
+    private function findRow(Practice $practice, int $rid): ?PracticeDocument
+    {
+        foreach ($practice->getPracticeDocuments() as $row) {
+            if ((int) $row->getId() === $rid) {
+                return $row;
+            }
+        }
+
+        return null;
     }
 }

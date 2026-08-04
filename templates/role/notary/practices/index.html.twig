@@ -75,7 +75,7 @@
                             </td>
                             <td>
                                 <a href="{{ path('notary_practice_show', {id: p.id}) }}"><strong>{{ p.number }}</strong></a>
-                                {% if p.type %}<span class="badge bg-light text-dark">{{ p.type }}</span>{% endif %}
+                                <span class="badge bg-light text-dark">{{ p.typeLabel }}</span>
                                 {% if p.subject %}<div class="op_07 small">{{ p.subject|length > 70 ? p.subject|slice(0, 70) ~ '…' : p.subject }}</div>{% endif %}
                             </td>
                             <td>

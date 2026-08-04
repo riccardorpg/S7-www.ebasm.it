@@ -1,0 +1,75 @@
+<?php
+
+namespace App\Service;
+
+use App\Entity\Slave\DocumentType;
+use App\Entity\Slave\Practice;
+use App\Entity\Slave\PracticeDocument;
+use Doctrine\ORM\EntityManagerInterface;
+
+/**
+ * 12.3.2.1 Costruisce le righe documentali di una pratica a partire dal catalogo
+ * tipi di documento dell'agenzia (13.1).
+ *
+ * Regole:
+ *  - entrano solo i tipi attivi (13.1.2);
+ *  - i tipi marcati "mutuo" (13.1.1.3) solo se la pratica è con mutuo (12.2.4);
+ *  - l'ordine è la priorità del catalogo (13.1.1.1), congelata sulla riga.
+ * Le righe già presenti non vengono toccate: la sincronizzazione aggiunge soltanto,
+ * così stato, allegati e mostra/nascondi impostati a mano restano dove sono.
+ */
+class PracticeDocumentSync
+{
+    /**
+     * Allinea le righe della pratica al catalogo. Ritorna quante righe ha aggiunto.
+     * Non fa flush: lo decide il chiamante.
+     */
+    public function sync(EntityManagerInterface $em, Practice $practice): int
+    {
+        $existing = [];
+        foreach ($practice->getPracticeDocuments() as $practiceDocument) {
+            $typeId = $practiceDocument->getDocumentType()?->getId();
+            if ($typeId !== null) {
+                $existing[(int) $typeId] = true;
+            }
+        }
+
+        $added = 0;
+        foreach ($this->catalogFor($em, $practice) as $type) {
+            if (isset($existing[(int) $type->getId()])) {
+                continue;
+            }
+
+            $practiceDocument = (new PracticeDocument())
+                ->setDocumentType($type)
+                ->setLabel($type->getValue())
+                ->setPriority($type->getPriority())
+                ->setStatus(PracticeDocument::STATUS_DA_CARICARE);
+
+            $practice->addPracticeDocument($practiceDocument);
+            $em->persist($practiceDocument);
+            ++$added;
+        }
+
+        return $added;
+    }
+
+    /**
+     * Tipi di documento previsti per la pratica.
+     *
+     * @return DocumentType[]
+     */
+    public function catalogFor(EntityManagerInterface $em, Practice $practice): array
+    {
+        $qb = $em->getRepository(DocumentType::class)->createQueryBuilder('t')
+            ->andWhere('t.active = true')
+            ->orderBy('t.priority', 'ASC')
+            ->addOrderBy('t.id', 'ASC');
+
+        if (!$practice->isMortgage()) {
+            $qb->andWhere('t.mortgage = false');
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+}

@@ -184,6 +184,10 @@ hr {
        "Gestione pratiche") allarga troppo la colonna. */
     --cnvs-primary-menu-ls: 0px;
     --cnvs-primary-menu-submenu-spacing: 0px;
+    /* Voci in grassetto: i sottomenu di Canvas sarebbero a 600. */
+    --cnvs-primary-menu-font-weight: 700;
+    --cnvs-primary-menu-submenu-font-weight: 700;
+    --cnvs-primary-menu-submenu-hover-font-weight: 700;
     --cnvs-primary-menu-color: #ffffff;
     --cnvs-primary-menu-hover-color: #d4d4d4;
     --cnvs-primary-menu-active-color: #ffffff;

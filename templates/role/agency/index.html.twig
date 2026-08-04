@@ -1,22 +1,137 @@
 {% extends 'role/agency/layout.html.twig' %}
+{% import 'components/action_icons.html.twig' as ico %}
 
-{% block title %} - Agenzia{% endblock %}
-{% block role_page_title_inner %}Dashboard{% endblock %}
+{% block title %} - Scrivania{% endblock %}
+{% block role_page_title_inner %}Scrivania{% endblock %}
 
 {% block role_content %}
     <section class="content-wrap">
         <div class="container">
-            <div class="card">
+
+            <div class="row g-3">
+                {# ===== 9.1 Spazio disponibile / spazio totale licenza ===== #}
+                <div class="col-lg-5">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 m_b_10p">
+                                <h6 class="m_b_none">Spazio della licenza</h6>
+                                {% if company %}<span class="badge bg-secondary">{{ company.licenseTypeLabel }}</span>{% endif %}
+                            </div>
+
+                            {% if quotaMb > 0 %}
+                                {% set freeMb = (quotaMb - usedMb) > 0 ? quotaMb - usedMb : 0 %}
+                                <div class="progress m_b_10p" style="height:20px;">
+                                    <div class="progress-bar{{ usedPercent >= 90 ? ' bg-danger' : (usedPercent >= 70 ? ' bg-warning' : '') }}"
+                                         role="progressbar" style="width: {{ usedPercent < 3 ? 3 : usedPercent }}%;"
+                                         aria-valuenow="{{ usedPercent }}" aria-valuemin="0" aria-valuemax="100">{{ usedPercent }}%</div>
+                                </div>
+                                <table class="table align-middle m_b_none">
+                                    <tr>
+                                        <th style="width:50%">Spazio disponibile</th>
+                                        <td><strong>{{ freeMb|number_format(1, ',', '.') }} MB</strong></td>
+                                    </tr>
+                                    <tr><th>Spazio occupato</th><td>{{ usedMb|number_format(1, ',', '.') }} MB</td></tr>
+                                    <tr><th>Spazio totale licenza</th><td>{{ quotaMb|number_format(0, ',', '.') }} MB</td></tr>
+                                    {% if company and company.licenseExpiresAt %}
+                                        {% set days = company.daysToExpiry %}
+                                        <tr>
+                                            <th>Scadenza licenza</th>
+                                            <td>
+                                                {{ company.licenseExpiresAt|date('d/m/Y') }}
+                                                {% if days is not null and days <= 30 %}
+                                                    <span class="badge {{ days < 0 ? 'bg-danger' : 'bg-warning text-dark' }}">{{ days < 0 ? 'scaduta' : 'fra ' ~ days ~ ' giorni' }}</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                </table>
+                                {% if usedPercent >= 90 %}
+                                    <p class="font_13 p_t_10p m_b_none">
+                                        <span class="badge bg-danger">Attenzione</span>
+                                        Spazio quasi esaurito: contatta l'amministratore per ampliare la licenza.
+                                    </p>
+                                {% endif %}
+                            {% else %}
+                                <p class="op_07 m_b_none">Nessuna licenza configurata per questa agenzia.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                {# ===== 9.2 Avvisi ===== #}
+                <div class="col-lg-7">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6 class="m_b_10p">Avvisi <span class="badge bg-secondary">{{ alerts|length }}</span></h6>
+
+                            {% if alerts is empty %}
+                                <p class="op_07 m_b_none">Nessun avviso inserito sulle pratiche.</p>
+                            {% else %}
+                                <table class="table table-hover align-middle m_b_none">
+                                    <thead>
+                                        <tr>
+                                            <th class="td_w_120p">Data</th>
+                                            <th class="td_w_150p">Pratica</th>
+                                            <th>Messaggio</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for a in alerts %}
+                                        <tr>
+                                            <td>
+                                                {{ a.remindAt|date('d/m/Y') }}
+                                                {% if a.due %}<span class="badge bg-danger">scaduto</span>{% endif %}
+                                            </td>
+                                            <td><a href="{{ path('agency_practice_show', {id: a.practice.id}) }}">{{ a.practice.number }}</a></td>
+                                            <td>{{ a.message }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# ===== 9.3 Pratiche contrassegnate ===== #}
+            <div class="card m_t_20p">
                 <div class="card-body">
-                    <h4>Benvenuto, {{ app.user.fullName }}</h4>
-                    <p class="op_07">Ruolo: <span class="badge bg-warning text-dark">Agenzia</span> — {{ app.user.userIdentifier }}</p>
-                    {% if company %}
-                        <p class="m_b_none">Agenzia: <strong>{{ company.name }}</strong> — DB: <code>{{ company.dbName }}</code></p>
+                    <h6 class="m_b_10p">Pratiche contrassegnate <span class="badge bg-secondary">{{ markedPractices|length }}</span></h6>
+
+                    {% if markedPractices is empty %}
+                        <p class="op_07 m_b_none">Nessuna pratica contrassegnata.</p>
                     {% else %}
-                        <p class="op_07 m_b_none">Contesto agenzia non risolto.</p>
+                        <table class="table table-hover table-bordered align-middle m_b_none">
+                            <thead>
+                                <tr>
+                                    <th class="td_w_150p">Contrassegno</th>
+                                    <th class="td_w_120p">Stato</th>
+                                    <th class="td_w_150p">Codice</th>
+                                    <th>Venditore</th>
+                                    <th>Acquirente</th>
+                                    <th>Indirizzo</th>
+                                    <th class="td_w_100p txt_a_c">Scheda</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for p in markedPractices %}
+                                <tr>
+                                    <td><span class="badge" style="background:{{ p.mark.color }}; color:{{ p.mark.contrastColor }};">{{ p.mark.value }}</span></td>
+                                    <td><span class="badge {{ p.status == 'completata' ? 'bg-success' : (p.status == 'archiviabile' ? 'bg-info' : 'bg-secondary') }}">{{ p.statusLabel }}</span></td>
+                                    <td><a href="{{ path('agency_practice_show', {id: p.id}) }}"><strong>{{ p.number }}</strong></a></td>
+                                    <td>{{ p.seller ? p.seller.fullName : '—' }}</td>
+                                    <td>{{ p.buyer ? p.buyer.fullName : '—' }}</td>
+                                    <td>{{ p.address ?: '—' }}</td>
+                                    <td class="txt_a_c">{{ ico.action(path('agency_practice_show', {id: p.id}), 'view', 'Apri la scheda', 'green') }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
                     {% endif %}
                 </div>
             </div>
+
         </div>
     </section>
 {% endblock %}

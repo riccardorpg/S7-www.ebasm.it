@@ -1,0 +1,64 @@
+{# =====================================================================
+   Autocomplete clienti per venditore e acquirente (12.2.1 / 12.2.2).
+   Digitando in {prefix}_{role}Name i risultati compaiono sotto al campo; la scelta
+   valorizza {prefix}_{role} (hidden con l'id) e scrive l'etichetta nel campo.
+   Stessa meccanica dell'autocomplete studi dell'area admin.
+   ===================================================================== #}
+<script>
+    (function () {
+        var url = "{{ path('agency_customer_search') }}";
+        var timers = {};
+
+        window.customerSearch = function (prefix, role) {
+            var key = prefix + '_' + role;
+            var input = document.getElementById(key + 'Name');
+            var hidden = document.getElementById(key);
+            var box = document.getElementById(key + 'Results');
+            if (!input || !hidden || !box) return;
+
+            // L'id vale solo se scelto dalla lista: appena si digita si azzera,
+            // così non si salva un cliente diverso da quello mostrato.
+            hidden.value = '';
+            var q = input.value.trim();
+
+            clearTimeout(timers[key]);
+            timers[key] = setTimeout(function () {
+                fetch(url + '?q=' + encodeURIComponent(q))
+                    .then(function (r) { return r.json(); })
+                    .then(function (items) {
+                        box.innerHTML = '';
+                        if (!items.length) {
+                            var empty = document.createElement('div');
+                            empty.className = 'list-group-item text-muted';
+                            empty.textContent = 'Nessun cliente trovato.';
+                            box.appendChild(empty);
+                            box.style.display = 'block';
+                            return;
+                        }
+                        items.forEach(function (it) {
+                            var option = document.createElement('button');
+                            option.type = 'button';
+                            option.className = 'list-group-item list-group-item-action';
+                            option.textContent = it.label;
+                            option.addEventListener('click', function () {
+                                input.value = it.label;
+                                hidden.value = it.id;
+                                box.style.display = 'none';
+                            });
+                            box.appendChild(option);
+                        });
+                        box.style.display = 'block';
+                    });
+            }, 250);
+        };
+
+        // Click fuori: chiude tutte le tendine dei risultati.
+        document.addEventListener('click', function (e) {
+            document.querySelectorAll('[id$="sellerResults"], [id$="buyerResults"]').forEach(function (box) {
+                var input = document.getElementById(box.id.replace('Results', 'Name'));
+                if (box.contains(e.target) || (input && input.contains(e.target))) return;
+                box.style.display = 'none';
+            });
+        });
+    })();
+</script>

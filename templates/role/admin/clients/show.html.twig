@@ -208,12 +208,7 @@
     {% include 'components/js/city_js.html.twig' with {number: 1, formName: 'clientEdit', modalToClose: 'clientEditModal'} only %}
     {% include 'role/admin/clients/_fiscal_js.html.twig' with {prefix: 'clientEdit'} only %}
     <script>
-        // Precarica i CAP del comune già associato (preservando quello salvato).
-        document.addEventListener('DOMContentLoaded', function () {
-            if (document.getElementById('clientEdit_city').value && window.zipUpdateSelect1) {
-                zipUpdateSelect1(true);
-            }
-        });
+        // Il precaricamento dei CAP del comune salvato lo fa city_js.
         // Filtro staff lato client.
         function staffFilterFn() {
             var qUser = document.getElementById('staffFilterUser').value.trim().toLowerCase();

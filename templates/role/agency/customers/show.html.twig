@@ -106,14 +106,14 @@
                             <tr class="practice-row"
                                 data-status="{{ p.status }}"
                                 data-date="{{ p.createdAt ? p.createdAt|date('d/m/Y') : '' }}"
-                                data-type="{{ p.type }}"
+                                data-type="{{ p.typeLabel }}"
                                 data-seller="{{ p.seller ? p.seller.fullName : '' }}"
                                 data-buyer="{{ p.buyer ? p.buyer.fullName : '' }}"
                                 data-number="{{ p.number }}"
                                 data-address="{{ p.address }}">
                                 <td><span class="badge {{ p.status == 'completata' ? 'bg-success' : (p.status == 'archiviabile' ? 'bg-info' : 'bg-secondary') }}">{{ p.statusLabel }}</span></td>
                                 <td>{{ p.createdAt ? p.createdAt|date('d/m/Y') : '—' }}</td>
-                                <td>{{ p.type ?: '—' }}</td>
+                                <td>{{ p.typeLabel }}</td>
                                 <td>
                                     {{ p.seller ? p.seller.fullName : '—' }}
                                     {% if p.seller and p.seller.id == customer.id %}<span class="badge bg-light text-dark">questo cliente</span>{% endif %}

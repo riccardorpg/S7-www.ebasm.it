@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controller\Admin;
+namespace App\Controller;
 
 use App\Entity\Master\City;
 use Doctrine\Persistence\ManagerRegistry;
@@ -13,9 +13,13 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 /**
  * Endpoint AJAX del sottosistema geo (città / CAP), lato Master.
  * Il picker (components/modals/city.html.twig + js/city_js.html.twig) li interroga.
+ *
+ * Sono dati di riferimento comuni, non roba da amministratori: li usa anche l'area
+ * agenzia (indirizzo della pratica), quindi bastano utenti autenticati. I nomi delle
+ * rotte restano quelli originali, così i template esistenti non cambiano.
  */
-#[Route('/amministratore/api')]
-#[IsGranted('ROLE_ADMIN')]
+#[Route('/api/geo')]
+#[IsGranted('IS_AUTHENTICATED_FULLY')]
 class GeoController extends AbstractController
 {
     public function __construct(private readonly ManagerRegistry $registry)

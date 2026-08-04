@@ -8,6 +8,13 @@
         <a class="menu-link" href="{{ path('agency_index') }}"><div>Scrivania</div></a>
     </li>
     {# 10.1.5 Le voci compaiono solo a chi ha almeno la lettura sulla sezione. #}
+    {% if is_granted('view', 'practices') %}
+        {# "agency_practice_mark"/"agency_practice_tag" sono le configurazioni, non le pratiche. #}
+        {% set onPractices = r starts with 'agency_practice' and not (r starts with 'agency_practice_mark') and not (r starts with 'agency_practice_tag') %}
+        <li class="menu-item{{ onPractices ? ' current' : '' }}">
+            <a class="menu-link" href="{{ path('agency_practices') }}"><div>Pratiche</div></a>
+        </li>
+    {% endif %}
     {% if is_granted('view', 'staff') %}
         <li class="menu-item{{ r starts with 'agency_staff' ? ' current' : '' }}">
             <a class="menu-link" href="{{ path('agency_staff') }}"><div>Staff</div></a>

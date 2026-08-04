@@ -28,13 +28,27 @@ class Practice
     public const STATUS_COMPLETATA = 'completata';
     public const STATUS_ARCHIVIABILE = 'archiviabile';
 
-    /** Numero/protocollo pratica. */
+    // 12.3.5 Archiviata: stato finale, oltre a quelli del ciclo notaio.
+    public const STATUS_ARCHIVIATA = 'archiviata';
+
+    /** @var array<string, string> Stati con la loro etichetta, nell'ordine del ciclo di vita. */
+    public const STATUSES = [
+        self::STATUS_APERTA => 'Aperta',
+        self::STATUS_COMPLETATA => 'Completata',
+        self::STATUS_ARCHIVIABILE => 'Archiviabile',
+        self::STATUS_ARCHIVIATA => 'Archiviata',
+    ];
+
+    /** 12.1.6 Numero/codice pratica. */
     #[ORM\Column(type: 'string', length: 60)]
     private string $number = '';
 
-    /** Tipo pratica (es. Compravendita, Successione, Donazione). */
-    #[ORM\Column(type: 'string', length: 80, nullable: true)]
-    private ?string $type = null;
+    /**
+     * 12.2.4 Tipo di pratica: con mutuo / senza mutuo. È il flag che decide quali tipi
+     * di documento entrano nella pratica (13.1.1.3).
+     */
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $mortgage = false;
 
     /** Oggetto/immobile della pratica. */
     #[ORM\Column(type: 'text', nullable: true)]
@@ -43,6 +57,25 @@ class Practice
     /** 11.2.3.7 Indirizzo dell'immobile oggetto della pratica. */
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $address = null;
+
+    /**
+     * 12.2.5 Città e CAP scelti dal catalogo geografico del Master.
+     *
+     * Sono copiati come testo, non come relazione: la pratica sta nel DB dell'agenzia
+     * e City/Zip nel master, quindi una FK fra i due database non è possibile. Teniamo
+     * anche gli id di origine, che servono a ripopolare il picker in modifica.
+     */
+    #[ORM\Column(type: 'string', length: 190, nullable: true)]
+    private ?string $city = null;
+
+    #[ORM\Column(type: 'string', length: 10, nullable: true)]
+    private ?string $zip = null;
+
+    #[ORM\Column(name: 'city_ref_id', type: 'integer', nullable: true)]
+    private ?int $cityRefId = null;
+
+    #[ORM\Column(name: 'zip_ref_id', type: 'integer', nullable: true)]
+    private ?int $zipRefId = null;
 
     #[ORM\Column(type: 'string', length: 20)]
     private string $status = self::STATUS_APERTA;
@@ -64,13 +97,53 @@ class Practice
     #[ORM\JoinColumn(name: 'seller_customer_id', referencedColumnName: 'id', nullable: true, onDelete: 'RESTRICT')]
     private ?Customer $seller = null;
 
-    /** @var Collection<int, Document> */
-    #[ORM\OneToMany(mappedBy: 'practice', targetEntity: Document::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
-    private Collection $documents;
+    /** 12.2.7 Contrassegno (uno solo per pratica). */
+    #[ORM\ManyToOne(targetEntity: PracticeMark::class)]
+    #[ORM\JoinColumn(name: 'mark_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
+    private ?PracticeMark $mark = null;
+
+    /**
+     * 12.2.6 Tag della pratica (più di uno).
+     *
+     * @var Collection<int, PracticeTag>
+     */
+    #[ORM\ManyToMany(targetEntity: PracticeTag::class)]
+    #[ORM\JoinTable(name: 'eb_s_practice_tag_map')]
+    private Collection $tags;
+
+    /**
+     * 12.3.3 Membri dello staff che accedono alla pratica oltre agli amministratori.
+     *
+     * @var Collection<int, User>
+     */
+    #[ORM\ManyToMany(targetEntity: User::class)]
+    #[ORM\JoinTable(name: 'eb_s_practice_staff')]
+    private Collection $staff;
+
+    /**
+     * 12.3.2.1 Righe documentali: un tipo di documento previsto per la pratica.
+     *
+     * @var Collection<int, PracticeDocument>
+     */
+    #[ORM\OneToMany(mappedBy: 'practice', targetEntity: PracticeDocument::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\OrderBy(['priority' => 'ASC', 'id' => 'ASC'])]
+    private Collection $practiceDocuments;
+
+    /**
+     * 12.3.4 Avvisi (promemoria) sulla pratica.
+     *
+     * @var Collection<int, PracticeAlert>
+     */
+    #[ORM\OneToMany(mappedBy: 'practice', targetEntity: PracticeAlert::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\OrderBy(['remindAt' => 'ASC'])]
+    private Collection $alerts;
 
     public function __construct()
     {
-        $this->documents = new ArrayCollection();
+        $this->tags = new ArrayCollection();
+        $this->staff = new ArrayCollection();
+        $this->practiceDocuments = new ArrayCollection();
+        $this->alerts = new ArrayCollection();
     }
 
     public function getNumber(): string
@@ -85,14 +158,28 @@ class Practice
         return $this;
     }
 
-    public function getType(): ?string
+    public function isMortgage(): bool
     {
-        return $this->type;
+        return $this->mortgage;
     }
 
-    public function setType(?string $type): static
+    public function setMortgage(bool $mortgage): static
     {
-        $this->type = $type;
+        $this->mortgage = $mortgage;
+
+        return $this;
+    }
+
+    /** 12.1.3 Tipo di pratica, in chiaro. */
+    public function getTypeLabel(): string
+    {
+        return $this->mortgage ? 'Con mutuo' : 'Senza mutuo';
+    }
+
+    /** 12.2.3 La data di creazione la sceglie l'agenzia nel form di inserimento. */
+    public function setCreatedAt(\DateTimeImmutable $createdAt): static
+    {
+        $this->createdAt = $createdAt;
 
         return $this;
     }
@@ -121,6 +208,65 @@ class Practice
         return $this;
     }
 
+    public function getCity(): ?string
+    {
+        return $this->city;
+    }
+
+    public function setCity(?string $city): static
+    {
+        $this->city = $city;
+
+        return $this;
+    }
+
+    public function getZip(): ?string
+    {
+        return $this->zip;
+    }
+
+    public function setZip(?string $zip): static
+    {
+        $this->zip = $zip;
+
+        return $this;
+    }
+
+    public function getCityRefId(): ?int
+    {
+        return $this->cityRefId;
+    }
+
+    public function setCityRefId(?int $cityRefId): static
+    {
+        $this->cityRefId = $cityRefId;
+
+        return $this;
+    }
+
+    public function getZipRefId(): ?int
+    {
+        return $this->zipRefId;
+    }
+
+    public function setZipRefId(?int $zipRefId): static
+    {
+        $this->zipRefId = $zipRefId;
+
+        return $this;
+    }
+
+    /** Indirizzo completo su una riga, per elenchi e archivi. */
+    public function getFullAddress(): string
+    {
+        $parts = array_filter([
+            $this->address,
+            trim(($this->zip ?? '') . ' ' . ($this->city ?? '')),
+        ], static fn (?string $p) => $p !== null && trim($p) !== '');
+
+        return implode(' — ', $parts);
+    }
+
     public function getStatus(): string
     {
         return $this->status;
@@ -135,11 +281,7 @@ class Practice
 
     public function getStatusLabel(): string
     {
-        return match ($this->status) {
-            self::STATUS_COMPLETATA => 'Completata',
-            self::STATUS_ARCHIVIABILE => 'Archiviabile',
-            default => 'Aperta',
-        };
+        return self::STATUSES[$this->status] ?? self::STATUSES[self::STATUS_APERTA];
     }
 
     public function getNotaryEmail(): ?string
@@ -178,42 +320,153 @@ class Practice
         return $this;
     }
 
-    /** @return Collection<int, Document> */
-    public function getDocuments(): Collection
+    public function getMark(): ?PracticeMark
     {
-        return $this->documents;
+        return $this->mark;
     }
 
-    public function addDocument(Document $document): static
+    public function setMark(?PracticeMark $mark): static
     {
-        if (!$this->documents->contains($document)) {
-            $this->documents->add($document);
-            $document->setPractice($this);
+        $this->mark = $mark;
+
+        return $this;
+    }
+
+    /** @return Collection<int, PracticeTag> */
+    public function getTags(): Collection
+    {
+        return $this->tags;
+    }
+
+    public function addTag(PracticeTag $tag): static
+    {
+        if (!$this->tags->contains($tag)) {
+            $this->tags->add($tag);
         }
 
         return $this;
     }
 
-    public function removeDocument(Document $document): static
+    public function clearTags(): static
     {
-        if ($this->documents->removeElement($document)) {
-            if ($document->getPractice() === $this) {
-                $document->setPractice(null);
+        $this->tags->clear();
+
+        return $this;
+    }
+
+    /** @return Collection<int, User> */
+    public function getStaff(): Collection
+    {
+        return $this->staff;
+    }
+
+    public function addStaff(User $user): static
+    {
+        if (!$this->staff->contains($user)) {
+            $this->staff->add($user);
+        }
+
+        return $this;
+    }
+
+    public function clearStaff(): static
+    {
+        $this->staff->clear();
+
+        return $this;
+    }
+
+    /** @return Collection<int, PracticeDocument> */
+    public function getPracticeDocuments(): Collection
+    {
+        return $this->practiceDocuments;
+    }
+
+    public function addPracticeDocument(PracticeDocument $practiceDocument): static
+    {
+        if (!$this->practiceDocuments->contains($practiceDocument)) {
+            $this->practiceDocuments->add($practiceDocument);
+            $practiceDocument->setPractice($this);
+        }
+
+        return $this;
+    }
+
+    /** Righe richieste per questa pratica (12.3.2.2: le nascoste non contano). */
+    public function getVisibleDocuments(): Collection
+    {
+        return $this->practiceDocuments->filter(fn (PracticeDocument $pd) => $pd->isVisible());
+    }
+
+    /** Numero di righe documentali con almeno un allegato. */
+    public function countUploaded(): int
+    {
+        return $this->getVisibleDocuments()->filter(fn (PracticeDocument $pd) => $pd->hasFiles())->count();
+    }
+
+    /** Numero di righe documentali richieste. */
+    public function countRequested(): int
+    {
+        return $this->getVisibleDocuments()->count();
+    }
+
+    /** 12.1.8 Spazio occupato dagli allegati della pratica, in MB. */
+    public function getSizeMb(): float
+    {
+        $bytes = 0;
+        foreach ($this->practiceDocuments as $practiceDocument) {
+            $bytes += $practiceDocument->getSizeBytes();
+        }
+
+        return round($bytes / 1048576, 2);
+    }
+
+    /** @return Collection<int, PracticeAlert> */
+    public function getAlerts(): Collection
+    {
+        return $this->alerts;
+    }
+
+    public function addAlert(PracticeAlert $alert): static
+    {
+        if (!$this->alerts->contains($alert)) {
+            $this->alerts->add($alert);
+            $alert->setPractice($this);
+        }
+
+        return $this;
+    }
+
+    public function isArchived(): bool
+    {
+        return $this->status === self::STATUS_ARCHIVIATA;
+    }
+
+    /**
+     * 12.3.5.2 L'archiviazione è possibile solo dopo il via libera del notaio, che
+     * mette la pratica in "archiviabile".
+     */
+    public function canBeArchived(): bool
+    {
+        return $this->status === self::STATUS_ARCHIVIABILE;
+    }
+
+    /**
+     * 12.3.3 Chi può aprire la pratica: gli amministratori dell'agenzia sempre,
+     * gli altri solo se inseriti fra lo staff della pratica.
+     */
+    public function isAccessibleBy(User $user): bool
+    {
+        if ($user->isAdmin()) {
+            return true;
+        }
+
+        foreach ($this->staff as $member) {
+            if ($member->getId() === $user->getId()) {
+                return true;
             }
         }
 
-        return $this;
-    }
-
-    /** Numero di documenti effettivamente caricati. */
-    public function countUploaded(): int
-    {
-        return $this->documents->filter(fn (Document $d) => $d->hasFile())->count();
-    }
-
-    /** Numero di documenti marcati come richiesti. */
-    public function countRequested(): int
-    {
-        return $this->documents->filter(fn (Document $d) => $d->isRequested())->count();
+        return false;
     }
 }

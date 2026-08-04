@@ -2,7 +2,12 @@
 
 namespace App\Controller\Agency;
 
+use App\Entity\Slave\Practice;
+use App\Entity\Slave\PracticeAlert;
+use App\Entity\Slave\User as StaffUser;
 use App\Service\CompanyService;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -12,11 +17,70 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_AGENCY')]
 class AgencyController extends AbstractController
 {
+    /** 9. Scrivania: spazio licenza (9.1), avvisi (9.2) e pratiche contrassegnate (9.3). */
     #[Route('', name: 'agency_index', methods: ['GET'])]
-    public function index(CompanyService $companyService): Response
+    public function index(CompanyService $companyService, ManagerRegistry $registry): Response
     {
+        $company = $companyService->getCurrentCompany();
+        $em = $registry->getManager('slave');
+        $user = $this->getUser();
+
+        // 9.1 Spazio: quello occupato è la dimensione reale del DB dell'agenzia più i file.
+        $usedMb = $company !== null ? $companyService->getStorageUsedMb((string) $company->getDbName()) : 0.0;
+        $quotaMb = $company?->getStorageQuotaMb() ?? 0;
+
+        // 9.2 / 9.3 Come nell'elenco pratiche, chi non è amministratore vede solo le sue.
+        $onlyMine = $user instanceof StaffUser && !$user->isAdmin() ? $user : null;
+
         return $this->render('role/agency/index.html.twig', [
-            'company' => $companyService->getCurrentCompany(),
+            'company' => $company,
+            'usedMb' => $usedMb,
+            'quotaMb' => $quotaMb,
+            'usedPercent' => $quotaMb > 0 ? min(100, round($usedMb / $quotaMb * 100, 1)) : 0,
+            'alerts' => $this->alerts($em, $onlyMine),
+            'markedPractices' => $this->markedPractices($em, $onlyMine),
         ]);
+    }
+
+    /**
+     * 9.2.1 Avvisi delle pratiche, i più imminenti per primi.
+     *
+     * @return PracticeAlert[]
+     */
+    private function alerts(EntityManagerInterface $em, ?StaffUser $onlyFor): array
+    {
+        $qb = $em->getRepository(PracticeAlert::class)->createQueryBuilder('a')
+            ->join('a.practice', 'p')->addSelect('p')
+            ->andWhere('p.status <> :archived')->setParameter('archived', Practice::STATUS_ARCHIVIATA)
+            ->orderBy('a.remindAt', 'ASC')
+            ->setMaxResults(50);
+
+        if ($onlyFor !== null) {
+            $qb->join('p.staff', 'ps')->andWhere('ps.id = :me')->setParameter('me', $onlyFor->getId());
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * 9.3.1 Pratiche con un contrassegno, escluse le archiviate.
+     *
+     * @return Practice[]
+     */
+    private function markedPractices(EntityManagerInterface $em, ?StaffUser $onlyFor): array
+    {
+        $qb = $em->getRepository(Practice::class)->createQueryBuilder('p')
+            ->join('p.mark', 'm')->addSelect('m')
+            ->leftJoin('p.seller', 's')->addSelect('s')
+            ->leftJoin('p.buyer', 'b')->addSelect('b')
+            ->andWhere('p.status <> :archived')->setParameter('archived', Practice::STATUS_ARCHIVIATA)
+            ->orderBy('m.value', 'ASC')
+            ->addOrderBy('p.createdAt', 'DESC');
+
+        if ($onlyFor !== null) {
+            $qb->join('p.staff', 'ps')->andWhere('ps.id = :me')->setParameter('me', $onlyFor->getId());
+        }
+
+        return $qb->getQuery()->getResult();
     }
 }
