@@ -6,7 +6,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         var route = "{{ app.request.attributes.get('_route') }}";
-        var saveUrl = "{{ path('admin_update_tab_session') }}";
+        var saveUrl = "{{ path('session_update_tab') }}";
 
         {% set savedTab = app.session.get(app.request.attributes.get('_route') ~ '_tab') %}
         {% if savedTab %}

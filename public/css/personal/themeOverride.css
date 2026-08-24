@@ -708,6 +708,9 @@ input.form-control {
 }
 
 /* ===== Badge ===== */
+/* custom.css usa .bg-success come evidenziazione sbiadita per celle e box, con testo
+   scuro: sui badge serve invece il verde pieno con testo bianco. */
+.badge.bg-success { background-color: #29a847 !important; color: #fff !important; }
 [data-theme-resolved="dark"] .badge.bg-secondary {
     background-color: #3a4356 !important;
     color: #e6e8ee;

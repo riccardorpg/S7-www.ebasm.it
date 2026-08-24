@@ -9,8 +9,9 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * Richiesta demo inviata dal form pubblico "Richiedi la demo per 30 giorni".
- * Le richieste non ancora evase (processed=false) sono gli allarmi "Nuove richieste in
- * arrivo" della scrivania admin (6.1.1).
+ * Le richieste ancora da evadere (status=new) sono gli allarmi "Nuove richieste in
+ * arrivo" della scrivania admin (6.1.1); da lì l'admin le converte in cliente
+ * (status=converted, con $company valorizzata) oppure le scarta (status=rejected).
  */
 #[ORM\Entity(repositoryClass: DemoRequestRepository::class)]
 #[ORM\Table(name: 'eb_m_demo_request')]
@@ -19,6 +20,13 @@ class DemoRequest
 {
     use IdTrait;
     use TimestampsTrait;
+
+    /** Da evadere: è l'allarme in scrivania. */
+    public const STATUS_NEW = 'new';
+    /** Evasa: è diventata un cliente ($company). */
+    public const STATUS_CONVERTED = 'converted';
+    /** Scartata (spam, doppione, non interessata): resta in archivio. */
+    public const STATUS_REJECTED = 'rejected';
 
     #[ORM\Column(name: 'account_type', type: 'string', length: 20)]
     private string $accountType = Company::TYPE_COMPANY;
@@ -48,8 +56,20 @@ class DemoRequest
     #[ORM\Column(type: 'string', length: 191, nullable: true)]
     private ?string $pec = null;
 
-    #[ORM\Column(type: 'boolean', options: ['default' => false])]
-    private bool $processed = false;
+    #[ORM\Column(type: 'string', length: 20, options: ['default' => self::STATUS_NEW])]
+    private string $status = self::STATUS_NEW;
+
+    #[ORM\Column(name: 'processed_at', type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $processedAt = null;
+
+    /** E-mail dell'admin che ha evaso/scartato la richiesta (per tracciabilità). */
+    #[ORM\Column(name: 'processed_by', type: 'string', length: 191, nullable: true)]
+    private ?string $processedBy = null;
+
+    /** Cliente creato da questa richiesta (solo se status=converted). */
+    #[ORM\ManyToOne(targetEntity: Company::class)]
+    #[ORM\JoinColumn(name: 'company_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
+    private ?Company $company = null;
 
     public function getAccountType(): string
     {
@@ -164,14 +184,74 @@ class DemoRequest
         return $this;
     }
 
-    public function isProcessed(): bool
+    public function getStatus(): string
     {
-        return $this->processed;
+        return $this->status;
     }
 
-    public function setProcessed(bool $processed): static
+    public function getStatusLabel(): string
     {
-        $this->processed = $processed;
+        return match ($this->status) {
+            self::STATUS_CONVERTED => 'Evasa',
+            self::STATUS_REJECTED => 'Scartata',
+            default => 'Da evadere',
+        };
+    }
+
+    public function getProcessedAt(): ?\DateTimeImmutable
+    {
+        return $this->processedAt;
+    }
+
+    public function getProcessedBy(): ?string
+    {
+        return $this->processedBy;
+    }
+
+    public function getCompany(): ?Company
+    {
+        return $this->company;
+    }
+
+    public function isNew(): bool
+    {
+        return $this->status === self::STATUS_NEW;
+    }
+
+    public function isProcessed(): bool
+    {
+        return $this->status !== self::STATUS_NEW;
+    }
+
+    /** Richiesta evasa: è nato il cliente $company. */
+    public function markConverted(Company $company, ?string $by = null): static
+    {
+        $this->status = self::STATUS_CONVERTED;
+        $this->company = $company;
+        $this->processedAt = new \DateTimeImmutable();
+        $this->processedBy = $by;
+
+        return $this;
+    }
+
+    /** Richiesta scartata: resta in archivio, senza cliente collegato. */
+    public function markRejected(?string $by = null): static
+    {
+        $this->status = self::STATUS_REJECTED;
+        $this->company = null;
+        $this->processedAt = new \DateTimeImmutable();
+        $this->processedBy = $by;
+
+        return $this;
+    }
+
+    /** Rimette una richiesta scartata tra quelle da evadere. */
+    public function markNew(): static
+    {
+        $this->status = self::STATUS_NEW;
+        $this->company = null;
+        $this->processedAt = null;
+        $this->processedBy = null;
 
         return $this;
     }

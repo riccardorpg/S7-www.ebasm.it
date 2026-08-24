@@ -1,9 +1,10 @@
 {# Icone-azione per le liste (stile DualMoto). I globals (PATH_GRAPHICS) sono accessibili nei macro. #}
 
-{# Azione con link (href può essere una rotta o javascript:fn()). #}
-{% macro action(href, icon, title, color) %}
+{# Azione con link (href può essere una rotta o javascript:fn()).
+   `cls`: classi extra sull'immagine, es. "icon_sm" per l'icona piccola. #}
+{% macro action(href, icon, title, color, cls) %}
     <a href="{{ href }}" class="d-inline-block m_r_5p" data-bs-toggle="tooltip" data-bs-title="{{ title }}">
-        <img src="{{ asset(PATH_GRAPHICS ~ 'icons/' ~ icon ~ '.png') }}" class="icon_action{% if color %} icon_{{ color }}{% endif %}" alt="{{ title }}">
+        <img src="{{ asset(PATH_GRAPHICS ~ 'icons/' ~ icon ~ '.png') }}" class="icon_action{% if color %} icon_{{ color }}{% endif %}{% if cls %} {{ cls }}{% endif %}" alt="{{ title }}">
     </a>
 {% endmacro %}
 

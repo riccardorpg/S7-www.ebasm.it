@@ -147,12 +147,14 @@ class MigratePracticeDocumentsCommand extends Command
             $key = $practiceId . ':' . ($typeId !== null ? 'T' . $typeId : 'N' . mb_strtolower($label));
 
             if (!isset($created[$key])) {
-                // Stato della riga dedotto dal vecchio allegato.
+                // Stato della riga dedotto dal vecchio allegato. Il letterale 'verificato'
+                // è lo stato nella vecchia colonna eb_s_document.status, scritta quando gli
+                // stati erano in italiano: qui si legge dati pre-migrazione, non va tradotto.
                 $hasFile = trim((string) $row['storage_path']) !== '';
                 $status = match (true) {
-                    (string) $row['status'] === 'verificato' => PracticeDocument::STATUS_VERIFICATO,
-                    $hasFile => PracticeDocument::STATUS_DA_VERIFICARE,
-                    default => PracticeDocument::STATUS_DA_CARICARE,
+                    (string) $row['status'] === 'verificato' => PracticeDocument::STATUS_VERIFIED,
+                    $hasFile => PracticeDocument::STATUS_TO_VERIFY,
+                    default => PracticeDocument::STATUS_TO_UPLOAD,
                 };
 
                 // visible = 1: la riga esiste perché il documento era richiesto o già caricato.

@@ -24,19 +24,19 @@ class Practice
     use TimestampsTrait;
 
     // 17.1.1.2 Stati del ciclo di vita.
-    public const STATUS_APERTA = 'aperta';
-    public const STATUS_COMPLETATA = 'completata';
-    public const STATUS_ARCHIVIABILE = 'archiviabile';
+    public const STATUS_OPEN = 'open';
+    public const STATUS_COMPLETED = 'completed';
+    public const STATUS_ARCHIVABLE = 'archivable';
 
     // 12.3.5 Archiviata: stato finale, oltre a quelli del ciclo notaio.
-    public const STATUS_ARCHIVIATA = 'archiviata';
+    public const STATUS_ARCHIVED = 'archived';
 
     /** @var array<string, string> Stati con la loro etichetta, nell'ordine del ciclo di vita. */
     public const STATUSES = [
-        self::STATUS_APERTA => 'Aperta',
-        self::STATUS_COMPLETATA => 'Completata',
-        self::STATUS_ARCHIVIABILE => 'Archiviabile',
-        self::STATUS_ARCHIVIATA => 'Archiviata',
+        self::STATUS_OPEN => 'Aperta',
+        self::STATUS_COMPLETED => 'Completata',
+        self::STATUS_ARCHIVABLE => 'Archiviabile',
+        self::STATUS_ARCHIVED => 'Archiviata',
     ];
 
     /** 12.1.6 Numero/codice pratica. */
@@ -78,7 +78,7 @@ class Practice
     private ?int $zipRefId = null;
 
     #[ORM\Column(type: 'string', length: 20)]
-    private string $status = self::STATUS_APERTA;
+    private string $status = self::STATUS_OPEN;
 
     /** Notaio con accesso alla pratica (email dell'utente master). Null = tutti. */
     #[ORM\Column(name: 'notary_email', type: 'string', length: 190, nullable: true)]
@@ -281,7 +281,7 @@ class Practice
 
     public function getStatusLabel(): string
     {
-        return self::STATUSES[$this->status] ?? self::STATUSES[self::STATUS_APERTA];
+        return self::STATUSES[$this->status] ?? self::STATUSES[self::STATUS_OPEN];
     }
 
     public function getNotaryEmail(): ?string
@@ -439,7 +439,7 @@ class Practice
 
     public function isArchived(): bool
     {
-        return $this->status === self::STATUS_ARCHIVIATA;
+        return $this->status === self::STATUS_ARCHIVED;
     }
 
     /**
@@ -448,7 +448,7 @@ class Practice
      */
     public function canBeArchived(): bool
     {
-        return $this->status === self::STATUS_ARCHIVIABILE;
+        return $this->status === self::STATUS_ARCHIVABLE;
     }
 
     /**

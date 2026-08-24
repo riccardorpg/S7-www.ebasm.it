@@ -282,8 +282,10 @@ class PracticeController extends AbstractController
 
         /** @var UploadedFile|null $file */
         $file = $request->files->get('file');
-        if ($file === null) {
-            $this->addFlash('danger', 'Seleziona un file da caricare.');
+        // Sono ammessi solo PDF (controllo sul contenuto, non sull'estensione dichiarata).
+        $fileError = $storage->validationError($file);
+        if ($fileError !== null) {
+            $this->addFlash('danger', $fileError);
 
             return $this->backToDocuments($practice);
         }
@@ -303,8 +305,8 @@ class PracticeController extends AbstractController
                 ->setSizeBytes($meta['size']);
 
             // Caricare il primo file porta la riga da "da caricare" a "da verificare".
-            if ($row->getStatus() === PracticeDocument::STATUS_DA_CARICARE) {
-                $row->setStatus(PracticeDocument::STATUS_DA_VERIFICARE);
+            if ($row->getStatus() === PracticeDocument::STATUS_TO_UPLOAD) {
+                $row->setStatus(PracticeDocument::STATUS_TO_VERIFY);
             }
             $em->flush();
             $this->addFlash('success', 'Allegato caricato su "' . $row->getLabel() . '".');
@@ -345,6 +347,9 @@ class PracticeController extends AbstractController
         if ($this->isCsrfTokenValid('delete', (string) $request->request->get('_csrf_token'))) {
             $storage->delete($this->dbName(), $document->getStoragePath());
             $em = $this->slave();
+            // Se la riga resta senza allegati torna "da caricare": non c'è più nulla da verificare.
+            $row = $document->getPracticeDocument();
+            $row?->removeDocument($document)->resetStatusIfEmpty();
             $em->remove($document);
             $em->flush();
             $this->addFlash('success', 'Allegato eliminato.');
@@ -508,7 +513,7 @@ class PracticeController extends AbstractController
             return $this->redirectToRoute('agency_practice_show', ['id' => $id], Response::HTTP_SEE_OTHER);
         }
 
-        $practice->setStatus(Practice::STATUS_ARCHIVIATA);
+        $practice->setStatus(Practice::STATUS_ARCHIVED);
         $this->slave()->flush();
         $this->addFlash('success', 'Pratica ' . $practice->getNumber() . ' archiviata. Scarica l\'archivio per conservarne una copia.');
 

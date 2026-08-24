@@ -2,8 +2,8 @@
 
 namespace App\Controller\Agency;
 
-use App\Entity\Slave\Document;
 use App\Entity\Slave\DocumentType;
+use App\Entity\Slave\PracticeDocument;
 use App\Entity\Slave\PracticeMark;
 use App\Entity\Slave\PracticeTag;
 use App\Repository\Slave\DocumentTypeRepository;
@@ -421,13 +421,13 @@ class ConfigurationController extends AbstractController
         return $this->redirectToRoute($route, [], Response::HTTP_SEE_OTHER);
     }
 
-    /** Id dei tipi di documento già referenziati da almeno un documento di pratica. */
+    /** Id dei tipi di documento già usati da almeno una riga documentale di pratica. */
     private function usedDocumentTypeIds(): array
     {
         $rows = $this->slave()->createQueryBuilder()
-            ->select('IDENTITY(d.documentType) AS tid')
-            ->from(Document::class, 'd')
-            ->andWhere('d.documentType IS NOT NULL')
+            ->select('IDENTITY(pd.documentType) AS tid')
+            ->from(PracticeDocument::class, 'pd')
+            ->andWhere('pd.documentType IS NOT NULL')
             ->distinct()
             ->getQuery()
             ->getScalarResult();

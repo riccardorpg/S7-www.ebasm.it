@@ -1,0 +1,75 @@
+{# =====================================================================
+   Tabella delle richieste demo (6.1.1) usata nei tab della scrivania admin.
+   Variabili (include ... only):
+     rows : DemoRequest[]
+     mode : 'pending' (da evadere) | 'rejected' (archivio scartate)
+   Richiede in pagina il modale di dettaglio (_request_detail_modal) e il
+   confirm_modal con type 'demoRequest'.
+   ===================================================================== #}
+{% import 'components/action_icons.html.twig' as ico %}
+{% if rows is empty %}
+    <p class="op_07 m_b_none">{{ mode == 'rejected' ? 'Nessuna richiesta scartata.' : 'Nessuna nuova richiesta.' }}</p>
+{% else %}
+    <table class="table table-hover table-bordered align-middle m_b_none">
+        <thead>
+            <tr>
+                <th class="td_w_100p">Data</th>
+                <th class="td_w_100p">Tipo</th>
+                <th>Ragione sociale / Nome</th>
+                <th class="td_w_200p">E-mail</th>
+                <th class="td_w_150p">Città</th>
+                {% if mode == 'rejected' %}<th class="td_w_150p">Scartata il</th>{% endif %}
+                <th class="td_w_100p txt_a_c">Azioni</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for r in rows %}
+            {% set detail = {
+                'Data richiesta': r.createdAt ? r.createdAt|date('d/m/Y H:i') : '—',
+                'Stato': r.statusLabel,
+                'Tipo account': r.accountTypeLabel,
+                'Ragione sociale / Nome': r.businessName ?: '—',
+                'E-mail': r.email ?: '—',
+                'Indirizzo': ((r.address ?: '') ~ ' ' ~ (r.civic ?: ''))|trim ?: '—',
+                'Città': r.city ?: '—',
+                'CAP': r.zip ?: '—',
+                'Codice SDI': r.sdi ?: '—',
+                'PEC': r.pec ?: '—',
+                'Evasa/scartata il': r.processedAt ? r.processedAt|date('d/m/Y H:i') : '—',
+                'A cura di': r.processedBy ?: '—'
+            } %}
+            <tr>
+                <td>{{ r.createdAt ? r.createdAt|date('d/m/Y H:i') : '' }}</td>
+                <td>{{ r.accountTypeLabel }}</td>
+                <td>{{ r.businessName }}</td>
+                <td>{{ r.email }}</td>
+                <td>{{ r.city }}</td>
+                {% if mode == 'rejected' %}
+                    <td>{{ r.processedAt ? r.processedAt|date('d/m/Y H:i') : '—' }}</td>
+                {% endif %}
+                <td class="txt_a_c text-nowrap">
+                    {{ ico.action("javascript:demoRequestDetail(" ~ detail|json_encode ~ ")", 'info', 'Dettaglio richiesta', 'pr') }}
+                    {% if mode == 'rejected' %}
+                        {{ ico.action(
+                            "javascript:demoRequestConfirm("
+                            ~ path('admin_demo_request_restore', {id: r.id})|json_encode ~ ", "
+                            ~ csrf_token('demoRequest')|json_encode ~ ", "
+                            ~ 'rimetterai la richiesta tra quelle da evadere'|json_encode ~ ")",
+                            'reset', 'Ripristina', 'green'
+                        ) }}
+                    {% else %}
+                        {{ ico.action(path('admin_client_new', {from: r.id}), 'add', 'Crea cliente da questa richiesta', 'green') }}
+                        {{ ico.action(
+                            "javascript:demoRequestConfirm("
+                            ~ path('admin_demo_request_reject', {id: r.id})|json_encode ~ ", "
+                            ~ csrf_token('demoRequest')|json_encode ~ ", "
+                            ~ ('scarterai la richiesta di ' ~ (r.businessName ?: r.email))|json_encode ~ ")",
+                            'delete', 'Scarta richiesta', 'red'
+                        ) }}
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endif %}

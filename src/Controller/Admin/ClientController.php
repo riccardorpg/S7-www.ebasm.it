@@ -4,7 +4,9 @@ namespace App\Controller\Admin;
 
 use App\Entity\Master\City;
 use App\Entity\Master\Company;
+use App\Entity\Master\DemoRequest;
 use App\Entity\Master\Zip;
+use App\Entity\Slave\Practice;
 use App\Entity\Slave\User as AgencyUser;
 use App\Repository\Master\CompanyRepository;
 use App\Service\CompanyService;
@@ -137,19 +139,37 @@ class ClientController extends AbstractController
 
     // ================= 7.1.10 NUOVO =================
 
+    /**
+     * Nuovo cliente. Con ?from=<id> il form nasce precompilato da una richiesta demo
+     * (6.1.1): al salvataggio la richiesta viene marcata evasa e collegata al cliente,
+     * la licenza parte come demo 30 giorni e nasce il primo utente dell'agenzia.
+     */
     #[Route('/nuovo', name: 'admin_client_new', methods: ['GET', 'POST'])]
     public function new(Request $request, CompanyRepository $companies): Response
     {
+        $master = $this->registry->getManager('master');
+
+        $fromId = (int) ($request->isMethod('POST') ? $request->request->get('from') : $request->query->get('from'));
+        $demoRequest = $fromId !== 0 ? $master->getRepository(DemoRequest::class)->find($fromId) : null;
+        if ($demoRequest !== null && !$demoRequest->isNew()) {
+            $this->addFlash('danger', 'La richiesta è già stata evasa o scartata.');
+
+            return $this->redirectToRoute('admin_index');
+        }
+        $backTo = $demoRequest !== null ? ['from' => $demoRequest->getId()] : [];
+
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('client_new', (string) $request->request->get('_csrf_token'))) {
                 $this->addFlash('danger', 'Sessione scaduta, riprova.');
 
-                return $this->redirectToRoute('admin_client_new');
+                return $this->redirectToRoute('admin_client_new', $backTo);
             }
 
             $code = strtoupper(trim((string) $request->request->get('code')));
             $name = trim((string) $request->request->get('name'));
             $dbName = trim((string) $request->request->get('db_name'));
+            $staffName = trim((string) $request->request->get('staff_name'));
+            $staffSurname = trim((string) $request->request->get('staff_surname'));
 
             $errors = [];
             if ($code === '' || !preg_match('/^[A-Z0-9._-]{2,64}$/', $code)) {
@@ -167,14 +187,20 @@ class ClientController extends AbstractController
             if ($errors === [] && $companies->findOneBy(['dbName' => $dbName]) !== null) {
                 $errors[] = 'Database già assegnato a un altro cliente.';
             }
+            if ($demoRequest !== null) {
+                if ($staffName === '' || $staffSurname === '') {
+                    $errors[] = 'Nome e cognome del primo utente sono obbligatori.';
+                }
+                if (!filter_var((string) $demoRequest->getEmail(), FILTER_VALIDATE_EMAIL)) {
+                    $errors[] = 'La richiesta non ha un\'e-mail valida: crea il cliente senza conversione e aggiungi lo staff a mano.';
+                }
+            }
 
             if ($errors !== []) {
                 $this->addFlash('danger', implode(' ', $errors));
 
-                return $this->redirectToRoute('admin_client_new');
+                return $this->redirectToRoute('admin_client_new', $backTo);
             }
-
-            $master = $this->registry->getManager('master');
 
             // Provisiona il DB slave + schema
             $master->getConnection()->executeStatement(
@@ -195,16 +221,80 @@ class ClientController extends AbstractController
             [$city, $zip] = $this->resolveGeo($request);
             $company->setCity($city)->setZip($zip);
 
+            // Conversione da richiesta demo: licenza demo 30 giorni (7.1.7).
+            if ($demoRequest !== null) {
+                $company->setLicenseType(Company::LICENSE_DEMO)
+                    ->setLicenseExpiresAt(new \DateTimeImmutable('today +30 days'));
+            }
+
             $master->persist($company);
             $master->flush();
-            $this->companyService->clearSession();
 
-            $this->addFlash('success', 'Cliente "' . $name . '" creato con database ' . $dbName . '.');
+            $message = 'Cliente "' . $name . '" creato con database ' . $dbName . '.';
+
+            if ($demoRequest !== null) {
+                // Primo utente dell'agenzia: e-mail presa dalla richiesta, ruolo amministratore.
+                // Password provvisoria casuale, come in staffNew: si attiva con "Invia credenziali".
+                $user = new AgencyUser();
+                $user->setName($staffName)->setSurname($staffSurname)
+                    ->setEmail(mb_strtolower((string) $demoRequest->getEmail()))
+                    ->setActive(true);
+                $user->setAdmin(true)->setStaffRole(AgencyUser::STAFF_ADMIN);
+                $user->setPassword($this->hasher->hashPassword($user, bin2hex(random_bytes(8))));
+                $slaveEm->persist($user);
+                $slaveEm->flush();
+
+                $demoRequest->markConverted($company, $this->getUser()?->getUserIdentifier());
+                $master->flush();
+
+                $message .= ' Richiesta demo evasa, licenza demo di 30 giorni e utente '
+                    . $user->getEmail() . ' creato: usa "Invia credenziali" per l\'attivazione.';
+            }
+
+            $this->companyService->clearSession();
+            $this->addFlash('success', $message);
 
             return $this->redirectToRoute('admin_client_show', ['id' => $company->getId()]);
         }
 
-        return $this->render('role/admin/clients/new.html.twig');
+        return $this->render('role/admin/clients/new.html.twig', [
+            'demoRequest' => $demoRequest,
+            'prefill' => $demoRequest !== null ? $this->prefillFromRequest($demoRequest) : null,
+        ]);
+    }
+
+    /**
+     * Company transiente (mai persistita) con i dati della richiesta demo: serve solo a
+     * precompilare _fiscal_fields, che ragiona su un oggetto Company.
+     */
+    private function prefillFromRequest(DemoRequest $demoRequest): Company
+    {
+        $master = $this->registry->getManager('master');
+
+        $company = new Company();
+        $company->setName($demoRequest->getBusinessName())
+            ->setClientType($demoRequest->getAccountType() === Company::TYPE_PROFESSIONAL ? Company::TYPE_PROFESSIONAL : Company::TYPE_COMPANY)
+            ->setAddress($demoRequest->getAddress())
+            ->setCivic($demoRequest->getCivic())
+            ->setSdi($demoRequest->getSdi())
+            ->setPec($demoRequest->getPec());
+
+        // Nella richiesta città e CAP sono testo libero: li ricolleghiamo al catalogo geo
+        // del master, così il picker parte già valorizzato (se il comune viene riconosciuto).
+        $city = $demoRequest->getCity() !== null
+            ? $master->getRepository(City::class)->findOneBy(['name' => $demoRequest->getCity()])
+            : null;
+        $company->setCity($city);
+        if ($city !== null && $demoRequest->getZip() !== null) {
+            foreach ($city->getZips() as $zip) {
+                if ($zip->getCode() === $demoRequest->getZip()) {
+                    $company->setZip($zip);
+                    break;
+                }
+            }
+        }
+
+        return $company;
     }
 
     // ================= MODIFICA (pagina dedicata, senza campo database) =================
@@ -300,9 +390,12 @@ class ClientController extends AbstractController
     {
         // Staff caricato tutto (filtro lato JS nel tab); lo slave è puntato solo per la query.
         $staff = [];
+        // 7.1.5 / 7.1.6 Pratiche del cliente, contate sul suo DB come fa l'area agenzia.
+        $practiceCounts = ['active' => null, 'archived' => null];
         try {
             $slaveEm = $this->companyService->switchToCompany($company);
             $staff = $slaveEm->getRepository(AgencyUser::class)->findBy([], ['email' => 'ASC']);
+            $practiceCounts = $this->practiceCounts($slaveEm);
         } catch (\Throwable) {
             $staff = [];
         }
@@ -311,8 +404,27 @@ class ClientController extends AbstractController
         return $this->render('role/admin/clients/show.html.twig', [
             'company' => $company,
             'staff' => $staff,
+            'practiceCounts' => $practiceCounts,
             'storageUsedMb' => $this->safeStorage($company),
         ]);
+    }
+
+    /**
+     * 7.1.5 attive / 7.1.6 archiviate: stessa convenzione dell'area agenzia, dove
+     * "archiviata" è lo stato finale e tutto il resto è ancora in lavorazione.
+     *
+     * @return array{active: int, archived: int}
+     */
+    private function practiceCounts(\Doctrine\ORM\EntityManagerInterface $slaveEm): array
+    {
+        $base = $slaveEm->getRepository(Practice::class)->createQueryBuilder('p')->select('COUNT(p.id)');
+
+        return [
+            'active' => (int) (clone $base)->andWhere('p.status <> :archived')
+                ->setParameter('archived', Practice::STATUS_ARCHIVED)->getQuery()->getSingleScalarResult(),
+            'archived' => (int) (clone $base)->andWhere('p.status = :archived')
+                ->setParameter('archived', Practice::STATUS_ARCHIVED)->getQuery()->getSingleScalarResult(),
+        ];
     }
 
     // ---- 7.1.9.4 Rinnova licenza / 7.1.9.5 Modifica tipo licenza ----

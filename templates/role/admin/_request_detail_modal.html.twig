@@ -1,0 +1,44 @@
+{# =====================================================================
+   Modale di dettaglio di una richiesta demo: le righe sono passate dal JS come
+   oggetto {etichetta: valore} (vedi _requests_table.html.twig).
+   Espone JS: window.demoRequestDetail(data)
+   ===================================================================== #}
+<div id="demoRequestDetailModal" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header"><h3 class="modal-title">Dettaglio richiesta</h3></div>
+            <div class="modal-stripe"></div>
+            <div class="modal-body">
+                <table class="table table-bordered m_b_none">
+                    <tbody id="demoRequestDetailBody"></tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="button button-3d button-small button-red f_left" data-bs-dismiss="modal">Chiudi</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var el = document.getElementById('demoRequestDetailModal');
+        if (!el) return;
+        var modal = new bootstrap.Modal(el, {backdrop: 'static', keyboard: false});
+        window.demoRequestDetail = function (data) {
+            var body = document.getElementById('demoRequestDetailBody');
+            body.innerHTML = '';
+            Object.keys(data || {}).forEach(function (label) {
+                var tr = document.createElement('tr');
+                var th = document.createElement('th');
+                var td = document.createElement('td');
+                th.className = 'td_w_200p';
+                th.textContent = label;
+                td.textContent = data[label];
+                tr.appendChild(th);
+                tr.appendChild(td);
+                body.appendChild(tr);
+            });
+            modal.show();
+        };
+    });
+</script>

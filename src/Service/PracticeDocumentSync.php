@@ -44,7 +44,7 @@ class PracticeDocumentSync
                 ->setDocumentType($type)
                 ->setLabel($type->getValue())
                 ->setPriority($type->getPriority())
-                ->setStatus(PracticeDocument::STATUS_DA_CARICARE);
+                ->setStatus(PracticeDocument::STATUS_TO_UPLOAD);
 
             $practice->addPracticeDocument($practiceDocument);
             $em->persist($practiceDocument);

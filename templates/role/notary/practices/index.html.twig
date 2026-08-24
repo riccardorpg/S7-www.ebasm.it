@@ -37,9 +37,9 @@
                             <td>
                                 <select form="practicesFilter" name="f_status" class="form-select form-select-sm">
                                     <option value="">Tutti</option>
-                                    <option value="aperta" {{ filters.status == 'aperta' ? 'selected' : '' }}>Aperta</option>
-                                    <option value="completata" {{ filters.status == 'completata' ? 'selected' : '' }}>Completata</option>
-                                    <option value="archiviabile" {{ filters.status == 'archiviabile' ? 'selected' : '' }}>Archiviabile</option>
+                                    <option value="open" {{ filters.status == 'open' ? 'selected' : '' }}>Aperta</option>
+                                    <option value="completed" {{ filters.status == 'completed' ? 'selected' : '' }}>Completata</option>
+                                    <option value="archivable" {{ filters.status == 'archivable' ? 'selected' : '' }}>Archiviabile</option>
                                 </select>
                             </td>
                             {# 3 Dati pratica #}
@@ -71,7 +71,7 @@
                         <tr>
                             <td class="txt_a_c">{{ ico.action(path('notary_practice_show', {id: p.id}), 'view', 'Scheda pratica', 'pr') }}</td>
                             <td>
-                                <span class="badge {{ p.status == 'completata' ? 'bg-success' : (p.status == 'archiviabile' ? 'bg-info' : 'bg-secondary') }}">{{ p.statusLabel }}</span>
+                                <span class="badge {{ p.status == 'completed' ? 'bg-success' : (p.status == 'archivable' ? 'bg-info' : 'bg-secondary') }}">{{ p.statusLabel }}</span>
                             </td>
                             <td>
                                 <a href="{{ path('notary_practice_show', {id: p.id}) }}"><strong>{{ p.number }}</strong></a>

@@ -51,7 +51,7 @@ class AgencyController extends AbstractController
     {
         $qb = $em->getRepository(PracticeAlert::class)->createQueryBuilder('a')
             ->join('a.practice', 'p')->addSelect('p')
-            ->andWhere('p.status <> :archived')->setParameter('archived', Practice::STATUS_ARCHIVIATA)
+            ->andWhere('p.status <> :archived')->setParameter('archived', Practice::STATUS_ARCHIVED)
             ->orderBy('a.remindAt', 'ASC')
             ->setMaxResults(50);
 
@@ -73,7 +73,7 @@ class AgencyController extends AbstractController
             ->join('p.mark', 'm')->addSelect('m')
             ->leftJoin('p.seller', 's')->addSelect('s')
             ->leftJoin('p.buyer', 'b')->addSelect('b')
-            ->andWhere('p.status <> :archived')->setParameter('archived', Practice::STATUS_ARCHIVIATA)
+            ->andWhere('p.status <> :archived')->setParameter('archived', Practice::STATUS_ARCHIVED)
             ->orderBy('m.value', 'ASC')
             ->addOrderBy('p.createdAt', 'DESC');
 

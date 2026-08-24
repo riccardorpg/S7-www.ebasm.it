@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Master\Company;
 use App\Entity\Master\DemoRequest;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -89,7 +90,7 @@ class DefaultController extends AbstractController
         $zip = trim((string) $request->request->get('zip'));
 
         $errors = [];
-        if (!in_array($accountType, ['aziendale', 'professionista'], true)) {
+        if (!in_array($accountType, [Company::TYPE_COMPANY, Company::TYPE_PROFESSIONAL], true)) {
             $errors[] = 'Seleziona il tipo di account.';
         }
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {

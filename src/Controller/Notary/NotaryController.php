@@ -169,7 +169,7 @@ class NotaryController extends AbstractController
         }
 
         $target = (string) $request->request->get('status', '');
-        $allowed = [Practice::STATUS_APERTA, Practice::STATUS_COMPLETATA, Practice::STATUS_ARCHIVIABILE];
+        $allowed = [Practice::STATUS_OPEN, Practice::STATUS_COMPLETED, Practice::STATUS_ARCHIVABLE];
         if (!in_array($target, $allowed, true)) {
             $this->addFlash('danger', 'Stato non valido.');
 
@@ -217,6 +217,36 @@ class NotaryController extends AbstractController
     }
 
     /**
+     * Anteprima dell'allegato: lo stesso file servito inline, per l'iframe del modale.
+     * Gli allegati sono solo PDF, quindi il browser lo mostra col suo viewer.
+     */
+    #[Route('/pratiche/{id}/documenti/{did}/anteprima', name: 'notary_doc_preview', requirements: ['id' => '\d+', 'did' => '\d+'], methods: ['GET'])]
+    public function docPreview(int $id, int $did, DocumentStorage $storage): Response
+    {
+        [$company, $practice, $doc] = $this->requireDocument($id, $did);
+        if ($doc === null || $company === null) {
+            throw $this->createNotFoundException('Documento non trovato.');
+        }
+        if (!$doc->hasFile()) {
+            throw $this->createNotFoundException('Nessun file caricato per questo documento.');
+        }
+
+        $abs = $storage->absolutePath((string) $company->getDbName(), (string) $doc->getStoragePath());
+        if (!is_file($abs)) {
+            throw $this->createNotFoundException('File non presente sul server.');
+        }
+
+        $response = new BinaryFileResponse($abs);
+        $response->headers->set('Content-Type', $doc->getMimeType() ?: DocumentStorage::ALLOWED_MIME);
+        $response->setContentDisposition(
+            HeaderUtils::DISPOSITION_INLINE,
+            $doc->getOriginalFilename() ?: ($doc->getName() . '.pdf')
+        );
+
+        return $response;
+    }
+
+    /**
      * 17.1.1.1.5.2.4 Richiesto / non richiesto: dal punto 12 è la riga documentale
      * (il tipo previsto per la pratica) a essere richiesta, non il singolo allegato.
      */
@@ -244,10 +274,18 @@ class NotaryController extends AbstractController
             return $this->redirectToRoute($company ? 'notary_practice_show' : 'notary_index', $company ? ['id' => $id] : []);
         }
         if ($this->isCsrfTokenValid('practice_doc_' . $practice->getId(), (string) $request->request->get('_csrf_token'))) {
+            // Senza allegato non c'è nulla da verificare: lo stato non si tocca. Resta
+            // possibile riaprire una riga già verificata (es. dopo aver eliminato il file).
+            if (!$row->hasFiles() && $row->getStatus() !== PracticeDocument::STATUS_VERIFIED) {
+                $this->addFlash('danger', 'Nessun allegato caricato per «' . $row->getLabel() . '»: lo stato non è modificabile.');
+
+                return $this->redirectToRoute('notary_practice_show', ['id' => $id]);
+            }
+
             $row->setStatus(
-                $row->getStatus() === PracticeDocument::STATUS_VERIFICATO
-                    ? PracticeDocument::STATUS_DA_VERIFICARE
-                    : PracticeDocument::STATUS_VERIFICATO
+                $row->getStatus() === PracticeDocument::STATUS_VERIFIED
+                    ? PracticeDocument::STATUS_TO_VERIFY
+                    : PracticeDocument::STATUS_VERIFIED
             );
             $this->registry->getManager('slave')->flush();
         }
@@ -288,8 +326,10 @@ class NotaryController extends AbstractController
         /** @var UploadedFile|null $file */
         $file = $request->files->get('file');
         $name = trim((string) $request->request->get('name', ''));
-        if ($file === null) {
-            $this->addFlash('danger', 'Seleziona un file da caricare.');
+        // Sono ammessi solo PDF (controllo sul contenuto, non sull'estensione dichiarata).
+        $fileError = $storage->validationError($file);
+        if ($fileError !== null) {
+            $this->addFlash('danger', $fileError);
 
             return $this->redirectToRoute('notary_practice_show', ['id' => $id]);
         }
@@ -302,12 +342,18 @@ class NotaryController extends AbstractController
             return $this->redirectToRoute('notary_practice_show', ['id' => $id]);
         }
 
+        if ($name === '') {
+            $this->addFlash('danger', 'Indica il nome dell\'allegato: è il nome con cui il file viene salvato.');
+
+            return $this->redirectToRoute('notary_practice_show', ['id' => $id]);
+        }
+
         $doc = new Document();
-        $doc->setName($name !== '' ? $name : ($file->getClientOriginalName() ?: 'Allegato'))
+        $doc->setName($name)
             ->setNotaryNote(trim((string) $request->request->get('note', '')) ?: null);
         $row->addDocument($doc);
-        if ($row->getStatus() === PracticeDocument::STATUS_DA_CARICARE) {
-            $row->setStatus(PracticeDocument::STATUS_DA_VERIFICARE);
+        if ($row->getStatus() === PracticeDocument::STATUS_TO_UPLOAD) {
+            $row->setStatus(PracticeDocument::STATUS_TO_VERIFY);
         }
 
         $em = $this->registry->getManager('slave');
@@ -315,7 +361,8 @@ class NotaryController extends AbstractController
         $em->flush(); // id pratica già presente; serve per il percorso file
 
         try {
-            $meta = $storage->store((string) $company->getDbName(), $practice, $file);
+            // Il file non conserva il nome originale: prende il "nome allegato" del form.
+            $meta = $storage->store((string) $company->getDbName(), $practice, $file, $name);
             $doc->setOriginalFilename($meta['name'])
                 ->setStoragePath($meta['path'])
                 ->setMimeType($meta['mime'])
@@ -342,6 +389,9 @@ class NotaryController extends AbstractController
         if ($this->isCsrfTokenValid('practice_doc_' . $practice->getId(), (string) $request->request->get('_csrf_token'))) {
             $storage->delete((string) $company->getDbName(), $doc->getStoragePath());
             $em = $this->registry->getManager('slave');
+            // Se la riga resta senza allegati torna "da caricare": non c'è più nulla da verificare.
+            $row = $doc->getPracticeDocument();
+            $row?->removeDocument($doc)->resetStatusIfEmpty();
             $em->remove($doc);
             $em->flush();
             $this->addFlash('success', 'Allegato eliminato.');

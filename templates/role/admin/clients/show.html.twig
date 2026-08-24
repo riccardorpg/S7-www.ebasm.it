@@ -30,7 +30,7 @@
                     <div class="d-flex justify-content-end mb-2">
                         <button type="button" class="button button-3d button-small bg_amber m_b_none" onclick="clientEditShow()">Modifica</button>
                     </div>
-                    {% set isPro = company.clientType == 'professionista' %}
+                    {% set isPro = company.clientType == 'professional' %}
                     <table class="table align-middle m_b_none">
                         <tr><th style="width:30%">Codice</th><td>{{ company.code }}</td></tr>
                         <tr><th>Tipo cliente</th><td>{{ company.clientTypeLabel }}</td></tr>
@@ -42,6 +42,19 @@
                         <tr><th>Città</th><td>{{ company.city ?? '—' }}</td></tr>
                         <tr><th>CAP</th><td>{{ company.zip ?? '—' }}</td></tr>
                         <tr><th>SDI</th><td>{{ company.sdi ?? '—' }}</td></tr>
+                    </table>
+
+                    {# 7.1.5 / 7.1.6 Pratiche sul DB del cliente: sola lettura. #}
+                    <h5 class="mt-4 mb-2">Pratiche</h5>
+                    <table class="table align-middle m_b_none">
+                        <tr>
+                            <th style="width:30%">Pratiche attive</th>
+                            <td>{{ practiceCounts.active is null ? '—' : practiceCounts.active }}</td>
+                        </tr>
+                        <tr>
+                            <th>Pratiche archiviate</th>
+                            <td>{{ practiceCounts.archived is null ? '—' : practiceCounts.archived }}</td>
+                        </tr>
                     </table>
                 </div>
 

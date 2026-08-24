@@ -33,7 +33,7 @@
                         {# 10.1.6 Stato: select attivi/sospesi #}
                         <td>
                             <div class="d-flex align-items-center gap-1">
-                                {{ ico.action(path('agency_staff'), 'close', 'Escludi filtro', 'red') }}
+                                {{ ico.action(path('agency_staff'), 'close', 'Escludi filtro', 'red', 'icon_sm') }}
                                 <select form="staffFilter" name="f_active" class="form-select form-select-sm">
                                     <option value="">Tutti</option>
                                     <option value="1"{{ filters.active == '1' ? ' selected' : '' }}>Attivi</option>
@@ -52,7 +52,7 @@
                         </td>
                         <td class="txt_a_c text-nowrap">
                             <button form="staffFilter" type="submit" class="btn p-0 border-0 bg-transparent" data-bs-toggle="tooltip" data-bs-title="Filtra">
-                                <img src="{{ asset(PATH_GRAPHICS ~ 'icons/search.png') }}" class="icon_action icon_green" alt="Filtra">
+                                <img src="{{ asset(PATH_GRAPHICS ~ 'icons/search.png') }}" class="icon_action icon_sm icon_green" alt="Filtra">
                             </button>
                         </td>
                     </tr>
@@ -78,7 +78,7 @@
                         <td>{{ u.name ?: '—' }}</td>
                         <td>{{ u.email }}</td>
                         <td>
-                            <span class="badge {{ u.staffRole == 'admin' ? 'bg-primary' : (u.staffRole == 'internal' ? 'bg-secondary' : 'bg-light text-dark') }}">
+                            <span class="badge text-white {{ u.staffRole == 'admin' ? 'bg-success' : (u.staffRole == 'internal' ? 'bg-primary' : 'bg-info') }}">
                                 {{ u.staffRoleLabel }}
                             </span>
                         </td>

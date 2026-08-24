@@ -17,7 +17,7 @@
         {% for c in rows %}
             {% set days = c.daysToExpiry %}
             <tr>
-                <td class="txt_a_c">{{ ico.action(path('admin_client_show', {'id': c.id}), 'view', 'Apri scheda', '') }}</td>
+                <td class="txt_a_c">{{ ico.action(path('admin_client_show', {'id': c.id}), 'view', 'Apri scheda', 'pr') }}</td>
                 <td>{{ c.name }}</td>
                 <td>{{ c.code }}</td>
                 <td>{{ c.licenseTypeLabel }}</td>

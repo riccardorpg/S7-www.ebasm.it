@@ -4,8 +4,10 @@
 
 {% block role_menu %}
     {% set r = app.request.attributes.get('_route') %}
+    {# Richieste demo da evadere (6.1.1): l'allarme si vede da ogni pagina. #}
+    {% set pendingRequests = pending_demo_requests() %}
     <li class="menu-item{{ r == 'admin_index' ? ' current' : '' }}">
-        <a class="menu-link" href="{{ path('admin_index') }}"><div>Scrivania</div></a>
+        <a class="menu-link" href="{{ path('admin_index') }}"><div>Scrivania{% if pendingRequests %} <span class="badge bg-danger">{{ pendingRequests }}</span>{% endif %}</div></a>
     </li>
     <li class="menu-item{{ r starts with 'admin_client' ? ' current' : '' }}">
         <a class="menu-link" href="{{ path('admin_clients') }}"><div>Clienti</div></a>

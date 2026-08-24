@@ -22,8 +22,8 @@ class Company
     use ActiveTrait;
     use TimestampsTrait;
 
-    public const TYPE_COMPANY = 'aziendale';
-    public const TYPE_PROFESSIONAL = 'professionista';
+    public const TYPE_COMPANY = 'company';
+    public const TYPE_PROFESSIONAL = 'professional';
 
     public const LICENSE_DEMO = 'demo';
     public const LICENSE_BASE = 'base';

@@ -118,7 +118,7 @@
                             {% for p in markedPractices %}
                                 <tr>
                                     <td><span class="badge" style="background:{{ p.mark.color }}; color:{{ p.mark.contrastColor }};">{{ p.mark.value }}</span></td>
-                                    <td><span class="badge {{ p.status == 'completata' ? 'bg-success' : (p.status == 'archiviabile' ? 'bg-info' : 'bg-secondary') }}">{{ p.statusLabel }}</span></td>
+                                    <td><span class="badge {{ p.status == 'completed' ? 'bg-success' : (p.status == 'archivable' ? 'bg-info' : 'bg-secondary') }}">{{ p.statusLabel }}</span></td>
                                     <td><a href="{{ path('agency_practice_show', {id: p.id}) }}"><strong>{{ p.number }}</strong></a></td>
                                     <td>{{ p.seller ? p.seller.fullName : '—' }}</td>
                                     <td>{{ p.buyer ? p.buyer.fullName : '—' }}</td>

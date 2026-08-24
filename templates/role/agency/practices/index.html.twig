@@ -78,7 +78,7 @@
                 {% for p in records %}
                     <tr>
                         <td>
-                            <span class="badge {{ p.status == 'completata' ? 'bg-success' : (p.status == 'archiviabile' ? 'bg-info' : (p.status == 'archiviata' ? 'bg-dark' : 'bg-secondary')) }}">{{ p.statusLabel }}</span>
+                            <span class="badge {{ p.status == 'completed' ? 'bg-success' : (p.status == 'archivable' ? 'bg-info' : (p.status == 'archived' ? 'bg-dark' : 'bg-secondary')) }}">{{ p.statusLabel }}</span>
                             {% if p.mark %}
                                 <div class="p_t_5p">
                                     <span class="badge" style="background:{{ p.mark.color }}; color:{{ p.mark.contrastColor }};">{{ p.mark.value }}</span>

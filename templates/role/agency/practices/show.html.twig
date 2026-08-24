@@ -64,8 +64,8 @@
                         <tr>
                             <th style="width:25%">Stato</th>
                             <td>
-                                <span class="badge {{ practice.status == 'completata' ? 'bg-success' : (practice.status == 'archiviabile' ? 'bg-info' : (practice.status == 'archiviata' ? 'bg-dark' : 'bg-secondary')) }}">{{ practice.statusLabel }}</span>
-                                {% if practice.status == 'archiviabile' %}
+                                <span class="badge {{ practice.status == 'completed' ? 'bg-success' : (practice.status == 'archivable' ? 'bg-info' : (practice.status == 'archived' ? 'bg-dark' : 'bg-secondary')) }}">{{ practice.statusLabel }}</span>
+                                {% if practice.status == 'archivable' %}
                                     <span class="op_07 font_13">— il notaio ha dato il via libera all'archiviazione</span>
                                 {% endif %}
                             </td>
@@ -149,11 +149,11 @@
                                             <input type="hidden" name="_csrf_token" value="{{ csrf_token('practiceRow') }}">
                                             <button type="submit" class="btn p-0 border-0 bg-transparent" data-bs-toggle="tooltip"
                                                     data-bs-title="Clicca per {{ row.visible ? 'nascondere' : 'mostrare' }} il documento">
-                                                <span class="badge {{ row.visible ? 'bg-primary' : 'bg-secondary' }}">{{ row.visible ? 'Sì' : 'No' }}</span>
+                                                <span class="badge {{ row.visible ? 'bg-danger' : 'bg-secondary' }}">{{ row.visible ? 'Sì' : 'No' }}</span>
                                             </button>
                                         </form>
                                     {% else %}
-                                        <span class="badge {{ row.visible ? 'bg-primary' : 'bg-secondary' }}">{{ row.visible ? 'Sì' : 'No' }}</span>
+                                        <span class="badge {{ row.visible ? 'bg-danger' : 'bg-secondary' }}">{{ row.visible ? 'Sì' : 'No' }}</span>
                                     {% endif %}
                                 </td>
                                 {# 12.3.2.3 / 12.3.2.4 Stato e modifica stato #}
@@ -168,7 +168,7 @@
                                             </select>
                                         </form>
                                     {% else %}
-                                        <span class="badge {{ row.status == 'verificato' ? 'bg-success' : (row.status == 'da_caricare' ? 'bg-warning text-dark' : 'bg-secondary') }}">{{ row.statusLabel }}</span>
+                                        <span class="badge {{ row.status == 'verified' ? 'bg-success' : (row.status == 'to_verify' ? 'bg-warning text-dark' : (row.status == 'to_upload' ? 'bg-danger' : 'bg-secondary')) }}">{{ row.statusLabel }}</span>
                                     {% endif %}
                                 </td>
                                 {# 12.3.2.5 Elenco degli allegati #}
@@ -197,7 +197,7 @@
                                 <td>{{ row.lastUpdate ? row.lastUpdate|date('d/m/Y H:i') : '—' }}</td>
                                 <td class="txt_a_c">
                                     {% if canEdit %}
-                                        {{ ico.action("javascript:documentNewOpen(" ~ row.id ~ ", " ~ row.label|json_encode ~ ")", 'upload', 'Nuovo allegato', 'green') }}
+                                        {{ ico.action("javascript:documentNewOpen(" ~ row.id ~ ", " ~ row.label|json_encode ~ ")", 'add', 'Nuovo allegato', 'green') }}
                                     {% else %}—{% endif %}
                                 </td>
                             </tr>
@@ -316,7 +316,7 @@
             {% block modalBody %}
                 <p class="op_07 font_13" id="documentNew_target"></p>
                 <div class="row g-3">
-                    <div class="col-12"><label class="form-label" for="documentNew_file">File *</label><input type="file" id="documentNew_file" name="file" class="form-control" required></div>
+                    <div class="col-12"><label class="form-label" for="documentNew_file">File * <span class="op_07 font_13">(solo PDF)</span></label><input type="file" id="documentNew_file" name="file" class="form-control" accept="application/pdf" required></div>
                     <div class="col-12"><label class="form-label" for="documentNew_note">Note dell'agente</label><textarea id="documentNew_note" name="agent_note" rows="3" class="form-control"></textarea></div>
                 </div>
             {% endblock %}

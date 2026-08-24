@@ -81,7 +81,7 @@ class SeedPracticesCommand extends Command
                 ->setMortgage($i % 3 === 0)
                 ->setSubject('Immobile sito in Via Esempio ' . ($i + 1) . ' — foglio ' . (10 + $i) . ', particella ' . (100 + $i))
                 ->setAddress('Via Esempio ' . ($i + 1) . ', Milano')
-                ->setStatus(Practice::STATUS_APERTA)
+                ->setStatus(Practice::STATUS_OPEN)
                 ->setNotaryEmail($notaryEmail);
 
             // Le parti sono clienti dell'agenzia (11): riusa l'anagrafica se il CF c'è già.
@@ -117,7 +117,7 @@ class SeedPracticesCommand extends Command
                     ->setSizeBytes(filesize($abs) ?: null);
 
                 $row->addDocument($doc);
-                $row->setStatus($rowIndex % 3 === 0 ? PracticeDocument::STATUS_VERIFICATO : PracticeDocument::STATUS_DA_VERIFICARE);
+                $row->setStatus($rowIndex % 3 === 0 ? PracticeDocument::STATUS_VERIFIED : PracticeDocument::STATUS_TO_VERIFY);
                 $em->persist($doc);
             }
             $em->flush();

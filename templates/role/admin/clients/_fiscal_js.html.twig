@@ -3,7 +3,7 @@
     window.clientFiscalToggle = window.clientFiscalToggle || function (prefix) {
         var type = document.getElementById(prefix + '_type');
         if (!type) return;
-        var isAzienda = (type.value === 'aziendale');
+        var isAzienda = (type.value === 'company');
 
         // Etichetta del campo nome.
         var lbl = document.getElementById(prefix + '_nameLabel');

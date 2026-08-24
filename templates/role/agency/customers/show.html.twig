@@ -72,9 +72,9 @@
                                 <td>
                                     <select class="form-select form-select-sm practice-filter" data-field="status">
                                         <option value="">Tutti</option>
-                                        <option value="aperta">Aperta</option>
-                                        <option value="completata">Completata</option>
-                                        <option value="archiviabile">Archiviabile</option>
+                                        <option value="open">Aperta</option>
+                                        <option value="completed">Completata</option>
+                                        <option value="archivable">Archiviabile</option>
                                     </select>
                                 </td>
                                 <td><input type="text" class="form-control form-control-sm practice-filter" data-field="date" placeholder="Filtra" autocomplete="off"></td>
@@ -111,7 +111,7 @@
                                 data-buyer="{{ p.buyer ? p.buyer.fullName : '' }}"
                                 data-number="{{ p.number }}"
                                 data-address="{{ p.address }}">
-                                <td><span class="badge {{ p.status == 'completata' ? 'bg-success' : (p.status == 'archiviabile' ? 'bg-info' : 'bg-secondary') }}">{{ p.statusLabel }}</span></td>
+                                <td><span class="badge {{ p.status == 'completed' ? 'bg-success' : (p.status == 'archivable' ? 'bg-info' : 'bg-secondary') }}">{{ p.statusLabel }}</span></td>
                                 <td>{{ p.createdAt ? p.createdAt|date('d/m/Y') : '—' }}</td>
                                 <td>{{ p.typeLabel }}</td>
                                 <td>

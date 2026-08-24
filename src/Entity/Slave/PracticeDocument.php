@@ -25,17 +25,17 @@ class PracticeDocument
     use TimestampsTrait;
 
     // 12.3.2.3 Stato del documento.
-    public const STATUS_DA_CARICARE = 'da_caricare';
-    public const STATUS_DA_VERIFICARE = 'da_verificare';
-    public const STATUS_VERIFICATO = 'verificato';
-    public const STATUS_NON_NECESSARIO = 'non_necessario';
+    public const STATUS_TO_UPLOAD = 'to_upload';
+    public const STATUS_TO_VERIFY = 'to_verify';
+    public const STATUS_VERIFIED = 'verified';
+    public const STATUS_NOT_REQUIRED = 'not_required';
 
     /** @var array<string, string> */
     public const STATUSES = [
-        self::STATUS_DA_CARICARE => 'Da caricare',
-        self::STATUS_DA_VERIFICARE => 'Da verificare',
-        self::STATUS_VERIFICATO => 'Verificato',
-        self::STATUS_NON_NECESSARIO => 'Non necessario',
+        self::STATUS_TO_UPLOAD => 'Da caricare',
+        self::STATUS_TO_VERIFY => 'Da verificare',
+        self::STATUS_VERIFIED => 'Verificato',
+        self::STATUS_NOT_REQUIRED => 'Non necessario',
     ];
 
     #[ORM\ManyToOne(targetEntity: Practice::class, inversedBy: 'practiceDocuments')]
@@ -56,7 +56,7 @@ class PracticeDocument
     private bool $visible = true;
 
     #[ORM\Column(type: 'string', length: 20)]
-    private string $status = self::STATUS_DA_CARICARE;
+    private string $status = self::STATUS_TO_UPLOAD;
 
     /** Ordine di comparsa: copiato dalla priorità del tipo (13.1.1.1) alla creazione. */
     #[ORM\Column(type: 'integer', options: ['default' => 0])]
@@ -181,6 +181,20 @@ class PracticeDocument
     public function hasFiles(): bool
     {
         return !$this->documents->isEmpty();
+    }
+
+    /**
+     * Riga rimasta senza allegati: torna "da caricare", perché non c'è più niente da
+     * verificare. Da chiamare dopo l'eliminazione di un allegato. "Non necessario" è una
+     * scelta esplicita e non viene toccata.
+     */
+    public function resetStatusIfEmpty(): static
+    {
+        if (!$this->hasFiles() && in_array($this->status, [self::STATUS_VERIFIED, self::STATUS_TO_VERIFY], true)) {
+            $this->status = self::STATUS_TO_UPLOAD;
+        }
+
+        return $this;
     }
 
     /** Somma in byte degli allegati di questa riga (12.1.8). */
