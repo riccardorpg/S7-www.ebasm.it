@@ -1,0 +1,34 @@
+{# 14.9 Contratto termini e condizioni accettato: conferma al cliente, con copia
+   all'indirizzo dedicato (cc impostata dal servizio). #}
+{% extends 'email/base.html.twig' %}
+
+{% block content %}
+    <tr>
+        <td style="padding:20px">
+            <p style="color:#333">
+                Buongiorno,<br>
+                confermiamo la registrazione dell'accettazione del contratto di termini e condizioni
+                d'uso della piattaforma <strong>EBASM</strong>.
+            </p>
+        </td>
+    </tr>
+    <tr>
+        <td style="padding:0 20px 20px 20px">
+            <table style="border-collapse:collapse; color:#333;">
+                <tr><td style="padding:4px 12px 4px 0;"><strong>Cliente</strong></td><td style="padding:4px 0;">{{ company.name }}</td></tr>
+                <tr><td style="padding:4px 12px 4px 0;"><strong>Codice</strong></td><td style="padding:4px 0;">{{ company.code }}</td></tr>
+                <tr><td style="padding:4px 12px 4px 0;"><strong>Accettato il</strong></td><td style="padding:4px 0;">{{ company.termsAcceptedAt|date('d/m/Y H:i') }}</td></tr>
+                <tr><td style="padding:4px 12px 4px 0;"><strong>Licenza</strong></td><td style="padding:4px 0;">{{ company.licenseTypeLabel }}{% if company.licenseExpiresAt %} — scadenza {{ company.licenseExpiresAt|date('d/m/Y') }}{% endif %}</td></tr>
+            </table>
+        </td>
+    </tr>
+    <tr>
+        <td style="padding:0 20px 20px 20px">
+            <p style="color:#333">
+                Il testo integrale è sempre consultabile su
+                <a href="{{ url('legal_terms') }}" style="color:#1D4ED8;">{{ url('legal_terms') }}</a>.
+                Conservi questo messaggio come ricevuta.
+            </p>
+        </td>
+    </tr>
+{% endblock %}

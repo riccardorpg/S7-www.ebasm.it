@@ -79,6 +79,13 @@ class Company
     #[ORM\Column(name: 'license_expires_at', type: 'date_immutable', nullable: true)]
     private ?\DateTimeImmutable $licenseExpiresAt = null;
 
+    /**
+     * 14.6 Quando è partito l'avviso di scadenza per la licenza corrente: evita di
+     * ripeterlo a ogni esecuzione del comando. Azzerato al rinnovo.
+     */
+    #[ORM\Column(name: 'license_notice_sent_at', type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $licenseNoticeSentAt = null;
+
     // --- 7.1.8 Spazio (quota in MB; occupato calcolato a runtime da information_schema) ---
     #[ORM\Column(name: 'storage_quota_mb', type: 'integer', options: ['default' => 5120])]
     private int $storageQuotaMb = 5120;
@@ -272,6 +279,18 @@ class Company
     public function setLicenseExpiresAt(?\DateTimeImmutable $licenseExpiresAt): static
     {
         $this->licenseExpiresAt = $licenseExpiresAt;
+
+        return $this;
+    }
+
+    public function getLicenseNoticeSentAt(): ?\DateTimeImmutable
+    {
+        return $this->licenseNoticeSentAt;
+    }
+
+    public function setLicenseNoticeSentAt(?\DateTimeImmutable $licenseNoticeSentAt): static
+    {
+        $this->licenseNoticeSentAt = $licenseNoticeSentAt;
 
         return $this;
     }

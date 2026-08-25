@@ -63,8 +63,9 @@
         </div>
     </div>
 
-    {# 12.2.5 Indirizzo, con città e CAP dal catalogo geografico del master #}
-    <div class="col-12">
+    {# 12.2.5 Indirizzo, con città e CAP dal catalogo geografico del master: tutti e tre
+       sulla stessa riga (6 + 4 + 2). #}
+    <div class="col-md-6">
         <label class="form-label" for="{{ prefix }}_address">Indirizzo dell'immobile *</label>
         <input type="text" id="{{ prefix }}_address" name="address" class="form-control" maxlength="255" required
                value="{{ practice ? practice.address : '' }}" placeholder="Via e civico">
@@ -73,6 +74,8 @@
         formName: prefix,
         number: geoNumber|default(1),
         required: true,
+        cityCols: 4,
+        zipCols: 2,
         cityId: practice ? practice.cityRefId : '',
         cityName: practice ? practice.city : '',
         zipId: practice ? practice.zipRefId : ''

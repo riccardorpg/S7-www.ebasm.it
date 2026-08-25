@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Bundle\DynamicConnection;
 use App\Entity\Master\Company;
+use App\Entity\Slave\User as SlaveUser;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
@@ -126,6 +127,37 @@ class CompanyService
         $this->storeInSession($company);
 
         return (string) $company->getDbName();
+    }
+
+    /**
+     * Indirizzo a cui scrivere al cliente (14.5 / 14.6 / 14.9). Il Company non ha un campo
+     * e-mail: si usa il primo amministratore attivo dell'agenzia, altrimenti un utente
+     * attivo qualsiasi. Null se il DB dell'agenzia non è raggiungibile o non ha utenti.
+     *
+     * Attenzione: ripunta la connessione slave sul DB del cliente.
+     */
+    public function getPrimaryContactEmail(Company $company): ?string
+    {
+        try {
+            $slaveEm = $this->pointSlaveToDbName((string) $company->getDbName());
+            $users = $slaveEm->getRepository(SlaveUser::class)->findBy(['active' => true], ['id' => 'ASC']);
+        } catch (\Throwable) {
+            return null;
+        }
+
+        foreach ($users as $user) {
+            if ($user->isAdmin() && $user->getEmail()) {
+                return $user->getEmail();
+            }
+        }
+
+        foreach ($users as $user) {
+            if ($user->getEmail()) {
+                return $user->getEmail();
+            }
+        }
+
+        return null;
     }
 
     /**

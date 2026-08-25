@@ -1,0 +1,45 @@
+{# 14.8 Invito ad utilizzare la piattaforma: primo contatto con un nuovo utente, con il
+   link per creare la password. Diverso dal 14.3, che è il reinvio delle credenziali. #}
+{% extends 'email/base.html.twig' %}
+
+{% block content %}
+    <tr>
+        <td style="padding:20px">
+            <p style="color:#333">
+                Buongiorno {{ name }},<br>
+                {% if companyName %}
+                    lo studio <strong>{{ companyName }}</strong> è stato attivato sulla piattaforma <strong>EBASM</strong>
+                    e il suo account è pronto.
+                {% else %}
+                    il suo account sulla piattaforma <strong>EBASM</strong> è pronto.
+                {% endif %}
+            </p>
+        </td>
+    </tr>
+    <tr>
+        <td style="padding:0 20px 20px 20px">
+            <p style="color:#333">
+                EBASM le permette di gestire le pratiche notarili e i relativi documenti: raccolta degli allegati,
+                verifica del notaio e archiviazione, con tutto lo storico a portata di mano.
+            </p>
+        </td>
+    </tr>
+    <tr>
+        <td style="padding:0 20px 20px 20px">
+            <p style="color:#333">
+                Per iniziare scelga la sua password dal link seguente:<br>
+                <a href="{{ link }}" style="color:#1D4ED8;">{{ link }}</a>
+            </p>
+        </td>
+    </tr>
+    {% if licenseExpiresAt %}
+        <tr>
+            <td style="padding:0 20px 20px 20px">
+                <p style="color:#333">
+                    {{ isDemo ? 'La demo è attiva fino al' : 'La licenza è attiva fino al' }}
+                    <strong>{{ licenseExpiresAt|date('d/m/Y') }}</strong>.
+                </p>
+            </td>
+        </tr>
+    {% endif %}
+{% endblock %}

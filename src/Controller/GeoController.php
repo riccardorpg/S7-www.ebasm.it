@@ -17,9 +17,13 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
  * Sono dati di riferimento comuni, non roba da amministratori: li usa anche l'area
  * agenzia (indirizzo della pratica), quindi bastano utenti autenticati. I nomi delle
  * rotte restano quelli originali, così i template esistenti non cambiano.
+ *
+ * REMEMBERED e non FULLY: con "Resta collegato" la sessione è ripristinata dal cookie
+ * e non è "piena", ma la pagina si apre — con FULLY queste chiamate AJAX rispondevano
+ * un redirect al login e il picker città smetteva di funzionare senza dirlo.
  */
 #[Route('/api/geo')]
-#[IsGranted('IS_AUTHENTICATED_FULLY')]
+#[IsGranted('IS_AUTHENTICATED_REMEMBERED')]
 class GeoController extends AbstractController
 {
     public function __construct(private readonly ManagerRegistry $registry)

@@ -1,0 +1,28 @@
+{# 14.2 Nuova richiesta demo dal form pubblico: va all'indirizzo dell'admin, che la
+   trova anche fra gli allarmi della scrivania (6.1.1). #}
+{% extends 'email/base.html.twig' %}
+
+{% block content %}
+    <tr>
+        <td style="padding:20px">
+            <p style="color:#333">
+                È arrivata una nuova richiesta di demo. La trovi in
+                <a href="{{ url('admin_index') }}" style="color:#1D4ED8;">scrivania</a>,
+                nel tab «Nuove richieste in arrivo».
+            </p>
+        </td>
+    </tr>
+    <tr>
+        <td style="padding:0 20px 20px 20px">
+            <table style="border-collapse:collapse; color:#333;">
+                <tr><td style="padding:4px 12px 4px 0;"><strong>Tipo account</strong></td><td style="padding:4px 0;">{{ request.accountTypeLabel }}</td></tr>
+                <tr><td style="padding:4px 12px 4px 0;"><strong>Ragione sociale / Nome</strong></td><td style="padding:4px 0;">{{ request.businessName ?: '—' }}</td></tr>
+                <tr><td style="padding:4px 12px 4px 0;"><strong>E-mail</strong></td><td style="padding:4px 0;">{{ request.email }}</td></tr>
+                <tr><td style="padding:4px 12px 4px 0;"><strong>Indirizzo</strong></td><td style="padding:4px 0;">{{ (request.address ~ ' ' ~ request.civic)|trim ?: '—' }}</td></tr>
+                <tr><td style="padding:4px 12px 4px 0;"><strong>Città</strong></td><td style="padding:4px 0;">{{ request.city ?: '—' }} {{ request.zip }}</td></tr>
+                <tr><td style="padding:4px 12px 4px 0;"><strong>PEC</strong></td><td style="padding:4px 0;">{{ request.pec ?: '—' }}</td></tr>
+                <tr><td style="padding:4px 12px 4px 0;"><strong>Codice SDI</strong></td><td style="padding:4px 0;">{{ request.sdi ?: '—' }}</td></tr>
+            </table>
+        </td>
+    </tr>
+{% endblock %}

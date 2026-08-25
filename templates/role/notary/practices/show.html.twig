@@ -136,6 +136,7 @@
                                                         <th class="td_w_250p">Allegato</th>
                                                         <th>Note agente</th>
                                                         <th>Note notaio</th>
+                                                        <th class="td_w_150p">Ultimo aggiornamento</th>
                                                         <th class="txt_a_c td_w_140p">Azioni</th>
                                                     </tr>
                                                 </thead>
@@ -152,6 +153,8 @@
                                                         </td>
                                                         <td class="font_13">{{ d.agentNote ?: '—' }}</td>
                                                         <td class="font_13">{{ d.notaryNote ?: '—' }}</td>
+                                                        {# Aggiornamento dell'allegato: la data è sua, non della riga documentale. #}
+                                                        <td class="font_13">{{ (d.updatedAt ?? d.createdAt) ? (d.updatedAt ?? d.createdAt)|date('d/m/Y H:i') : '—' }}</td>
                                                         <td class="txt_a_c text-nowrap">
                                                             {% if d.hasFile %}
                                                                 {{ ico.action("javascript:docPreviewShow(" ~ path('notary_doc_preview', {id: practice.id, did: d.id})|json_encode ~ ", " ~ (d.originalFilename ?: d.name)|json_encode ~ ")", 'preview', 'Anteprima', 'pr') }}

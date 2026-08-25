@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Master\User as MasterUser;
 use App\Entity\Slave\User as SlaveUser;
 use App\Repository\Master\CompanyRepository;
+use App\Service\AppMailer;
 use App\Service\CompanyService;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -103,7 +104,7 @@ class SecurityController extends AbstractController
     // ================= 3.3 RECUPERA PASSWORD =================
 
     #[Route('/recupera-password', name: 'password_recover', methods: ['GET', 'POST'])]
-    public function passwordRecover(Request $request): Response
+    public function passwordRecover(Request $request, AppMailer $mailer): Response
     {
         $code = trim((string) $request->query->get('code', $request->request->get('code', '')));
 
@@ -123,8 +124,14 @@ class SecurityController extends AbstractController
                 $em = $user instanceof SlaveUser ? $this->registry->getManager('slave') : $this->registry->getManager('master');
                 $em->flush();
 
-                // TODO: inviare email con il link:
-                //   path('password_create', {code: user.oneTimeCode, c: companyCode})
+                // 14.4 Recupero password: link monouso all'indirizzo dell'utente.
+                $mailer->passwordRecovery(
+                    (string) $user->getEmail(),
+                    $user->getFullName(),
+                    (string) $user->getOneTimeCode(),
+                    $companyCode,
+                    $user->getExpirationOneTimeCode(),
+                );
             }
 
             // Messaggio generico (evita user enumeration)

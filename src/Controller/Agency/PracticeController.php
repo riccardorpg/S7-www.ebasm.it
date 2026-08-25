@@ -378,6 +378,30 @@ class PracticeController extends AbstractController
         return $response;
     }
 
+    /**
+     * Anteprima dell'allegato: lo stesso file servito inline, per l'iframe del modale.
+     * Gli allegati sono solo PDF, quindi lo mostra il viewer del browser.
+     */
+    #[Route('/{id}/allegati/{did}/anteprima', name: 'agency_document_preview', methods: ['GET'], requirements: ['id' => '\d+', 'did' => '\d+'])]
+    public function documentPreview(int $id, int $did, DocumentStorage $storage): Response
+    {
+        [, $document] = $this->requireDocument($id, $did);
+
+        $absolute = $storage->absolutePath($this->dbName(), (string) $document->getStoragePath());
+        if (!$document->hasFile() || !is_file($absolute)) {
+            throw $this->createNotFoundException('File non presente sul server.');
+        }
+
+        $response = new BinaryFileResponse($absolute);
+        $response->headers->set('Content-Type', $document->getMimeType() ?: DocumentStorage::ALLOWED_MIME);
+        $response->setContentDisposition(
+            HeaderUtils::DISPOSITION_INLINE,
+            $document->getOriginalFilename() ?: ($document->getName() . '.pdf')
+        );
+
+        return $response;
+    }
+
     /** 12.3.2.7 Invia notifica di aggiornamento file. */
     #[Route('/{id}/notifica', name: 'agency_practice_notify', methods: ['POST'], requirements: ['id' => '\d+'])]
     #[IsGranted(new Expression("is_granted('edit', 'practices')"))]

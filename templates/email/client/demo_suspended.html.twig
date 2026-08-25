@@ -1,0 +1,31 @@
+{# 14.5 Sospensione della Demo: la demo è scaduta e l'accesso è stato sospeso. #}
+{% extends 'email/base.html.twig' %}
+
+{% block content %}
+    <tr>
+        <td style="padding:20px">
+            <p style="color:#333">
+                Buongiorno,<br>
+                il periodo di prova di <strong>{{ company.name }}</strong> è terminato
+                {% if company.licenseExpiresAt %}il {{ company.licenseExpiresAt|date('d/m/Y') }}{% endif %}
+                e l'accesso alla piattaforma <strong>EBASM</strong> è stato sospeso.
+            </p>
+        </td>
+    </tr>
+    <tr>
+        <td style="padding:0 20px 20px 20px">
+            <p style="color:#333">
+                I dati inseriti durante la prova sono conservati: attivando una licenza li ritrova esattamente
+                come li ha lasciati.
+            </p>
+        </td>
+    </tr>
+    <tr>
+        <td style="padding:0 20px 20px 20px">
+            <p style="color:#333">
+                Per riattivare l'accesso o avere informazioni sulle licenze, risponda a questo messaggio
+                scrivendo a <a href="mailto:{{ contactEmail }}" style="color:#1D4ED8;">{{ contactEmail }}</a>.
+            </p>
+        </td>
+    </tr>
+{% endblock %}

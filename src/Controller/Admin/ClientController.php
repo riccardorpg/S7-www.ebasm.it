@@ -9,6 +9,7 @@ use App\Entity\Master\Zip;
 use App\Entity\Slave\Practice;
 use App\Entity\Slave\User as AgencyUser;
 use App\Repository\Master\CompanyRepository;
+use App\Service\AppMailer;
 use App\Service\CompanyService;
 use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\Persistence\ManagerRegistry;
@@ -145,7 +146,7 @@ class ClientController extends AbstractController
      * la licenza parte come demo 30 giorni e nasce il primo utente dell'agenzia.
      */
     #[Route('/nuovo', name: 'admin_client_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, CompanyRepository $companies): Response
+    public function new(Request $request, CompanyRepository $companies, AppMailer $mailer): Response
     {
         $master = $this->registry->getManager('master');
 
@@ -241,14 +242,28 @@ class ClientController extends AbstractController
                     ->setActive(true);
                 $user->setAdmin(true)->setStaffRole(AgencyUser::STAFF_ADMIN);
                 $user->setPassword($this->hasher->hashPassword($user, bin2hex(random_bytes(8))));
+                // Codice monouso per l'invito (14.8): l'utente si crea la password dal link.
+                $user->setOneTimeCode(bin2hex(random_bytes(16)));
+                $user->setExpirationOneTimeCode(new \DateTimeImmutable('+72 hours'));
                 $slaveEm->persist($user);
                 $slaveEm->flush();
 
                 $demoRequest->markConverted($company, $this->getUser()?->getUserIdentifier());
                 $master->flush();
 
+                // 14.8 Invito ad utilizzare la piattaforma, col link di creazione password.
+                $invited = $mailer->invite(
+                    (string) $user->getEmail(),
+                    $user->getFullName(),
+                    $company,
+                    (string) $user->getOneTimeCode(),
+                    $company->getCode(),
+                );
+
                 $message .= ' Richiesta demo evasa, licenza demo di 30 giorni e utente '
-                    . $user->getEmail() . ' creato: usa "Invia credenziali" per l\'attivazione.';
+                    . $user->getEmail() . ($invited
+                        ? ' invitato via e-mail.'
+                        : ' creato, ma l\'invio dell\'invito non è riuscito: usa "Invia credenziali".');
             }
 
             $this->companyService->clearSession();
@@ -445,6 +460,8 @@ class ClientController extends AbstractController
                     $base = new \DateTimeImmutable('today');
                 }
                 $company->setLicenseExpiresAt($base->modify('+' . $months . ' months'));
+                // Nuova scadenza: l'avviso 14.6 potrà ripartire per il nuovo periodo.
+                $company->setLicenseNoticeSentAt(null);
             }
 
             $quota = (int) $request->request->get('storage_quota_mb', 0);
@@ -462,12 +479,24 @@ class ClientController extends AbstractController
     // ---- 7.1.9.7 Contratto termini e condizioni ----
 
     #[Route('/{id}/termini', name: 'admin_client_terms', methods: ['POST'], requirements: ['id' => '\d+'])]
-    public function terms(Company $company, Request $request): Response
+    public function terms(Company $company, Request $request, AppMailer $mailer): Response
     {
         if ($this->isCsrfTokenValid('client_terms_' . $company->getId(), (string) $request->request->get('_csrf_token'))) {
-            $company->setTermsAcceptedAt($company->isTermsAccepted() ? null : new \DateTimeImmutable());
+            $accepting = !$company->isTermsAccepted();
+            $company->setTermsAcceptedAt($accepting ? new \DateTimeImmutable() : null);
             $this->registry->getManager('master')->flush();
             $this->addFlash('success', 'Stato contratto aggiornato.');
+
+            // 14.9 Solo all'accettazione: ricevuta al cliente, copia all'indirizzo dedicato.
+            if ($accepting) {
+                $to = $this->companyService->getPrimaryContactEmail($company);
+                $this->companyService->clearSession();
+                if ($to === null) {
+                    $this->addFlash('danger', 'Nessun indirizzo a cui inviare la ricevuta del contratto: il cliente non ha utenti attivi.');
+                } elseif (!$mailer->termsAccepted($company, $to)) {
+                    $this->addFlash('danger', 'Invio della ricevuta del contratto a ' . $to . ' non riuscito.');
+                }
+            }
         }
 
         return $this->redirectToRoute('admin_client_show', ['id' => $company->getId()]);
@@ -544,7 +573,7 @@ class ClientController extends AbstractController
     }
 
     #[Route('/{id}/staff/{sid}/credenziali', name: 'admin_client_staff_credentials', methods: ['POST'], requirements: ['id' => '\d+', 'sid' => '\d+'])]
-    public function staffCredentials(Company $company, int $sid, Request $request): Response
+    public function staffCredentials(Company $company, int $sid, Request $request, AppMailer $mailer): Response
     {
         if ($this->isCsrfTokenValid('client_staff_' . $company->getId(), (string) $request->request->get('_csrf_token'))) {
             $slaveEm = $this->companyService->switchToCompany($company);
@@ -553,8 +582,21 @@ class ClientController extends AbstractController
                 $user->setOneTimeCode(bin2hex(random_bytes(16)));
                 $user->setExpirationOneTimeCode(new \DateTimeImmutable('+72 hours'));
                 $slaveEm->flush();
-                // TODO: inviare email con link path('password_create', {code: ..., c: company.code})
-                $this->addFlash('success', 'Credenziali generate per ' . $user->getEmail() . ' (invio email da configurare).');
+
+                // 14.3 Link di creazione password: l'utente è dell'agenzia, serve il suo codice.
+                $sent = $mailer->passwordCreate(
+                    (string) $user->getEmail(),
+                    $user->getFullName(),
+                    (string) $user->getOneTimeCode(),
+                    $company->getCode(),
+                    $user->getExpirationOneTimeCode(),
+                );
+                $this->addFlash(
+                    $sent ? 'success' : 'danger',
+                    $sent
+                        ? 'Credenziali inviate a ' . $user->getEmail() . '.'
+                        : 'Credenziali generate, ma l\'invio dell\'e-mail a ' . $user->getEmail() . ' non è riuscito.'
+                );
             }
             $this->companyService->clearSession();
         }

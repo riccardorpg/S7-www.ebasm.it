@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Master\Company;
 use App\Entity\Master\DemoRequest;
+use App\Service\AppMailer;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,8 +14,8 @@ use Symfony\Component\Routing\Attribute\Route;
 /**
  * Parte esterna (pubblica) del sito: homepage marketing, form contatti/demo, pagine legali.
  *
- * NOTA BOZZA: i submit validano CSRF e campi obbligatori e mostrano un flash di conferma.
- * TODO: verifica reCaptcha server-side, invio email (Mailer) e persistenza della richiesta.
+ * I submit validano CSRF e campi obbligatori, notificano via e-mail (14.1 / 14.2) e
+ * mostrano un flash di conferma. TODO: verifica reCaptcha server-side.
  */
 class DefaultController extends AbstractController
 {
@@ -44,7 +45,7 @@ class DefaultController extends AbstractController
     }
 
     #[Route('/contatti/invia', name: 'contact_submit', methods: ['POST'])]
-    public function contactSubmit(Request $request): Response
+    public function contactSubmit(Request $request, AppMailer $mailer): Response
     {
         if (!$this->isCsrfTokenValid('contact', (string) $request->request->get('_csrf_token'))) {
             $this->addFlash('danger', 'Sessione scaduta, riprova a inviare il modulo.');
@@ -64,14 +65,15 @@ class DefaultController extends AbstractController
             return $this->redirect($this->generateUrl('homepage') . '#contatti-contact', Response::HTTP_SEE_OTHER);
         }
 
-        // TODO: verifica reCaptcha + invio email della richiesta di contatto.
+        // 14.1 Notifica interna della richiesta. TODO: verifica reCaptcha server-side.
+        $mailer->contactRequest($name, $surname, $email, $message);
         $this->addFlash('success', 'Grazie ' . $name . '! Abbiamo ricevuto la tua richiesta e ti risponderemo al più presto.');
 
         return $this->redirect($this->generateUrl('homepage') . '#contatti', Response::HTTP_SEE_OTHER);
     }
 
     #[Route('/demo/richiedi', name: 'demo_request_submit', methods: ['POST'])]
-    public function demoRequestSubmit(Request $request, EntityManagerInterface $em): Response
+    public function demoRequestSubmit(Request $request, EntityManagerInterface $em, AppMailer $mailer): Response
     {
         if (!$this->isCsrfTokenValid('demo', (string) $request->request->get('_csrf_token'))) {
             $this->addFlash('danger', 'Sessione scaduta, riprova a inviare il modulo.');
@@ -112,7 +114,7 @@ class DefaultController extends AbstractController
         }
 
         // Persistenza come richiesta demo (lead) da evadere in area admin (allarme 6.1.1).
-        // TODO: verifica reCaptcha + invio email di conferma.
+        // TODO: verifica reCaptcha server-side.
         $demo = new DemoRequest();
         $demo->setAccountType($accountType)
             ->setEmail($email)
@@ -125,6 +127,9 @@ class DefaultController extends AbstractController
             ->setPec(trim((string) $request->request->get('pec')) ?: null);
         $em->persist($demo);
         $em->flush();
+
+        // 14.2 Avvisa l'indirizzo interno: la richiesta è anche un allarme in scrivania.
+        $mailer->demoRequest($demo);
 
         $this->addFlash('success', 'Richiesta demo ricevuta! Ti invieremo a breve le istruzioni di accesso all\'indirizzo ' . $email . '.');
 

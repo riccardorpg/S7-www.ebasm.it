@@ -5,6 +5,7 @@ namespace App\Controller\Admin;
 use App\Entity\Master\User;
 use App\Repository\Master\CompanyRepository;
 use App\Repository\Master\UserRepository;
+use App\Service\AppMailer;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -148,7 +149,7 @@ class NotaryUserController extends AbstractController
 
     /** Invia (genera) le credenziali di attivazione. */
     #[Route('/{id}/credenziali', name: 'admin_notary_credentials', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function credentials(int $id, Request $request, UserRepository $users): RedirectResponse
+    public function credentials(int $id, Request $request, UserRepository $users, AppMailer $mailer): RedirectResponse
     {
         $notary = $this->findNotary($id, $users);
         if ($notary === null) {
@@ -163,8 +164,20 @@ class NotaryUserController extends AbstractController
         $notary->setOneTimeCode(bin2hex(random_bytes(16)));
         $notary->setExpirationOneTimeCode(new \DateTimeImmutable('+72 hours'));
         $this->em->flush();
-        // TODO: inviare email con link path('password_create', {code: ...}) per il master.
-        $this->addFlash('success', 'Credenziali generate per ' . $notary->getEmail() . ' (invio email da configurare).');
+        // 14.3 Il notaio è un utente master: nessun codice agenzia nel link.
+        $sent = $mailer->passwordCreate(
+            (string) $notary->getEmail(),
+            $notary->getFullName(),
+            (string) $notary->getOneTimeCode(),
+            null,
+            $notary->getExpirationOneTimeCode(),
+        );
+        $this->addFlash(
+            $sent ? 'success' : 'danger',
+            $sent
+                ? 'Credenziali inviate a ' . $notary->getEmail() . '.'
+                : 'Credenziali generate, ma l\'invio dell\'e-mail a ' . $notary->getEmail() . ' non è riuscito.'
+        );
 
         return $this->redirectToRoute('admin_notaries');
     }

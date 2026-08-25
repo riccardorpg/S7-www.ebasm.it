@@ -12,9 +12,12 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
  * Preferenze d'interfaccia salvate in sessione, condivise da tutte le aree (stile
  * Tillomeditalia). Sta fuori da /amministratore, /notaio e /agenzia perché la usano
  * tutti i ruoli: basta essere autenticati.
+ *
+ * REMEMBERED e non FULLY: con "Resta collegato" la sessione non è "piena" e la chiamata
+ * verrebbe respinta, perdendo la tab attiva senza nessun segnale.
  */
 #[Route('/sessione')]
-#[IsGranted('IS_AUTHENTICATED_FULLY')]
+#[IsGranted('IS_AUTHENTICATED_REMEMBERED')]
 class SessionController extends AbstractController
 {
     /**

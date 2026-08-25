@@ -6,6 +6,8 @@ use App\Entity\Slave\Permission;
 use App\Entity\Slave\User as StaffUser;
 use App\Entity\Slave\UserPermission;
 use App\Repository\Slave\PermissionRepository;
+use App\Service\AppMailer;
+use App\Service\CompanyService;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Knp\Component\Pager\PaginatorInterface;
@@ -197,7 +199,7 @@ class StaffController extends AbstractController
     /** 10.1.7 Invia credenziali: genera il codice usa-e-getta per creare la password. */
     #[Route('/{id}/credenziali', name: 'agency_staff_credentials', methods: ['POST'], requirements: ['id' => '\d+'])]
     #[IsGranted(new Expression("is_granted('edit', 'staff')"))]
-    public function credentials(int $id, Request $request): RedirectResponse
+    public function credentials(int $id, Request $request, AppMailer $mailer, CompanyService $companyService): RedirectResponse
     {
         if (!$this->isCsrfTokenValid('staffCredentials', (string) $request->request->get('_csrf_token'))) {
             return $this->back();
@@ -210,8 +212,20 @@ class StaffController extends AbstractController
         $member->setExpirationOneTimeCode(new \DateTimeImmutable('+72 hours'));
         $em->flush();
 
-        // TODO: inviare l'email con path('password_create', {code: ..., c: <codice agenzia>}).
-        $this->addFlash('success', 'Credenziali generate per ' . $member->getEmail() . ' (invio email da configurare).');
+        // 14.3 Il link porta il codice dell'agenzia corrente: dice a quale DB puntare.
+        $sent = $mailer->passwordCreate(
+            (string) $member->getEmail(),
+            $member->getFullName(),
+            (string) $member->getOneTimeCode(),
+            $companyService->getCurrentCompany()?->getCode(),
+            $member->getExpirationOneTimeCode(),
+        );
+        $this->addFlash(
+            $sent ? 'success' : 'danger',
+            $sent
+                ? 'Credenziali inviate a ' . $member->getEmail() . '.'
+                : 'Credenziali generate, ma l\'invio dell\'e-mail a ' . $member->getEmail() . ' non è riuscito.'
+        );
 
         return $this->back();
     }

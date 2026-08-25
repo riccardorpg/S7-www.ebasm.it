@@ -3,23 +3,17 @@
 namespace App\Service;
 
 use App\Entity\Slave\Practice;
-use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
-use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mime\Email;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
 /**
- * 12.3.2.7 Notifica di aggiornamento file su una pratica.
+ * 12.3.2.7 / 14.7 Notifica di aggiornamento file su una pratica.
  *
- * L'invio è già completo: con MAILER_DSN su `null://null` (impostazione attuale) il
- * messaggio non parte, ma il codice non cambia quando verrà configurato un DSN vero.
+ * Qui vive solo la scelta dei destinatari possibili: la composizione e l'invio passano
+ * da {@see AppMailer}, come tutte le altre notifiche del punto 14.
  */
 class PracticeNotifier
 {
-    public function __construct(
-        private readonly MailerInterface $mailer,
-        private readonly ParameterBagInterface $params,
-    ) {
+    public function __construct(private readonly AppMailer $mailer)
+    {
     }
 
     /**
@@ -58,34 +52,6 @@ class PracticeNotifier
      */
     public function notifyFileUpdate(Practice $practice, string $to, string $message, string $senderName): bool
     {
-        $email = (new Email())
-            ->from((string) $this->params->get('email_noreply'))
-            ->to($to)
-            ->subject(sprintf('Aggiornamento documenti — pratica %s', $practice->getNumber()))
-            ->text($this->body($practice, $message, $senderName));
-
-        try {
-            $this->mailer->send($email);
-
-            return true;
-        } catch (TransportExceptionInterface) {
-            return false;
-        }
-    }
-
-    private function body(Practice $practice, string $message, string $senderName): string
-    {
-        $lines = [
-            sprintf('Pratica %s — %s', $practice->getNumber(), $practice->getTypeLabel()),
-        ];
-        if ($practice->getAddress()) {
-            $lines[] = 'Immobile: ' . $practice->getAddress();
-        }
-        $lines[] = '';
-        $lines[] = $message;
-        $lines[] = '';
-        $lines[] = '— ' . $senderName;
-
-        return implode("\n", $lines);
+        return $this->mailer->fileUpdate($practice, $to, $message, $senderName);
     }
 }

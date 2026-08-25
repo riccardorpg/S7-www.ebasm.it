@@ -25,22 +25,46 @@
             idInput.value = ids.join(',');
         }
 
-        (function prefill() {
+        /* Nessun valore selezionato = nessun filtro, cioè tutti inclusi: in quel caso gli
+           switch si presentano tutti attivi, così il modale rispecchia ciò che si vede. */
+        function applySaved() {
             var current = (idInput.value || '').split(',').filter(Boolean);
+            var noFilter = current.length === 0;
             var sw = switches();
             for (var i = 0; i < sw.length; i++) {
-                if (current.indexOf(sw[i].getAttribute('data-id')) !== -1) sw[i].checked = true;
+                sw[i].checked = noFilter || current.indexOf(sw[i].getAttribute('data-id')) !== -1;
             }
-            refreshDisplay();
-        })();
+            return !noFilter;
+        }
 
-        window.filterMulti{{ number }} = function () { modal.show(); };
+        function allChecked() {
+            var sw = switches();
+            for (var i = 0; i < sw.length; i++) {
+                if (!sw[i].checked) return false;
+            }
+
+            return sw.length > 0;
+        }
+
+        // Al load: se un filtro è attivo mostra le etichette scelte, altrimenti lascia il
+        // placeholder "Tutti" (gli switch sono comunque tutti attivi).
+        if (applySaved()) refreshDisplay();
+
+        // Riapre il modale sempre allineato al filtro salvato, anche dopo un "Annulla".
+        window.filterMulti{{ number }} = function () { applySaved(); modal.show(); };
         window.filterMultiAll{{ number }} = function (bool) {
             var sw = switches();
             for (var i = 0; i < sw.length; i++) sw[i].checked = bool;
         };
         window.setFilterMulti{{ number }} = function () {
-            refreshDisplay();
+            // Tutti attivi (o nessuno) = nessun filtro: campo vuoto e placeholder "Tutti".
+            if (allChecked()) {
+                valueInput.value = '';
+                valueInput.removeAttribute('title');
+                idInput.value = '';
+            } else {
+                refreshDisplay();
+            }
             modal.hide();
             if (idInput.form) idInput.form.submit();
         };

@@ -1,0 +1,30 @@
+{# 14.6 Licenza in scadenza: avviso al cliente coi giorni residui. #}
+{% extends 'email/base.html.twig' %}
+
+{% block content %}
+    <tr>
+        <td style="padding:20px">
+            <p style="color:#333">
+                Buongiorno,<br>
+                la licenza <strong>{{ company.licenseTypeLabel }}</strong> di <strong>{{ company.name }}</strong>
+                scade il <strong>{{ company.licenseExpiresAt|date('d/m/Y') }}</strong>
+                {% if days > 0 %}, fra {{ days }} giorn{{ days == 1 ? 'o' : 'i' }}{% endif %}.
+            </p>
+        </td>
+    </tr>
+    <tr>
+        <td style="padding:0 20px 20px 20px">
+            <p style="color:#333">
+                Alla scadenza l'accesso alla piattaforma viene sospeso: i dati restano conservati, ma non è
+                più possibile lavorare sulle pratiche.
+            </p>
+        </td>
+    </tr>
+    <tr>
+        <td style="padding:0 20px 20px 20px">
+            <p style="color:#333">
+                Per il rinnovo scriva a <a href="mailto:{{ contactEmail }}" style="color:#1D4ED8;">{{ contactEmail }}</a>.
+            </p>
+        </td>
+    </tr>
+{% endblock %}

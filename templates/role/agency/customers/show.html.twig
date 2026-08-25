@@ -124,8 +124,8 @@
                                 </td>
                                 <td>{{ p.number }}</td>
                                 <td>{{ p.address ?: '—' }}</td>
-                                {# 11.2.3.8 Link alla scheda: la scheda pratica lato agenzia arriva col punto 12. #}
-                                <td class="txt_a_c">{{ ico.disabled('view-grey', 'La scheda pratica lato agenzia non è ancora disponibile') }}</td>
+                                {# 11.2.3.8 Link alla scheda pratica (12.3). #}
+                                <td class="txt_a_c">{{ ico.action(path('agency_practice_show', {id: p.id}), 'view', 'Apri la scheda', 'green') }}</td>
                             </tr>
                         {% else %}
                             <tr><td colspan="8" class="op_07 text-center">Nessuna pratica collegata a questo cliente.</td></tr>

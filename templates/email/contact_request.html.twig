@@ -1,0 +1,24 @@
+{# 14.1 Nuova richiesta di contatto dal form pubblico: va all'indirizzo dell'admin. #}
+{% extends 'email/base.html.twig' %}
+
+{% block content %}
+    <tr>
+        <td style="padding:20px">
+            <p style="color:#333">È arrivata una nuova richiesta di contatto dal sito.</p>
+        </td>
+    </tr>
+    <tr>
+        <td style="padding:0 20px 20px 20px">
+            <table style="border-collapse:collapse; color:#333;">
+                <tr><td style="padding:4px 12px 4px 0;"><strong>Nome</strong></td><td style="padding:4px 0;">{{ name }} {{ surname }}</td></tr>
+                <tr><td style="padding:4px 12px 4px 0;"><strong>E-mail</strong></td><td style="padding:4px 0;">{{ senderEmail }}</td></tr>
+            </table>
+        </td>
+    </tr>
+    <tr>
+        <td style="padding:0 20px 20px 20px">
+            <p style="color:#333; margin:0 0 6px 0;"><strong>Messaggio</strong></p>
+            <p style="color:#333; margin:0; white-space:pre-line;">{{ message }}</p>
+        </td>
+    </tr>
+{% endblock %}

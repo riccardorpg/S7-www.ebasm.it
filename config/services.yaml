@@ -10,8 +10,25 @@ parameters:
     web_path: 'public'
 
     # --- Email ---
+    # Mittente di tutte le notifiche (14).
     email_noreply: 'no-reply@ebasm.it'
+    # Destinatario interno: richieste di contatto e richieste demo dal sito pubblico.
+    email_admin: 'info@ebasm.it'
+    # Copia dedicata dei contratti termini e condizioni accettati (14.9).
+    email_contracts: 'contratti@ebasm.it'
+    # Indirizzo mostrato ai clienti negli avvisi su licenze e demo.
+    email_support: 'info@ebasm.it'
+
+    # Oggetti delle notifiche (14.1 … 14.9)
+    object_contact_request: 'Nuova richiesta di contatto'
+    object_demo_request: 'Nuova richiesta demo'
+    object_password_create: 'Crea la tua password'
     object_recovery: 'Recupero password'
+    object_demo_suspended: 'Demo terminata: accesso sospeso'
+    object_license_expiring: 'Licenza in scadenza'
+    object_file_update: 'Aggiornamento documenti — pratica %s'
+    object_invite: 'Benvenuto su EBASM'
+    object_terms_accepted: 'Contratto termini e condizioni accettato'
     object_credentials: 'Credenziali di accesso'
 
     # --- Firewall /script (SQL runner) ---
