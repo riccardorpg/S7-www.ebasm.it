@@ -1,7 +1,10 @@
 {% extends 'role/agency/layout.html.twig' %}
 {% import 'components/action_icons.html.twig' as ico %}
+{% import 'components/practice_status.html.twig' as practiceStatus %}
 
 {% set canEdit = is_granted('edit', 'practices') and not practice.archived %}
+{# 12.3.2 I documenti si modificano solo a pratica aperta: da "completata" in poi sono in sola lettura. #}
+{% set canEditDocuments = canEdit and practice.areDocumentsEditable %}
 
 {% block title %} - Pratica {{ practice.number }}{% endblock %}
 {% block role_page_title_inner %}Pratica {{ practice.number }}{% endblock %}
@@ -64,7 +67,7 @@
                         <tr>
                             <th style="width:25%">Stato</th>
                             <td>
-                                <span class="badge {{ practice.status == 'completed' ? 'bg-success' : (practice.status == 'archivable' ? 'bg-info' : (practice.status == 'archived' ? 'bg-dark' : 'bg-secondary')) }}">{{ practice.statusLabel }}</span>
+                                {{ practiceStatus.badge(practice.status, practice.statusLabel) }}
                                 {% if practice.status == 'archivable' %}
                                     <span class="op_07 font_13">— il notaio ha dato il via libera all'archiviazione</span>
                                 {% endif %}
@@ -115,10 +118,19 @@
 
                 {# ===== 12.3.2 Gestione documentale ===== #}
                 <div class="tab-pane fade" id="tab-documenti">
-                    {% if canEdit %}
-                        <div class="d-flex justify-content-end m_b_10p">
+                    {% if canEditDocuments %}
+                        <div class="d-flex justify-content-end gap-2 m_b_10p">
+                            {# 12.3.2.6 Nuovo allegato: la riga documentale si sceglie nel modale. #}
+                            <a href="javascript:documentNewOpen()" class="button button-3d button-mini button-green m-0">Nuovo allegato</a>
                             {# 12.3.2.7 Invia notifica aggiornamento file #}
                             <a href="javascript:practiceNotifyShow()" class="button button-3d button-mini button-green m-0">Invia notifica</a>
+                        </div>
+                    {% elseif not practice.archived %}
+                        {# 12.3.2 Da "completata" in poi i documenti sono in sola lettura;
+                           per l'archiviata l'avviso sta già in testa alla pagina. #}
+                        <div class="alert alert-warning">
+                            <i class="bi-lock"></i> La pratica è <strong>{{ practice.statusLabel|lower }}</strong>:
+                            i documenti sono in sola lettura. Puoi ancora consultarli e scaricarli.
                         </div>
                     {% endif %}
 
@@ -140,34 +152,17 @@
                                         <div><span class="badge bg-light text-dark">solo con mutuo</span></div>
                                     {% endif %}
                                 </td>
-                                {# 12.3.2.2 Mostra / Nascondi #}
+                                {# 12.3.2.2 "Richiesto" lo decide il notaio: qui è in sola lettura. #}
                                 <td class="txt_a_c">
-                                    {% if canEdit %}
-                                        <form method="post" action="{{ path('agency_row_toggle', {id: practice.id, rid: row.id}) }}" class="d-inline">
-                                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('practiceRow') }}">
-                                            <button type="submit" class="btn p-0 border-0 bg-transparent" data-bs-toggle="tooltip"
-                                                    data-bs-title="Clicca per {{ row.visible ? 'nascondere' : 'mostrare' }} il documento">
-                                                <span class="badge {{ row.visible ? 'bg-danger' : 'bg-secondary' }}">{{ row.visible ? 'Sì' : 'No' }}</span>
-                                            </button>
-                                        </form>
-                                    {% else %}
-                                        <span class="badge {{ row.visible ? 'bg-danger' : 'bg-secondary' }}">{{ row.visible ? 'Sì' : 'No' }}</span>
-                                    {% endif %}
+                                    <span class="badge {{ row.visible ? 'bg-danger' : 'bg-secondary' }}" data-bs-toggle="tooltip"
+                                          data-bs-title="Lo decide il notaio">{{ row.visible ? 'Sì' : 'No' }}</span>
                                 </td>
-                                {# 12.3.2.3 / 12.3.2.4 Stato: badge in visualizzazione, il modale lo cambia #}
+                                {# 12.3.2.4 Anche lo stato del documento è del notaio: l'agenzia carica, lui verifica. #}
                                 <td class="txt_a_c">
                                     {% set statusBadge = row.status == 'verified' ? 'bg-success' : (row.status == 'to_verify' ? 'bg-warning text-dark' : (row.status == 'to_upload' ? 'bg-danger' : 'bg-secondary')) %}
-                                    {% if canEdit %}
-                                        <a href="javascript:void(0)" class="text-decoration-none" data-bs-toggle="tooltip"
-                                           data-bs-title="Clicca per cambiare lo stato"
-                                           onclick="rowStatusOpen({{ row.id }}, {{ row.status|json_encode }}, {{ row.label|json_encode }})">
-                                            <span class="badge {{ statusBadge }}">{{ row.statusLabel }}</span>
-                                        </a>
-                                    {% else %}
-                                        <span class="badge {{ statusBadge }}">{{ row.statusLabel }}</span>
-                                    {% endif %}
+                                    <span class="badge {{ statusBadge }}" data-bs-toggle="tooltip"
+                                          data-bs-title="Lo aggiorna il notaio">{{ row.statusLabel }}</span>
                                 </td>
-|date('d/m/Y H:i') : '—' }}</td>
                                 <td class="txt_a_c text-nowrap">
                                     {# 12.3.2.5 Gli allegati stanno nel pannello a tendina sotto la riga. #}
                                     {% if row.hasFiles %}
@@ -175,8 +170,8 @@
                                     {% else %}
                                         {{ ico.disabled('documents-grey', 'Nessun allegato') }}
                                     {% endif %}
-                                    {% if canEdit %}
-                                        {{ ico.action("javascript:documentNewOpen(" ~ row.id ~ ", " ~ row.label|json_encode ~ ")", 'add', 'Nuovo allegato', 'green') }}
+                                    {% if canEditDocuments %}
+                                        {{ ico.action("javascript:documentNewOpen(" ~ row.id ~ ")", 'add', 'Nuovo allegato', 'green') }}
                                     {% endif %}
                                 </td>
                             </tr>
@@ -217,7 +212,7 @@
                                                                 {{ ico.disabled('preview', 'Nessun file da mostrare') }}
                                                                 {{ ico.disabled('download', 'Nessun file da scaricare') }}
                                                             {% endif %}
-                                                            {% if canEdit %}
+                                                            {% if canEditDocuments %}
                                                                 {# 12.3.2.5.5 Modifica nome e note dell'agente #}
                                                                 <a href="javascript:void(0)" class="d-inline-block m_r_5p" data-bs-toggle="tooltip"
                                                                    data-bs-title="Modifica allegato" onclick="documentEditOpen(this)"
@@ -363,30 +358,29 @@
         {% include 'components/modals/city.html.twig' with {number: 1, cities: []} only %}
 
         {# 12.3.2.6 Nuovo allegato #}
-        {% embed 'components/modals/form_modal.html.twig' with {type: 'documentNew', title: 'Nuovo allegato', enctype: 'multipart/form-data'} %}
+        {% embed 'components/modals/form_modal.html.twig' with {
+            type: 'documentNew', title: 'Nuovo allegato', action: path('agency_document_new', {id: practice.id}), enctype: 'multipart/form-data'
+        } %}
             {% block modalBody %}
-                <p class="op_07 font_13" id="documentNew_target"></p>
                 <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label" for="documentNew_row">Documento *</label>
+                        <select id="documentNew_row" name="practice_document_id" class="form-select" required>
+                            {% for row in practice.practiceDocuments %}
+                                <option value="{{ row.id }}">{{ row.label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="documentNew_name">Nome allegato *</label>
+                        <input type="text" id="documentNew_name" name="name" class="form-control" required>
+                        <div class="form-text">Il file viene salvato con questo nome (più l'estensione), non con quello originale.</div>
+                    </div>
                     <div class="col-12"><label class="form-label" for="documentNew_file">File * <span class="op_07 font_13">(solo PDF)</span></label><input type="file" id="documentNew_file" name="file" class="form-control" accept="application/pdf" required></div>
                     <div class="col-12"><label class="form-label" for="documentNew_note">Note dell'agente</label><textarea id="documentNew_note" name="agent_note" rows="3" class="form-control"></textarea></div>
                 </div>
             {% endblock %}
             {% block modalSubmit %}Carica{% endblock %}
-        {% endembed %}
-
-        {# 12.3.2.4 Stato della riga documentale: il badge apre questo modale. Il tipo del
-           modale è anche il nome del token CSRF atteso dal controller. #}
-        {% embed 'components/modals/form_modal.html.twig' with {type: 'practiceRowStatus', title: 'Stato del documento'} %}
-            {% block modalBody %}
-                <p class="op_07 font_13" id="practiceRowStatus_target"></p>
-                <label class="form-label" for="practiceRowStatus_value">Stato *</label>
-                <select id="practiceRowStatus_value" name="status" class="form-select" required>
-                    {% for value, label in documentStatuses %}
-                        <option value="{{ value }}">{{ label }}</option>
-                    {% endfor %}
-                </select>
-            {% endblock %}
-            {% block modalSubmit %}Aggiorna stato{% endblock %}
         {% endembed %}
 
         {# 12.3.2.5.5 Modifica allegato #}
@@ -517,12 +511,12 @@
 <script>
     var PRACTICE_BASE = "{{ path('agency_practice_show', {id: practice.id}) }}";
 
-    /* 12.3.2.6 Nuovo allegato su una riga documentale. */
-    function documentNewOpen(rowId, label) {
-        var form = document.getElementById('documentNewForm');
-        form.reset();
-        form.action = PRACTICE_BASE + '/righe/' + rowId + '/allegati/nuovo';
-        document.getElementById('documentNew_target').textContent = 'Documento: ' + label;
+    /* 12.3.2.6 Nuovo allegato: dall'icona della riga arriva l'id da preselezionare,
+       dal pulsante di pagina no e la riga la sceglie l'utente. */
+    function documentNewOpen(rowId) {
+        document.getElementById('documentNewForm').reset();
+        var select = document.getElementById('documentNew_row');
+        if (select && rowId) { select.value = rowId; }
         documentNewShow();
     }
 
@@ -533,15 +527,6 @@
         document.getElementById('documentEdit_name').value = link.dataset.docName || '';
         document.getElementById('documentEdit_note').value = link.dataset.docNote || '';
         documentEditShow();
-    }
-
-    /* 12.3.2.4 Cambio stato della riga documentale dal badge. */
-    function rowStatusOpen(rowId, status, label) {
-        var form = document.getElementById('practiceRowStatusForm');
-        form.action = PRACTICE_BASE + '/righe/' + rowId + '/stato';
-        document.getElementById('practiceRowStatus_target').textContent = 'Documento: ' + label;
-        document.getElementById('practiceRowStatus_value').value = status;
-        practiceRowStatusShow();
     }
 
     function practiceNotifyOpen() { practiceNotifyShow(); }

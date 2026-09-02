@@ -1,5 +1,6 @@
 {% extends 'role/agency/layout.html.twig' %}
 {% import 'components/action_icons.html.twig' as ico %}
+{% import 'components/practice_status.html.twig' as practiceStatus %}
 
 {% block title %} - Pratiche{% endblock %}
 {% block role_page_title_inner %}Pratiche{% endblock %}
@@ -78,7 +79,7 @@
                 {% for p in records %}
                     <tr>
                         <td>
-                            <span class="badge {{ p.status == 'completed' ? 'bg-success' : (p.status == 'archivable' ? 'bg-info' : (p.status == 'archived' ? 'bg-dark' : 'bg-secondary')) }}">{{ p.statusLabel }}</span>
+                            {{ practiceStatus.badge(p.status, p.statusLabel) }}
                             {% if p.mark %}
                                 <div class="p_t_5p">
                                     <span class="badge" style="background:{{ p.mark.color }}; color:{{ p.mark.contrastColor }};">{{ p.mark.value }}</span>

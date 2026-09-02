@@ -1,5 +1,6 @@
 {% extends 'role/agency/layout.html.twig' %}
 {% import 'components/action_icons.html.twig' as ico %}
+{% import 'components/practice_status.html.twig' as practiceStatus %}
 
 {% block title %} - {{ customer.fullName }}{% endblock %}
 {% block role_page_title_inner %}{{ customer.fullName }}{% endblock %}
@@ -111,7 +112,7 @@
                                 data-buyer="{{ p.buyer ? p.buyer.fullName : '' }}"
                                 data-number="{{ p.number }}"
                                 data-address="{{ p.address }}">
-                                <td><span class="badge {{ p.status == 'completed' ? 'bg-success' : (p.status == 'archivable' ? 'bg-info' : 'bg-secondary') }}">{{ p.statusLabel }}</span></td>
+                                <td>{{ practiceStatus.badge(p.status, p.statusLabel) }}</td>
                                 <td>{{ p.createdAt ? p.createdAt|date('d/m/Y') : '—' }}</td>
                                 <td>{{ p.typeLabel }}</td>
                                 <td>

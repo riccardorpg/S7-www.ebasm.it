@@ -410,6 +410,28 @@ class Practice
         return $this->getVisibleDocuments()->count();
     }
 
+    /**
+     * 17.1.1 Righe richieste non ancora verificate: sono quelle che bloccano il
+     * passaggio a "completata". Le righe nascoste (12.3.2.2) non contano, e
+     * "non necessario" vale come verificata: quel documento non serve.
+     *
+     * @return Collection<int, PracticeDocument>
+     */
+    public function getDocumentsPendingVerification(): Collection
+    {
+        return $this->getVisibleDocuments()->filter(fn (PracticeDocument $pd) => !in_array(
+            $pd->getStatus(),
+            [PracticeDocument::STATUS_VERIFIED, PracticeDocument::STATUS_NOT_REQUIRED],
+            true
+        ));
+    }
+
+    /** 17.1.1 Il notaio segna "completata" solo a documenti richiesti tutti verificati. */
+    public function canBeCompleted(): bool
+    {
+        return $this->getDocumentsPendingVerification()->count() === 0;
+    }
+
     /** 12.1.8 Spazio occupato dagli allegati della pratica, in MB. */
     public function getSizeMb(): float
     {
@@ -449,6 +471,16 @@ class Practice
     public function canBeArchived(): bool
     {
         return $this->status === self::STATUS_ARCHIVABLE;
+    }
+
+    /**
+     * 12.3.2 I documenti si toccano solo a pratica aperta: da "completata" in poi
+     * (quindi anche "archiviabile" e "archiviata") sono in sola lettura, perché il
+     * fascicolo è già passato al notaio.
+     */
+    public function areDocumentsEditable(): bool
+    {
+        return $this->status === self::STATUS_OPEN;
     }
 
     /**

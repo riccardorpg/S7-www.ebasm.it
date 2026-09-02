@@ -176,6 +176,20 @@ class NotaryController extends AbstractController
             return $this->redirectToRoute('notary_practice_show', ['id' => $id]);
         }
 
+        // 17.1.1 "Completata" solo a documenti richiesti tutti verificati.
+        if ($target === Practice::STATUS_COMPLETED && !$practice->canBeCompleted()) {
+            $pending = $practice->getDocumentsPendingVerification();
+            $labels = array_map(static fn ($row) => $row->getLabel(), $pending->toArray());
+            $this->addFlash('danger', sprintf(
+                'Non puoi completare la pratica: %d document%s da verificare (%s).',
+                count($labels),
+                count($labels) === 1 ? 'o' : 'i',
+                implode(', ', $labels)
+            ));
+
+            return $this->redirectToRoute('notary_practice_show', ['id' => $id]);
+        }
+
         $practice->setStatus($target);
         $this->registry->getManager('slave')->flush();
         $this->addFlash('success', 'Stato pratica aggiornato: ' . $practice->getStatusLabel() . '.');
@@ -257,6 +271,9 @@ class NotaryController extends AbstractController
         if ($row === null) {
             return $this->redirectToRoute($company ? 'notary_practice_show' : 'notary_index', $company ? ['id' => $id] : []);
         }
+        if ($this->documentsLocked($practice)) {
+            return $this->redirectToRoute('notary_practice_show', ['id' => $id]);
+        }
         if ($this->isCsrfTokenValid('practice_doc_' . $practice->getId(), (string) $request->request->get('_csrf_token'))) {
             $row->setVisible(!$row->isVisible());
             $this->registry->getManager('slave')->flush();
@@ -272,6 +289,9 @@ class NotaryController extends AbstractController
         [$company, $practice, $row] = $this->requireRow($id, $rid);
         if ($row === null) {
             return $this->redirectToRoute($company ? 'notary_practice_show' : 'notary_index', $company ? ['id' => $id] : []);
+        }
+        if ($this->documentsLocked($practice)) {
+            return $this->redirectToRoute('notary_practice_show', ['id' => $id]);
         }
         if ($this->isCsrfTokenValid('practice_doc_' . $practice->getId(), (string) $request->request->get('_csrf_token'))) {
             // Senza allegato non c'è nulla da verificare: lo stato non si tocca. Resta
@@ -301,6 +321,9 @@ class NotaryController extends AbstractController
         if ($doc === null) {
             return $this->redirectToRoute($company ? 'notary_practice_show' : 'notary_index', $company ? ['id' => $id] : []);
         }
+        if ($this->documentsLocked($practice)) {
+            return $this->redirectToRoute('notary_practice_show', ['id' => $id]);
+        }
         if ($this->isCsrfTokenValid('docNote', (string) $request->request->get('_csrf_token'))) {
             $note = trim((string) $request->request->get('notary_note', ''));
             $doc->setNotaryNote($note !== '' ? $note : null);
@@ -318,6 +341,9 @@ class NotaryController extends AbstractController
         [$company, $practice] = $this->requirePractice($id);
         if ($practice === null) {
             return $this->redirectToRoute($company ? 'notary_practice_show' : 'notary_index', $company ? ['id' => $id] : []);
+        }
+        if ($this->documentsLocked($practice)) {
+            return $this->redirectToRoute('notary_practice_show', ['id' => $id]);
         }
         if (!$this->isCsrfTokenValid('docNew', (string) $request->request->get('_csrf_token'))) {
             return $this->redirectToRoute('notary_practice_show', ['id' => $id]);
@@ -386,6 +412,9 @@ class NotaryController extends AbstractController
         if ($doc === null) {
             return $this->redirectToRoute($company ? 'notary_practice_show' : 'notary_index', $company ? ['id' => $id] : []);
         }
+        if ($this->documentsLocked($practice)) {
+            return $this->redirectToRoute('notary_practice_show', ['id' => $id]);
+        }
         if ($this->isCsrfTokenValid('practice_doc_' . $practice->getId(), (string) $request->request->get('_csrf_token'))) {
             $storage->delete((string) $company->getDbName(), $doc->getStoragePath());
             $em = $this->registry->getManager('slave');
@@ -398,6 +427,25 @@ class NotaryController extends AbstractController
         }
 
         return $this->redirectToRoute('notary_practice_show', ['id' => $id]);
+    }
+
+    /**
+     * 12.3.2 Da "completata" in poi i documenti sono in sola lettura anche per il
+     * notaio: qui si blocca la POST, nel template spariscono i pulsanti. Per
+     * intervenire di nuovo bisogna riaprire la pratica.
+     */
+    private function documentsLocked(Practice $practice): bool
+    {
+        if ($practice->areDocumentsEditable()) {
+            return false;
+        }
+
+        $this->addFlash('danger', sprintf(
+            'La pratica è %s: i documenti non sono più modificabili. Riaprila per intervenire.',
+            mb_strtolower($practice->getStatusLabel())
+        ));
+
+        return true;
     }
 
     /**

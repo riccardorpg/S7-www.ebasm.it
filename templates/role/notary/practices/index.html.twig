@@ -1,5 +1,6 @@
 {% extends 'role/notary/layout.html.twig' %}
 {% import 'components/action_icons.html.twig' as ico %}
+{% import 'components/practice_status.html.twig' as practiceStatus %}
 
 {% block title %} - Pratiche{% endblock %}
 {% block role_page_title_inner %}Gestione pratiche{% endblock %}
@@ -71,7 +72,7 @@
                         <tr>
                             <td class="txt_a_c">{{ ico.action(path('notary_practice_show', {id: p.id}), 'view', 'Scheda pratica', 'pr') }}</td>
                             <td>
-                                <span class="badge {{ p.status == 'completed' ? 'bg-success' : (p.status == 'archivable' ? 'bg-info' : 'bg-secondary') }}">{{ p.statusLabel }}</span>
+                                {{ practiceStatus.badge(p.status, p.statusLabel) }}
                             </td>
                             <td>
                                 <a href="{{ path('notary_practice_show', {id: p.id}) }}"><strong>{{ p.number }}</strong></a>

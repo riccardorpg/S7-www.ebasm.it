@@ -203,7 +203,6 @@ class PracticeController extends AbstractController
             'assignedStaffIds' => $practice->getStaff()->map(fn (StaffUser $u) => $u->getId())->toArray(),
             // 12.3.2.7 Destinatari possibili della notifica.
             'recipients' => $notifier->recipientsFor($practice),
-            'documentStatuses' => PracticeDocument::STATUSES,
         ]);
     }
 
@@ -234,54 +233,22 @@ class PracticeController extends AbstractController
 
     // ===================== 12.3.2 GESTIONE DOCUMENTALE =====================
 
-    /** 12.3.2.2 Mostra/Nascondi una riga documentale. */
-    #[Route('/{id}/righe/{rid}/visibilita', name: 'agency_row_toggle', methods: ['POST'], requirements: ['id' => '\d+', 'rid' => '\d+'])]
+    /**
+     * 12.3.2.6 Nuovo allegato: come per il notaio (17.1.1.1.5.3) la riga documentale
+     * arriva dal form e il file viene salvato con il "nome allegato" indicato.
+     */
+    #[Route('/{id}/allegati/nuovo', name: 'agency_document_new', methods: ['POST'], requirements: ['id' => '\d+'])]
     #[IsGranted(new Expression("is_granted('edit', 'practices')"))]
-    public function rowToggle(int $id, int $rid, Request $request): RedirectResponse
+    public function documentNew(int $id, Request $request, DocumentStorage $storage): RedirectResponse
     {
-        [$practice, $row] = $this->requireRow($id, $rid);
-        if ($this->isCsrfTokenValid('practiceRow', (string) $request->request->get('_csrf_token'))) {
-            $row->setVisible(!$row->isVisible());
-            $this->slave()->flush();
-            $this->addFlash('success', sprintf('"%s" ora è %s.', $row->getLabel(), $row->isVisible() ? 'richiesto' : 'nascosto'));
-        }
-
-        return $this->backToDocuments($practice);
-    }
-
-    /** 12.3.2.4 Modifica stato del documento. */
-    #[Route('/{id}/righe/{rid}/stato', name: 'agency_row_status', methods: ['POST'], requirements: ['id' => '\d+', 'rid' => '\d+'])]
-    #[IsGranted(new Expression("is_granted('edit', 'practices')"))]
-    public function rowStatus(int $id, int $rid, Request $request): RedirectResponse
-    {
-        [$practice, $row] = $this->requireRow($id, $rid);
-        if ($this->isCsrfTokenValid('practiceRowStatus', (string) $request->request->get('_csrf_token'))) {
-            $status = (string) $request->request->get('status');
-            if (!isset(PracticeDocument::STATUSES[$status])) {
-                $this->addFlash('danger', 'Stato non valido.');
-
-                return $this->backToDocuments($practice);
-            }
-            $row->setStatus($status);
-            $this->slave()->flush();
-            $this->addFlash('success', sprintf('"%s": stato aggiornato a %s.', $row->getLabel(), $row->getStatusLabel()));
-        }
-
-        return $this->backToDocuments($practice);
-    }
-
-    /** 12.3.2.6 Nuovo allegato: file + note dell'agente. */
-    #[Route('/{id}/righe/{rid}/allegati/nuovo', name: 'agency_document_new', methods: ['POST'], requirements: ['id' => '\d+', 'rid' => '\d+'])]
-    #[IsGranted(new Expression("is_granted('edit', 'practices')"))]
-    public function documentNew(int $id, int $rid, Request $request, DocumentStorage $storage): RedirectResponse
-    {
-        [$practice, $row] = $this->requireRow($id, $rid);
+        $practice = $this->requirePracticeWithEditableDocuments($id);
         if (!$this->isCsrfTokenValid('documentNew', (string) $request->request->get('_csrf_token'))) {
             return $this->backToDocuments($practice);
         }
 
         /** @var UploadedFile|null $file */
         $file = $request->files->get('file');
+        $name = trim((string) $request->request->get('name', ''));
         // Sono ammessi solo PDF (controllo sul contenuto, non sull'estensione dichiarata).
         $fileError = $storage->validationError($file);
         if ($fileError !== null) {
@@ -290,15 +257,30 @@ class PracticeController extends AbstractController
             return $this->backToDocuments($practice);
         }
 
+        // L'allegato va appeso a una riga documentale della pratica (12.3.2.5).
+        $row = $this->findRow($practice, (int) $request->request->get('practice_document_id'));
+        if ($row === null) {
+            $this->addFlash('danger', 'Seleziona il documento a cui allegare il file.');
+
+            return $this->backToDocuments($practice);
+        }
+
+        if ($name === '') {
+            $this->addFlash('danger', 'Indica il nome dell\'allegato: è il nome con cui il file viene salvato.');
+
+            return $this->backToDocuments($practice);
+        }
+
         $em = $this->slave();
         $document = (new Document())
-            ->setName($file->getClientOriginalName() ?: 'Allegato')
+            ->setName($name)
             ->setAgentNote(trim((string) $request->request->get('agent_note')) ?: null);
         $row->addDocument($document);
         $em->persist($document);
 
         try {
-            $meta = $storage->store($this->dbName(), $practice, $file);
+            // Il file non conserva il nome originale: prende il "nome allegato" del form.
+            $meta = $storage->store($this->dbName(), $practice, $file, $name);
             $document->setOriginalFilename($meta['name'])
                 ->setStoragePath($meta['path'])
                 ->setMimeType($meta['mime'])
@@ -324,7 +306,7 @@ class PracticeController extends AbstractController
     #[IsGranted(new Expression("is_granted('edit', 'practices')"))]
     public function documentEdit(int $id, int $did, Request $request): RedirectResponse
     {
-        $this->requireEditablePractice($id);
+        $this->requirePracticeWithEditableDocuments($id);
         [$practice, $document] = $this->requireDocument($id, $did);
         if ($this->isCsrfTokenValid('documentEdit', (string) $request->request->get('_csrf_token'))) {
             $name = trim((string) $request->request->get('name'));
@@ -342,7 +324,7 @@ class PracticeController extends AbstractController
     #[IsGranted(new Expression("is_granted('edit', 'practices')"))]
     public function documentDelete(int $id, int $did, Request $request, DocumentStorage $storage): RedirectResponse
     {
-        $this->requireEditablePractice($id);
+        $this->requirePracticeWithEditableDocuments($id);
         [$practice, $document] = $this->requireDocument($id, $did);
         if ($this->isCsrfTokenValid('delete', (string) $request->request->get('_csrf_token'))) {
             $storage->delete($this->dbName(), $document->getStoragePath());
@@ -647,18 +629,32 @@ class PracticeController extends AbstractController
     }
 
     /**
-     * @return array{0: Practice, 1: PracticeDocument}
+     * 12.3.2 Come requireEditablePractice(), ma per i documenti: sono modificabili
+     * solo a pratica aperta. Nascondere i pulsanti non basta, la POST va bloccata.
      */
-    private function requireRow(int $id, int $rid): array
+    private function requirePracticeWithEditableDocuments(int $id): Practice
     {
-        $practice = $this->requireEditablePractice($id);
+        $practice = $this->requirePractice($id);
+        if (!$practice->areDocumentsEditable()) {
+            throw $this->createAccessDeniedException(sprintf(
+                'La pratica è %s: i documenti non sono più modificabili.',
+                mb_strtolower($practice->getStatusLabel())
+            ));
+        }
+
+        return $practice;
+    }
+
+    /** Riga documentale della pratica, per id; null se non le appartiene. */
+    private function findRow(Practice $practice, int $rid): ?PracticeDocument
+    {
         foreach ($practice->getPracticeDocuments() as $row) {
             if ((int) $row->getId() === $rid) {
-                return [$practice, $row];
+                return $row;
             }
         }
 
-        throw $this->createNotFoundException('Documento non trovato in questa pratica.');
+        return null;
     }
 
     /**

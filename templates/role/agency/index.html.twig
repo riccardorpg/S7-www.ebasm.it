@@ -1,5 +1,6 @@
 {% extends 'role/agency/layout.html.twig' %}
 {% import 'components/action_icons.html.twig' as ico %}
+{% import 'components/practice_status.html.twig' as practiceStatus %}
 
 {% block title %} - Scrivania{% endblock %}
 {% block role_page_title_inner %}Scrivania{% endblock %}
@@ -118,7 +119,7 @@
                             {% for p in markedPractices %}
                                 <tr>
                                     <td><span class="badge" style="background:{{ p.mark.color }}; color:{{ p.mark.contrastColor }};">{{ p.mark.value }}</span></td>
-                                    <td><span class="badge {{ p.status == 'completed' ? 'bg-success' : (p.status == 'archivable' ? 'bg-info' : 'bg-secondary') }}">{{ p.statusLabel }}</span></td>
+                                    <td>{{ practiceStatus.badge(p.status, p.statusLabel) }}</td>
                                     <td><a href="{{ path('agency_practice_show', {id: p.id}) }}"><strong>{{ p.number }}</strong></a></td>
                                     <td>{{ p.seller ? p.seller.fullName : '—' }}</td>
                                     <td>{{ p.buyer ? p.buyer.fullName : '—' }}</td>
