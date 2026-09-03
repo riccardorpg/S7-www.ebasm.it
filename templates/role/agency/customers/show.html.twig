@@ -70,16 +70,24 @@
                             {# Un filtro per campo: ogni input lavora sulla propria colonna
                                tramite i data-* della riga (vedi JS in fondo alla pagina). #}
                             <tr class="tr_filter">
+                                {# Stato: scelta multipla in modale (stesso componente dell'elenco pratiche). #}
                                 <td>
-                                    <select class="form-select form-select-sm practice-filter" data-field="status">
-                                        <option value="">Tutti</option>
-                                        <option value="open">Aperta</option>
-                                        <option value="completed">Completata</option>
-                                        <option value="archivable">Archiviabile</option>
+                                    <input type="text" class="form-control form-control-sm cursor_p" id="filter_multi_value_1"
+                                           readonly onclick="filterMulti1()" placeholder="Tutti" autocomplete="off">
+                                    <input type="hidden" id="filter_multi_id_1" value="">
+                                </td>
+                                {# Data creazione: intervallo dal daterangepicker. #}
+                                <td>
+                                    <input type="text" class="form-control form-control-sm cursor_p" id="practiceFilterCreated"
+                                           placeholder="Intervallo" autocomplete="off" readonly>
+                                </td>
+                                <td>
+                                    <select class="form-select form-select-sm practice-filter" data-field="type">
+                                        <option value="">Tutte</option>
+                                        <option value="Con mutuo">Con mutuo</option>
+                                        <option value="Senza mutuo">Senza mutuo</option>
                                     </select>
                                 </td>
-                                <td><input type="text" class="form-control form-control-sm practice-filter" data-field="date" placeholder="Filtra" autocomplete="off"></td>
-                                <td><input type="text" class="form-control form-control-sm practice-filter" data-field="type" placeholder="Filtra" autocomplete="off"></td>
                                 <td><input type="text" class="form-control form-control-sm practice-filter" data-field="seller" placeholder="Filtra" autocomplete="off"></td>
                                 <td><input type="text" class="form-control form-control-sm practice-filter" data-field="buyer" placeholder="Filtra" autocomplete="off"></td>
                                 <td><input type="text" class="form-control form-control-sm practice-filter" data-field="number" placeholder="Filtra" autocomplete="off"></td>
@@ -106,7 +114,7 @@
                         {% for p in practices %}
                             <tr class="practice-row"
                                 data-status="{{ p.status }}"
-                                data-date="{{ p.createdAt ? p.createdAt|date('d/m/Y') : '' }}"
+                                data-date-iso="{{ p.createdAt ? p.createdAt|date('Y-m-d') : '' }}"
                                 data-type="{{ p.typeLabel }}"
                                 data-seller="{{ p.seller ? p.seller.fullName : '' }}"
                                 data-buyer="{{ p.buyer ? p.buyer.fullName : '' }}"
@@ -126,7 +134,7 @@
                                 <td>{{ p.number }}</td>
                                 <td>{{ p.address ?: '—' }}</td>
                                 {# 11.2.3.8 Link alla scheda pratica (12.3). #}
-                                <td class="txt_a_c">{{ ico.action(path('agency_practice_show', {id: p.id}), 'view', 'Apri la scheda', 'green') }}</td>
+                                <td class="txt_a_c">{{ ico.action(path('agency_practice_show', {id: p.id}), 'sheet', 'Apri la scheda', 'green') }}</td>
                             </tr>
                         {% else %}
                             <tr><td colspan="8" class="op_07 text-center">Nessuna pratica collegata a questo cliente.</td></tr>
@@ -146,6 +154,13 @@
 {% endblock %}
 
 {% block modals %}
+    {# 11.2.3 Filtro stato a scelta multipla #}
+    {% include 'components/modals/filter_multi.html.twig' with {
+        number: 1,
+        title: 'Filtra per stato',
+        options: statuses|map((label, value) => {'id': value, 'label': label})
+    } only %}
+
     {% if is_granted('edit', 'customers') %}
         {% embed 'components/modals/form_modal.html.twig' with {type: 'customerEdit', title: 'Modifica cliente', action: path('agency_customer_edit', {id: customer.id}), size: 'modal-lg'} %}
             {% block modalBody %}{{ include('role/agency/customers/_form_fields.html.twig', {prefix: 'customerEdit'}) }}{% endblock %}
@@ -154,8 +169,13 @@
 {% endblock %}
 
 {% block page_javascripts %}
-{# 11.2.3 Filtro delle pratiche lato client, un campo per colonna: lo stato è a
-   corrispondenza esatta (select), gli altri per sottostringa sul valore della colonna. #}
+{# 11.2.3 Filtro delle pratiche lato client: stato a scelta multipla, data creazione a
+   intervallo, tipo a select, il resto per sottostringa. I due componenti vanno inclusi
+   prima dello script sotto, che si aggancia alle funzioni che definiscono. #}
+{% include 'components/js/filter_multi_js.html.twig' with {number: 1} only %}
+{% include 'components/js/daterangepicker_js.html.twig' with {
+    id: 'practiceFilterCreated', format: 'DD-MM-YYYY', hasTimePicker: 'false'
+} only %}
 <script>
     (function () {
         var body = document.getElementById('practiceRows');
@@ -164,6 +184,9 @@
         if (!rows.length) return;
 
         var filters = Array.prototype.slice.call(document.querySelectorAll('.practice-filter'));
+        var statusIds = document.getElementById('filter_multi_id_1');
+        var statusLabels = document.getElementById('filter_multi_value_1');
+        var created = document.getElementById('practiceFilterCreated');
         var noMatch = document.getElementById('practiceNoMatch');
         var counter = document.getElementById('practiceCount');
 
@@ -176,19 +199,48 @@
             });
         });
 
+        /* Stati selezionati nel modale: lista vuota = nessun filtro, cioè tutti. */
+        function selectedStatuses() {
+            return ((statusIds && statusIds.value) || '').split(',').filter(Boolean);
+        }
+
+        function toIso(value) {
+            var m = value.trim().match(/^(\d{2})-(\d{2})-(\d{4})$/);
+
+            return m ? m[3] + '-' + m[2] + '-' + m[1] : null;
+        }
+
+        /* Il daterangepicker scrive "GG-MM-AAAA/GG-MM-AAAA": lo porto in ISO per
+           confrontarlo con data-date-iso della riga, che è già ordinabile. */
+        function selectedRange() {
+            var parts = ((created && created.value) || '').split('/');
+            if (parts.length !== 2) return null;
+            var from = toIso(parts[0]), to = toIso(parts[1]);
+
+            return from && to ? [from, to] : null;
+        }
+
         function apply() {
             var visible = 0;
+            var statuses = selectedStatuses();
+            var range = selectedRange();
 
             rows.forEach(function (row) {
                 var ok = filters.every(function (input) {
                     var needle = (input.value || '').trim().toLowerCase();
                     if (needle === '') return true;
                     var value = row.filterValues[input.dataset.field];
-                    // Lo stato arriva da una select: deve combaciare, non contenere.
-                    return input.dataset.field === 'status'
-                        ? value === needle
-                        : value.indexOf(needle) !== -1;
+                    // Le select filtrano per corrispondenza esatta, i testi per sottostringa.
+                    return input.tagName === 'SELECT' ? value === needle : value.indexOf(needle) !== -1;
                 });
+                if (ok && statuses.length) {
+                    ok = statuses.indexOf(row.dataset.status) !== -1;
+                }
+                if (ok && range) {
+                    // Riga senza data: non può cadere in un intervallo.
+                    var day = row.dataset.dateIso || '';
+                    ok = day !== '' && day >= range[0] && day <= range[1];
+                }
                 row.classList.toggle('d-none', !ok);
                 if (ok) visible++;
             });
@@ -204,10 +256,29 @@
         filters.forEach(function (input) {
             input.addEventListener(input.tagName === 'SELECT' ? 'change' : 'input', apply);
         });
+
         document.getElementById('practiceFilterReset').addEventListener('click', function () {
             filters.forEach(function (input) { input.value = ''; });
+            if (statusIds) statusIds.value = '';
+            if (statusLabels) { statusLabels.value = ''; statusLabels.removeAttribute('title'); }
+            if (created) created.value = '';
             apply();
         });
+
+        /* Il modale a scelta multipla normalmente invia il form: qui non c'è, quindi ci
+           si aggancia al suo "Aggiorna filtro" per rifiltrare le righe già in pagina. */
+        document.addEventListener('DOMContentLoaded', function () {
+            var setMulti = window.setFilterMulti1;
+            if (typeof setMulti === 'function') {
+                window.setFilterMulti1 = function () { setMulti(); apply(); };
+            }
+        });
+
+        if (window.jQuery) {
+            jQuery(function ($) {
+                $('#practiceFilterCreated').on('apply.daterangepicker cancel.daterangepicker', apply);
+            });
+        }
 
         apply();
     })();

@@ -104,7 +104,7 @@
                         {# 12.1.8 Spazio occupato dagli allegati #}
                         <td class="txt_a_c">{{ p.sizeMb > 0 ? p.sizeMb|number_format(2, ',', '.') ~ ' MB' : '—' }}</td>
                         {# 12.1.9 Link alla scheda #}
-                        <td class="txt_a_c">{{ ico.action(path('agency_practice_show', {id: p.id}), 'view', 'Apri la scheda', 'green') }}</td>
+                        <td class="txt_a_c">{{ ico.action(path('agency_practice_show', {id: p.id}), 'sheet', 'Apri la scheda', 'green') }}</td>
                     </tr>
                 {% else %}
                     <tr><td colspan="9" class="op_07 text-center">Nessuna pratica trovata.</td></tr>

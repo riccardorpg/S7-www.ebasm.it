@@ -93,6 +93,8 @@ class CustomerController extends AbstractController
         return $this->render('role/agency/customers/show.html.twig', [
             'customer' => $customer,
             'practices' => $practices,
+            // 11.2.3 Voci del filtro stato a scelta multipla.
+            'statuses' => Practice::STATUSES,
         ]);
     }
 

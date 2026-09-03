@@ -70,7 +70,7 @@
                     <tbody>
                     {% for p in records %}
                         <tr>
-                            <td class="txt_a_c">{{ ico.action(path('notary_practice_show', {id: p.id}), 'view', 'Scheda pratica', 'pr') }}</td>
+                            <td class="txt_a_c">{{ ico.action(path('notary_practice_show', {id: p.id}), 'sheet', 'Scheda pratica', 'pr') }}</td>
                             <td>
                                 {{ practiceStatus.badge(p.status, p.statusLabel) }}
                             </td>

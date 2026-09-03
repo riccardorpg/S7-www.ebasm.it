@@ -24,8 +24,10 @@
     <li class="nav-item"><a class="nav-link" href="{{ path('agency_practice_archive_download', {id: practice.id}) }}">Scarica archivio</a></li>
     {% if canEdit %}
         <li class="nav-item"><a class="nav-link" href="javascript:practiceEditShow()">Modifica</a></li>
-        {# 12.3.5 Archivia pratica #}
-        <li class="nav-item"><a class="nav-link" href="javascript:practiceArchiveShow()">Archivia</a></li>
+        {# 12.3.5 / 12.3.5.2 Archivia: solo col via libera del notaio (stato "archiviabile"). #}
+        {% if practice.canBeArchived %}
+            <li class="nav-item"><a class="nav-link" href="javascript:practiceArchiveShow()">Archivia</a></li>
+        {% endif %}
     {% endif %}
 {% endblock %}
 
@@ -240,41 +242,39 @@
                 {# ===== 12.3.3 Gestione dello staff ===== #}
                 <div class="tab-pane fade" id="tab-staff">
                     <p class="op_07 font_13">
-                        Gli amministratori dell'agenzia accedono a tutte le pratiche. Qui scegli chi altro può aprire questa.
+                        Gli amministratori dell'agenzia accedono a tutte le pratiche. Qui sotto chi altro può aprire questa.
                     </p>
-                    <form method="post" action="{{ path('agency_practice_staff', {id: practice.id}) }}">
-                        <input type="hidden" name="_csrf_token" value="{{ csrf_token('practiceStaff') }}">
-                        <table class="table table-bordered align-middle m_b_none">
-                            <thead>
-                                <tr>
-                                    <th class="td_w_50p txt_a_c">Accesso</th>
-                                    <th>Cognome e nome</th>
-                                    <th>E-mail</th>
-                                    <th class="td_w_120p">Ruolo</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                            {% for u in staffMembers %}
-                                <tr>
-                                    <td class="txt_a_c">
-                                        <input class="form-check-input" type="checkbox" name="staff[]" value="{{ u.id }}"
-                                               id="staff_{{ u.id }}"{{ u.id in assignedStaffIds ? ' checked' : '' }}{{ canEdit ? '' : ' disabled' }}>
-                                    </td>
-                                    <td><label class="m_b_none" for="staff_{{ u.id }}">{{ u.surname }} {{ u.name }}</label></td>
-                                    <td>{{ u.email }}</td>
-                                    <td><span class="badge bg-secondary">{{ u.staffRoleLabel }}</span></td>
-                                </tr>
-                            {% else %}
-                                <tr><td colspan="4" class="op_07 text-center">Nessun membro dello staff da abilitare: ci sono solo amministratori.</td></tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
-                        {% if canEdit and staffMembers|length %}
-                            <div class="p_t_15p d-flex justify-content-end">
-                                <button type="submit" class="button button-3d button-small button-green m-0">Salva accessi</button>
-                            </div>
-                        {% endif %}
-                    </form>
+                    {% if canEdit and staffMembers|length %}
+                        <div class="d-flex justify-content-end m_b_10p">
+                            <a href="javascript:practiceStaffOpen()" class="button button-3d button-mini button-amber m-0">Modifica</a>
+                        </div>
+                    {% endif %}
+                    <table class="table table-bordered align-middle m_b_none">
+                        <thead>
+                            <tr>
+                                <th>Cognome e nome</th>
+                                <th>E-mail</th>
+                                <th class="td_w_120p">Ruolo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for u in practice.staff %}
+                            <tr>
+                                <td>{{ u.surname }} {{ u.name }}</td>
+                                <td>{{ u.email }}</td>
+                                <td><span class="badge bg-secondary">{{ u.staffRoleLabel }}</span></td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="3" class="op_07 text-center">
+                                {% if staffMembers|length %}
+                                    Nessun accesso assegnato: solo gli amministratori possono aprire questa pratica.
+                                {% else %}
+                                    Nessun membro dello staff da abilitare: ci sono solo amministratori.
+                                {% endif %}
+                            </td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
 
                 {# ===== 12.3.4 Gestione degli avvisi ===== #}
@@ -383,6 +383,30 @@
             {% block modalSubmit %}Carica{% endblock %}
         {% endembed %}
 
+        {# 12.3.3 Chi può aprire la pratica: uno switch per membro dello staff. #}
+        {% if staffMembers|length %}
+            {% embed 'components/modals/form_modal.html.twig' with {
+                type: 'practiceStaff', title: 'Accessi alla pratica', action: path('agency_practice_staff', {id: practice.id})
+            } %}
+                {% block modalBody %}
+                    <p class="op_07 font_13">
+                        Gli amministratori entrano comunque: qui scegli chi altro può aprire la pratica.
+                    </p>
+                    {% for u in staffMembers %}
+                        <div class="form-check form-switch m_b_5p">
+                            <input class="form-check-input" type="checkbox" role="switch" name="staff[]" value="{{ u.id }}"
+                                   id="practiceStaff_{{ u.id }}"{{ u.id in assignedStaffIds ? ' checked' : '' }}>
+                            <label class="form-check-label" for="practiceStaff_{{ u.id }}">
+                                {{ u.surname }} {{ u.name }}
+                                <span class="op_07 font_13">— {{ u.email }} · {{ u.staffRoleLabel }}</span>
+                            </label>
+                        </div>
+                    {% endfor %}
+                {% endblock %}
+                {% block modalSubmit %}Salva accessi{% endblock %}
+            {% endembed %}
+        {% endif %}
+
         {# 12.3.2.5.5 Modifica allegato #}
         {% embed 'components/modals/form_modal.html.twig' with {type: 'documentEdit', title: 'Modifica allegato'} %}
             {% block modalBody %}
@@ -433,7 +457,9 @@
         {% include 'components/modals/delete_modal.html.twig' with {type: 'document', title: 'Allegato', text: 'eliminerai l\'allegato selezionato e il relativo file'} only %}
         {% include 'components/modals/delete_modal.html.twig' with {type: 'alert', title: 'Avviso', text: 'eliminerai l\'avviso selezionato'} only %}
 
-        {# 12.3.5.1 Alert sul processo di archiviazione #}
+        {# 12.3.5.1 Alert sul processo di archiviazione: il pulsante che lo apre c'è
+           solo a pratica archiviabile, quindi qui non serve il caso contrario. #}
+        {% if practice.canBeArchived %}
         <div id="practiceArchiveModal" class="modal fade" tabindex="-1" role="dialog">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
@@ -442,28 +468,17 @@
                         <div class="modal-header"><h3 class="modal-title">Archivia pratica</h3></div>
                         <div class="modal-stripe"></div>
                         <div class="modal-body">
-                            {% if practice.canBeArchived %}
-                                <label class="modal_subtitle">Attenzione!</label>
-                                <p class="modal-paragraph">
-                                    Archiviando la pratica <strong>{{ practice.number }}</strong> la chiudi definitivamente:
-                                    non sarà più possibile modificare dati, documenti, staff e avvisi.
-                                    Gli allegati restano consultabili e scaricabili dall'archivio.
-                                </p>
-                                <p class="modal-paragraph">Sei sicuro di voler proseguire?</p>
-                            {% else %}
-                                {# 12.3.5.2 Verifica del via libera del notaio #}
-                                <label class="modal_subtitle">Non ancora archiviabile</label>
-                                <p class="modal-paragraph">
-                                    La pratica è in stato <strong>{{ practice.statusLabel }}</strong>.
-                                    Puoi archiviarla solo dopo che il notaio l'ha messa in <strong>archiviabile</strong>.
-                                </p>
-                            {% endif %}
+                            <label class="modal_subtitle">Attenzione!</label>
+                            <p class="modal-paragraph">
+                                Archiviando la pratica <strong>{{ practice.number }}</strong> la chiudi definitivamente:
+                                non sarà più possibile modificare dati, documenti, staff e avvisi.
+                                Gli allegati restano consultabili e scaricabili dall'archivio.
+                            </p>
+                            <p class="modal-paragraph">Sei sicuro di voler proseguire?</p>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="button button-3d button-small button-red f_left" data-bs-dismiss="modal">Annulla</button>
-                            {% if practice.canBeArchived %}
-                                <button type="submit" class="button button-3d button-small button-green f_right">Archivia</button>
-                            {% endif %}
+                            <button type="submit" class="button button-3d button-small button-green f_right">Archivia</button>
                         </div>
                     </form>
                 </div>
@@ -477,6 +492,7 @@
                 window.practiceArchiveShow = function () { modal.show(); };
             })();
         </script>
+        {% endif %}
     {% endif %}
 {% endblock %}
 
@@ -527,6 +543,12 @@
         document.getElementById('documentEdit_name').value = link.dataset.docName || '';
         document.getElementById('documentEdit_note').value = link.dataset.docNote || '';
         documentEditShow();
+    }
+
+    /* 12.3.3 Accessi alla pratica: il modale parte sempre dagli accessi salvati. */
+    function practiceStaffOpen() {
+        document.getElementById('practiceStaffForm').reset();
+        practiceStaffShow();
     }
 
     function practiceNotifyOpen() { practiceNotifyShow(); }

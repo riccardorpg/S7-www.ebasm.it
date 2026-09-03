@@ -124,7 +124,7 @@
                                     <td>{{ p.seller ? p.seller.fullName : '—' }}</td>
                                     <td>{{ p.buyer ? p.buyer.fullName : '—' }}</td>
                                     <td>{{ p.address ?: '—' }}</td>
-                                    <td class="txt_a_c">{{ ico.action(path('agency_practice_show', {id: p.id}), 'view', 'Apri la scheda', 'green') }}</td>
+                                    <td class="txt_a_c">{{ ico.action(path('agency_practice_show', {id: p.id}), 'sheet', 'Apri la scheda', 'green') }}</td>
                                 </tr>
                             {% endfor %}
                             </tbody>

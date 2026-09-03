@@ -76,7 +76,7 @@
                     {% for c in records %}
                         {% set status = c.statusLabel %}
                         <tr>
-                            <td class="txt_a_c">{{ ico.action(path('admin_client_show', {id: c.id}), 'view', 'Scheda', 'pr') }}</td>
+                            <td class="txt_a_c">{{ ico.action(path('admin_client_show', {id: c.id}), 'sheet', 'Scheda', 'pr') }}</td>
                             <td><span class="badge {{ status == 'Attivo' ? 'bg-success' : (status == 'Demo' ? 'bg-info' : (status == 'Scaduto' ? 'bg-danger' : 'bg-secondary')) }}">{{ status }}</span></td>
                             <td>{{ c.code }}</td>
                             <td>{{ c.clientTypeLabel }}</td>

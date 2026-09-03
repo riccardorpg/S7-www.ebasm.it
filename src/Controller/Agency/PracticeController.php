@@ -427,7 +427,7 @@ class PracticeController extends AbstractController
     {
         $practice = $this->requireEditablePractice($id);
         if (!$this->isCsrfTokenValid('practiceStaff', (string) $request->request->get('_csrf_token'))) {
-            return $this->redirectToRoute('agency_practice_show', ['id' => $id], Response::HTTP_SEE_OTHER);
+            return $this->backToTab($practice, 'staff');
         }
 
         $em = $this->slave();
@@ -442,7 +442,7 @@ class PracticeController extends AbstractController
         $em->flush();
         $this->addFlash('success', 'Accessi alla pratica aggiornati.');
 
-        return $this->redirectToRoute('agency_practice_show', ['id' => $id], Response::HTTP_SEE_OTHER);
+        return $this->backToTab($practice, 'staff');
     }
 
     // ===================== 12.3.4 AVVISI =====================
@@ -691,18 +691,21 @@ class PracticeController extends AbstractController
 
     private function backToDocuments(Practice $practice): RedirectResponse
     {
+        return $this->backToTab($practice, 'documenti');
+    }
+
+    /** Torna alla scheda sulla tab da cui si è partiti (la ripristina l'hash). */
+    private function backToTab(Practice $practice, string $tab): RedirectResponse
+    {
         return $this->redirect(
-            $this->generateUrl('agency_practice_show', ['id' => $practice->getId()]) . '#tab-documenti',
+            $this->generateUrl('agency_practice_show', ['id' => $practice->getId()]) . '#tab-' . $tab,
             Response::HTTP_SEE_OTHER
         );
     }
 
     private function backToAlerts(Practice $practice): RedirectResponse
     {
-        return $this->redirect(
-            $this->generateUrl('agency_practice_show', ['id' => $practice->getId()]) . '#tab-avvisi',
-            Response::HTTP_SEE_OTHER
-        );
+        return $this->backToTab($practice, 'avvisi');
     }
 
     /**
