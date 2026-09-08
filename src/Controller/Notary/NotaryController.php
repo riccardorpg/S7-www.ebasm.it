@@ -8,6 +8,7 @@ use App\Entity\Slave\Practice;
 use App\Entity\Slave\PracticeDocument;
 use App\Service\CompanyService;
 use App\Service\DocumentStorage;
+use App\Service\NotaryAgencyAccess;
 use Doctrine\Persistence\ManagerRegistry;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -31,6 +32,7 @@ class NotaryController extends AbstractController
     public function __construct(
         private readonly ManagerRegistry $registry,
         private readonly CompanyService $companyService,
+        private readonly NotaryAgencyAccess $agencyAccess,
     ) {
     }
 
@@ -57,7 +59,7 @@ class NotaryController extends AbstractController
         $id = $request->request->get('company_id');
         $company = $id ? $this->registry->getManager('master')->getRepository(Company::class)->find($id) : null;
         // Deve essere attiva E tra le agenzie abbinate al notaio.
-        if ($company === null || !$company->isActive() || !$this->getUser()->hasCompany($company)) {
+        if ($company === null || !$this->agencyAccess->hasAccess($this->getUser(), $company)) {
             $this->addFlash('danger', 'Agenzia non valida o non autorizzata.');
 
             return $this->redirectToRoute('notary_index');
@@ -95,8 +97,8 @@ class NotaryController extends AbstractController
             'status' => trim((string) $request->query->get('f_status', '')),
         ];
 
-        // L'accesso è già garantito a livello di agenzia (relazione notaio↔Company):
-        // dentro l'agenzia autorizzata il notaio vede tutte le pratiche.
+        // 17.1 L'accesso all'agenzia è già stato verificato (una pratica assegnata al
+        // notaio in questo slave): dentro l'agenzia vede tutte le sue pratiche.
         /** @var \App\Repository\Slave\PracticeRepository $repo */
         $repo = $this->registry->getManager('slave')->getRepository(Practice::class);
         $qb = $repo->accessibleQueryBuilder(null);
@@ -468,16 +470,13 @@ class NotaryController extends AbstractController
     }
 
     /**
-     * Agenzie (attive) abbinate al notaio corrente, ordinate per nome.
+     * 17.1 Agenzie (attive) in cui il notaio ha almeno una pratica assegnata, per nome.
      *
      * @return Company[]
      */
     private function allowedCompanies(): array
     {
-        $companies = $this->getUser()->getCompanies()->filter(fn (Company $c) => $c->isActive())->toArray();
-        usort($companies, fn (Company $a, Company $b) => strcasecmp((string) $a->getName(), (string) $b->getName()));
-
-        return $companies;
+        return $this->agencyAccess->companiesFor($this->getUser());
     }
 
     /**
@@ -487,7 +486,7 @@ class NotaryController extends AbstractController
     private function currentAllowedCompany(): ?Company
     {
         $company = $this->companyService->getCurrentCompany();
-        if ($company === null || !$this->getUser()->hasCompany($company)) {
+        if ($company === null || !$this->agencyAccess->hasAccess($this->getUser(), $company)) {
             return null;
         }
 

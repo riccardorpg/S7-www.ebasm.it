@@ -57,7 +57,7 @@
                         <tr>
                             <th class="td_w_200p">{{ ico.sort('Notaio', 'u.surname') }}</th>
                             <th class="td_w_200p">{{ ico.sort('E-mail', 'u.email') }}</th>
-                            <th class="td_w_200p">Agenzie abilitate</th>
+                            <th class="td_w_200p">Agenzie collegate</th>
                             <th class="td_w_100p txt_a_c">Azioni</th>
                         </tr>
                     </thead>
@@ -66,18 +66,17 @@
                         <tr>
                             <td>{{ n.fullName }}</td>
                             <td>{{ n.email }}</td>
+                            {# 17.1 Non c'è abbinamento: l'agenzia compare se ha assegnato una pratica al notaio. #}
                             <td>
-                                {% if n.companies|length %}
-                                    {% for c in n.companies %}<span class="badge bg-secondary">{{ c.code }}</span> - {{ c.name }}{% if not loop.last %}<br>{% endif %}{% endfor %}
+                                {% set agencies = agenciesByEmail[n.email]|default([]) %}
+                                {% if agencies|length %}
+                                    {% for c in agencies %}<span class="badge bg-secondary">{{ c.code }}</span> - {{ c.name }}{% if not loop.last %}<br>{% endif %}{% endfor %}
                                 {% else %}
                                     <span class="op_07">Nessuna</span>
                                 {% endif %}
                             </td>
                             <td class="txt_a_c text-nowrap">
-                                {% set ids = [] %}
-                                {% for c in n.companies %}{% set ids = ids|merge([c.id]) %}{% endfor %}
                                 {{ ico.action("javascript:notaryEditShow(" ~ path('admin_notary_edit', {id: n.id})|json_encode ~ ", " ~ n.name|default('')|json_encode ~ ", " ~ n.surname|default('')|json_encode ~ ", " ~ n.email|json_encode ~ ")", 'edit', 'Modifica dati', 'pr') }}
-                                {{ ico.action("javascript:notaryAgenciesShow(" ~ path('admin_notary_agencies', {id: n.id})|json_encode ~ ", " ~ ids|json_encode ~ ", " ~ n.fullName|json_encode ~ ")", 'binded', 'Modifica agenzie', 'pr') }}
                                 {{ ico.action("javascript:notaryCredConfirm(" ~ path('admin_notary_credentials', {id: n.id})|json_encode ~ ", " ~ csrf_token('notaryCredentials')|json_encode ~ ", " ~ ('invierai le credenziali di accesso a ' ~ n.email)|json_encode ~ ")", 'send', 'Invia credenziali', 'pr') }}
                             </td>
                         </tr>
@@ -132,36 +131,6 @@
         </div>
     </div>
 
-    <div id="notaryAgenciesModal" class="modal fade" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <form id="notaryAgenciesForm" method="post" action="">
-                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('notaryAgencies') }}">
-                    <div class="modal-header"><h3 class="modal-title">Agenzie abilitate — <span id="notaryAgenciesName" style="color:inherit"></span></h3></div>
-                    <div class="modal-stripe"></div>
-                    <div class="modal-body">
-                        <p class="op_07">Seleziona le agenzie che il notaio può vedere e gestire.</p>
-                        <div class="row g-2">
-                        {% for c in companies %}
-                            <div class="col-12">
-                                <label class="d-flex align-items-center gap-2 p-1 m_b_none">
-                                    <input type="checkbox" class="notaryAgencyCb form-check-input m_b_none" name="company_ids[]" value="{{ c.id }}">
-                                    <span><span class="badge bg-secondary">{{ c.code }}</span> {{ c.name }}</span>
-                                </label>
-                            </div>
-                        {% else %}
-                            <div class="col-12 op_07">Nessuna agenzia attiva.</div>
-                        {% endfor %}
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="button button-3d button-small button-red f_left" data-bs-dismiss="modal">Annulla</button>
-                        <button type="submit" class="button button-3d button-small button-green f_right">Salva</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
 {% endblock %}
 
 {% block page_javascripts %}
@@ -172,20 +141,6 @@
     <script>
         // I modali sono in #divModals, renderizzato DOPO questo blocco: inizializzo al DOMContentLoaded.
         document.addEventListener('DOMContentLoaded', function () {
-            var agEl = document.getElementById('notaryAgenciesModal');
-            if (agEl) {
-                var agModal = new bootstrap.Modal(agEl, {backdrop: 'static', keyboard: false});
-                window.notaryAgenciesShow = function (url, selectedIds, name) {
-                    document.getElementById('notaryAgenciesForm').action = url;
-                    document.getElementById('notaryAgenciesName').textContent = name || '';
-                    var ids = (selectedIds || []).map(String);
-                    document.querySelectorAll('.notaryAgencyCb').forEach(function (cb) {
-                        cb.checked = ids.indexOf(cb.value) !== -1;
-                    });
-                    agModal.show();
-                };
-            }
-
             var edEl = document.getElementById('notaryEditModal');
             if (edEl) {
                 var edModal = new bootstrap.Modal(edEl, {backdrop: 'static', keyboard: false});

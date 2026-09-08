@@ -6,6 +6,7 @@ use App\Entity\Master\User;
 use App\Repository\Master\CompanyRepository;
 use App\Repository\Master\UserRepository;
 use App\Service\AppMailer;
+use App\Service\NotaryAgencyAccess;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -17,8 +18,10 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
- * Gestione notai (ROLE_NOTARY): elenco, creazione, modifica dati, invio credenziali
- * e assegnazione delle agenzie (clienti) che ciascun notaio può vedere (notaio↔Company).
+ * Gestione notai (ROLE_NOTARY): elenco, creazione, modifica dati e invio credenziali.
+ *
+ * 17.1 Le agenzie NON si abbinano da qui: l'accesso lo dà l'agenzia assegnando una
+ * pratica al notaio, quindi l'elenco mostra solo ciò che ne risulta (NotaryAgencyAccess).
  */
 #[Route('/amministratore/notai')]
 #[IsGranted('ROLE_ADMIN')]
@@ -27,6 +30,7 @@ class NotaryUserController extends AbstractController
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly UserPasswordHasherInterface $hasher,
+        private readonly NotaryAgencyAccess $agencyAccess,
     ) {
     }
 
@@ -49,8 +53,12 @@ class NotaryUserController extends AbstractController
         if ($filters['email'] !== '') {
             $qb->andWhere('u.email LIKE :em')->setParameter('em', '%' . $filters['email'] . '%');
         }
+        // 17.1 "Agenzia" filtra su chi ha una pratica assegnata in quell'agenzia: le
+        // e-mail arrivano dallo slave, qui restano un semplice IN sugli utenti master.
         if ($filters['agency'] !== '') {
-            $qb->innerJoin('u.companies', 'c')->andWhere('c.id = :aid')->setParameter('aid', (int) $filters['agency']);
+            $company = $companies->find((int) $filters['agency']);
+            $emails = $company !== null ? $this->agencyAccess->assignedEmails($company) : [];
+            $qb->andWhere('u.email IN (:emails)')->setParameter('emails', $emails !== [] ? $emails : ['']);
         }
 
         $records = $paginator->paginate(
@@ -69,6 +77,8 @@ class NotaryUserController extends AbstractController
             'records' => $records,
             'filters' => $filters,
             'companies' => $companies->findBy(['active' => true], ['name' => 'ASC']),
+            // 17.1 Agenzie di ciascun notaio, per e-mail: una lettura per agenzia.
+            'agenciesByEmail' => $this->agencyAccess->companiesByNotaryEmail(),
         ]);
     }
 
@@ -178,39 +188,6 @@ class NotaryUserController extends AbstractController
                 ? 'Credenziali inviate a ' . $notary->getEmail() . '.'
                 : 'Credenziali generate, ma l\'invio dell\'e-mail a ' . $notary->getEmail() . ' non è riuscito.'
         );
-
-        return $this->redirectToRoute('admin_notaries');
-    }
-
-    /** Salva le agenzie abbinate al notaio. */
-    #[Route('/{id}/agenzie', name: 'admin_notary_agencies', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function saveAgencies(int $id, Request $request, UserRepository $users, CompanyRepository $companies): RedirectResponse
-    {
-        $notary = $this->findNotary($id, $users);
-        if ($notary === null) {
-            return $this->redirectToRoute('admin_notaries');
-        }
-        if (!$this->isCsrfTokenValid('notaryAgencies', (string) $request->request->get('_csrf_token'))) {
-            $this->addFlash('danger', 'Token non valido, riprova.');
-
-            return $this->redirectToRoute('admin_notaries');
-        }
-
-        $ids = array_map('intval', (array) $request->request->all('company_ids'));
-        $selected = $ids !== [] ? $companies->findBy(['id' => $ids]) : [];
-
-        // Sincronizza la collezione: rimuove le non selezionate, aggiunge le nuove.
-        foreach ($notary->getCompanies()->toArray() as $existing) {
-            if (!in_array($existing, $selected, true)) {
-                $notary->removeCompany($existing);
-            }
-        }
-        foreach ($selected as $company) {
-            $notary->addCompany($company);
-        }
-        $this->em->flush();
-
-        $this->addFlash('success', sprintf('Agenzie di %s aggiornate (%d).', $notary->getFullName(), count($selected)));
 
         return $this->redirectToRoute('admin_notaries');
     }
