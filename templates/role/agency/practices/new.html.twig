@@ -1,5 +1,8 @@
 {% extends 'role/agency/layout.html.twig' %}
 
+{# 12.2.1 / 12.2.2 Il "+" accanto alle parti crea un cliente: serve il permesso sull'anagrafica. #}
+{% set canAddCustomer = is_granted('edit', 'customers') %}
+
 {% block title %} - Nuova pratica{% endblock %}
 {% block role_page_title_inner %}Nuova pratica{% endblock %}
 
@@ -18,8 +21,13 @@
         <div class="container">
             {% if customers|length < 2 %}
                 <div class="alert alert-warning">
-                    Per aprire una pratica servono almeno due clienti in anagrafica (venditore e acquirente).
-                    <a href="{{ path('agency_customers') }}">Vai ai clienti</a>.
+                    Per aprire una pratica servono un venditore e un acquirente in anagrafica.
+                    {% if canAddCustomer %}
+                        Puoi crearli qui col <strong>+</strong> accanto ai due campi, oppure
+                        <a href="{{ path('agency_customers') }}">vai ai clienti</a>.
+                    {% else %}
+                        <a href="{{ path('agency_customers') }}">Vai ai clienti</a>.
+                    {% endif %}
                 </div>
             {% endif %}
 
@@ -27,14 +35,16 @@
                 <input type="hidden" name="_csrf_token" value="{{ csrf_token('practiceNew') }}">
 
                 {% include 'role/agency/practices/_form_fields.html.twig' with {
-                    prefix: 'practiceNew', marks: marks, tags: tags, practice: null, geoNumber: 1
+                    prefix: 'practiceNew', marks: marks, tags: tags, practice: null, geoNumber: 1,
+                    quickCustomer: canAddCustomer, old: old, notaries: notaries
                 } only %}
 
                 {# Stessa disposizione dei modali: Annulla a sinistra, azione a destra. #}
                 <div class="d-flex justify-content-between align-items-center p_t_20p">
                     <a href="{{ path('agency_practices') }}" class="button button-3d button-small button-red m-0">Annulla</a>
                     {# 12.2.8 Crea la pratica e apre la scheda #}
-                    <button type="submit" class="button button-3d button-small button-green m-0"{{ customers|length < 2 ? ' disabled' : '' }}>
+                    <button type="submit" class="button button-3d button-small button-green m-0"
+                            data-needs-customers{{ customers|length < 2 ? ' disabled' : '' }}>
                         Inserisci
                     </button>
                 </div>
@@ -46,6 +56,13 @@
 {% block modals %}
     {# Ricerca comune per il picker Città/CAP #}
     {% include 'components/modals/city.html.twig' with {number: 1, cities: []} only %}
+
+    {# 12.2.1 / 12.2.2 Nuovo cliente al volo dal "+" accanto alle parti #}
+    {% if canAddCustomer %}
+        {% include 'role/agency/practices/_customer_quick_new.html.twig' with {
+            prefix: 'practiceNew', modalToClose: ''
+        } only %}
+    {% endif %}
 {% endblock %}
 
 {% block page_javascripts %}

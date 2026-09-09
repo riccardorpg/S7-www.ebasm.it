@@ -32,6 +32,7 @@ class SyncPermissionsCommand extends Command
         'customers' => ['label' => 'Clienti', 'priority' => 20],
         'staff' => ['label' => 'Staff', 'priority' => 30],
         'configurations' => ['label' => 'Configurazioni', 'priority' => 40],
+        'company' => ['label' => 'Anagrafica agenzia', 'priority' => 50],
     ];
 
     public function __construct(

@@ -9,6 +9,7 @@ use App\Entity\Slave\PracticeDocument;
 use App\Service\CompanyService;
 use App\Service\DocumentStorage;
 use App\Service\NotaryAgencyAccess;
+use App\Service\PracticeNotifier;
 use Doctrine\Persistence\ManagerRegistry;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -195,6 +196,40 @@ class NotaryController extends AbstractController
         $practice->setStatus($target);
         $this->registry->getManager('slave')->flush();
         $this->addFlash('success', 'Stato pratica aggiornato: ' . $practice->getStatusLabel() . '.');
+
+        return $this->redirectToRoute('notary_practice_show', ['id' => $id]);
+    }
+
+    /**
+     * 17.1.1.3 "Ho messo delle note": avvisa via e-mail l'agente che segue la pratica.
+     * Le note stanno già sugli allegati, questo è solo il campanello.
+     */
+    #[Route('/pratiche/{id}/note-inserite', name: 'notary_practice_notes_alert', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function notesAlert(int $id, Request $request, PracticeNotifier $notifier): RedirectResponse
+    {
+        [$company, $practice] = $this->requirePractice($id);
+        if ($practice === null) {
+            return $this->redirectToRoute($company ? 'notary_practice_show' : 'notary_index', $company ? ['id' => $id] : []);
+        }
+        if (!$this->isCsrfTokenValid('notaryNotes', (string) $request->request->get('_csrf_token'))) {
+            return $this->redirectToRoute('notary_practice_show', ['id' => $id]);
+        }
+
+        $recipients = $notifier->agentEmailsFor($practice, $company);
+        if ($recipients === []) {
+            $this->addFlash('danger', 'Nessun indirizzo a cui scrivere: l\'agenzia non ha un contatto per questa pratica.');
+
+            return $this->redirectToRoute('notary_practice_show', ['id' => $id]);
+        }
+
+        $sent = $notifier->notifyNotaryNotes($practice, $recipients, $this->getUser()->getFullName());
+        if ($sent === 0) {
+            $this->addFlash('danger', 'Invio dell\'avviso non riuscito: riprova più tardi.');
+        } elseif ($sent === count($recipients)) {
+            $this->addFlash('success', sprintf('Avviso inviato a %s.', implode(', ', $recipients)));
+        } else {
+            $this->addFlash('warning', sprintf('Avviso inviato a %d destinatari su %d.', $sent, count($recipients)));
+        }
 
         return $this->redirectToRoute('notary_practice_show', ['id' => $id]);
     }

@@ -90,9 +90,28 @@ class Company
     #[ORM\Column(name: 'storage_quota_mb', type: 'integer', options: ['default' => 5120])]
     private int $storageQuotaMb = 5120;
 
+    /**
+     * 7.1.9.8 Logo dell'agenzia: nome del file dentro la cartella del tenant
+     * (vedi CompanyLogoStorage). Lo carica l'agenzia dalla propria anagrafica.
+     */
+    #[ORM\Column(type: 'string', length: 191, nullable: true)]
+    private ?string $logo = null;
+
     // --- 7.1.9.7 Contratto termini e condizioni ---
     #[ORM\Column(name: 'terms_accepted_at', type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $termsAcceptedAt = null;
+
+    public function getLogo(): ?string
+    {
+        return $this->logo;
+    }
+
+    public function setLogo(?string $logo): static
+    {
+        $this->logo = $logo;
+
+        return $this;
+    }
 
     public function getCode(): ?string
     {

@@ -10,6 +10,7 @@ use Doctrine\Persistence\ManagerRegistry;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\ExpressionLanguage\Expression;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -109,7 +110,10 @@ class CustomerController extends AbstractController
 
         $em = $this->slave();
         $customer = new Customer();
-        if (!$this->fill($customer, $request, $em)) {
+        $error = $this->fill($customer, $request, $em);
+        if ($error !== null) {
+            $this->addFlash('danger', $error);
+
             return $this->redirectToRoute('agency_customers', [], Response::HTTP_SEE_OTHER);
         }
 
@@ -118,6 +122,37 @@ class CustomerController extends AbstractController
         $this->addFlash('success', 'Cliente "' . $customer->getFullName() . '" creato.');
 
         return $this->redirectToRoute('agency_customer_show', ['id' => $customer->getId()], Response::HTTP_SEE_OTHER);
+    }
+
+    /**
+     * 12.2.1 / 12.2.2 Nuovo cliente "al volo" dal form della pratica: stessi campi e
+     * stessi controlli del form completo, ma risposta JSON, così la pratica in
+     * compilazione non si perde e l'autocomplete può selezionarlo subito.
+     */
+    #[Route('/api/nuovo', name: 'agency_customer_quick_new', methods: ['POST'])]
+    #[IsGranted(new Expression("is_granted('edit', 'customers')"))]
+    public function quickNew(Request $request): JsonResponse
+    {
+        if (!$this->isCsrfTokenValid('customerQuickNew', (string) $request->request->get('_csrf_token'))) {
+            return $this->json(['ok' => false, 'error' => 'Sessione scaduta: ricarica la pagina.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $em = $this->slave();
+        $customer = new Customer();
+        $error = $this->fill($customer, $request, $em);
+        if ($error !== null) {
+            return $this->json(['ok' => false, 'error' => $error], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $em->persist($customer);
+        $em->flush();
+
+        return $this->json([
+            'ok' => true,
+            'id' => $customer->getId(),
+            // Stessa etichetta di agency_customer_search: la tendina e il campo coincidono.
+            'label' => $customer->getFullName() . ($customer->getFiscalCode() ? ' — ' . $customer->getFiscalCode() : ''),
+        ]);
     }
 
     /** Modifica dei dati anagrafici e fiscali dalla scheda. */
@@ -135,7 +170,10 @@ class CustomerController extends AbstractController
             throw $this->createNotFoundException('Cliente non trovato.');
         }
 
-        if ($this->fill($customer, $request, $em, $id)) {
+        $error = $this->fill($customer, $request, $em, $id);
+        if ($error !== null) {
+            $this->addFlash('danger', $error);
+        } else {
             $em->flush();
             $this->addFlash('success', 'Cliente aggiornato.');
         }
@@ -153,15 +191,18 @@ class CustomerController extends AbstractController
         return $em;
     }
 
-    /** 11.2.1 / 11.2.2 Dati anagrafici e fiscali. */
-    private function fill(Customer $customer, Request $request, EntityManagerInterface $em, ?int $exceptId = null): bool
+    /**
+     * 11.2.1 / 11.2.2 Dati anagrafici e fiscali.
+     *
+     * Ritorna il messaggio d'errore, null se i dati sono validi: così lo stesso codice
+     * serve i form (che lo mostrano come flash) e l'endpoint JSON (che lo restituisce).
+     */
+    private function fill(Customer $customer, Request $request, EntityManagerInterface $em, ?int $exceptId = null): ?string
     {
         $name = trim((string) $request->request->get('name'));
         $surname = trim((string) $request->request->get('surname'));
         if ($surname === '') {
-            $this->addFlash('danger', 'Il cognome (o la ragione sociale) è obbligatorio.');
-
-            return false;
+            return 'Il cognome (o la ragione sociale) è obbligatorio.';
         }
 
         $fiscalCode = mb_strtoupper(trim((string) $request->request->get('fiscal_code')));
@@ -170,17 +211,13 @@ class CustomerController extends AbstractController
             $repo = $em->getRepository(Customer::class);
             $duplicate = $repo->findOneByFiscalCode($fiscalCode);
             if ($duplicate !== null && $duplicate->getId() !== $exceptId) {
-                $this->addFlash('danger', 'Esiste già un cliente con codice fiscale ' . $fiscalCode . '.');
-
-                return false;
+                return 'Esiste già un cliente con codice fiscale ' . $fiscalCode . '.';
             }
         }
 
         $birthDate = $this->parseDate(trim((string) $request->request->get('birth_date')));
         if ($birthDate === false) {
-            $this->addFlash('danger', 'La data di nascita non è valida: usa il formato gg-mm-aaaa.');
-
-            return false;
+            return 'La data di nascita non è valida: usa il formato gg-mm-aaaa.';
         }
 
         $customer->setName($name)
@@ -198,6 +235,6 @@ class CustomerController extends AbstractController
             ->setSdi(trim((string) $request->request->get('sdi')) ?: null)
             ->setNotes(trim((string) $request->request->get('notes')) ?: null);
 
-        return true;
+        return null;
     }
 }

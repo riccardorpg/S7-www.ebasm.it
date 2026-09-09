@@ -26,20 +26,8 @@ class PracticeDocumentSync
      */
     public function sync(EntityManagerInterface $em, Practice $practice): int
     {
-        $existing = [];
-        foreach ($practice->getPracticeDocuments() as $practiceDocument) {
-            $typeId = $practiceDocument->getDocumentType()?->getId();
-            if ($typeId !== null) {
-                $existing[(int) $typeId] = true;
-            }
-        }
-
         $added = 0;
-        foreach ($this->catalogFor($em, $practice) as $type) {
-            if (isset($existing[(int) $type->getId()])) {
-                continue;
-            }
-
+        foreach ($this->missingFor($em, $practice) as $type) {
             $practiceDocument = (new PracticeDocument())
                 ->setDocumentType($type)
                 ->setLabel($type->getValue())
@@ -52,6 +40,29 @@ class PracticeDocumentSync
         }
 
         return $added;
+    }
+
+    /**
+     * 12.3.2.1 Tipi previsti che non hanno ancora una riga sulla pratica: sono quelli
+     * aggiunti al catalogo (o riattivati) dopo l'apertura, oppure entrati con il
+     * passaggio a "con mutuo".
+     *
+     * @return DocumentType[]
+     */
+    public function missingFor(EntityManagerInterface $em, Practice $practice): array
+    {
+        $existing = [];
+        foreach ($practice->getPracticeDocuments() as $practiceDocument) {
+            $typeId = $practiceDocument->getDocumentType()?->getId();
+            if ($typeId !== null) {
+                $existing[(int) $typeId] = true;
+            }
+        }
+
+        return array_values(array_filter(
+            $this->catalogFor($em, $practice),
+            static fn (DocumentType $type) => !isset($existing[(int) $type->getId()]),
+        ));
     }
 
     /**

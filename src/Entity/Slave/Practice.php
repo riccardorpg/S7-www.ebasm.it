@@ -80,7 +80,11 @@ class Practice
     #[ORM\Column(type: 'string', length: 20)]
     private string $status = self::STATUS_OPEN;
 
-    /** Notaio con accesso alla pratica (email dell'utente master). Null = tutti. */
+    /**
+     * 12.2.9 / 17.1 Notaio assegnato alla pratica (e-mail dell'utente master): è questa
+     * assegnazione a dargli accesso all'agenzia. Null = nessun notaio, pratica non
+     * visibile in area notaio.
+     */
     #[ORM\Column(name: 'notary_email', type: 'string', length: 190, nullable: true)]
     private ?string $notaryEmail = null;
 

@@ -20,4 +20,17 @@ class UserRepository extends ServiceEntityRepository
     {
         return $this->findOneBy(['email' => mb_strtolower(trim($email))]);
     }
+
+    /**
+     * 12.2.9 Notai attivi, per cognome: sono i candidati assegnabili a una pratica.
+     *
+     * @return User[]
+     */
+    public function findActiveNotaries(): array
+    {
+        return $this->findBy(
+            ['role' => 'ROLE_NOTARY', 'active' => true],
+            ['surname' => 'ASC', 'name' => 'ASC'],
+        );
+    }
 }

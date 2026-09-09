@@ -5,6 +5,8 @@
 {% set canEdit = is_granted('edit', 'practices') and not practice.archived %}
 {# 12.3.2 I documenti si modificano solo a pratica aperta: da "completata" in poi sono in sola lettura. #}
 {% set canEditDocuments = canEdit and practice.areDocumentsEditable %}
+{# 12.2.1 / 12.2.2 Il "+" accanto alle parti crea un cliente: serve il permesso sull'anagrafica. #}
+{% set canAddCustomer = canEdit and is_granted('edit', 'customers') %}
 
 {% block title %} - Pratica {{ practice.number }}{% endblock %}
 {% block role_page_title_inner %}Pratica {{ practice.number }}{% endblock %}
@@ -97,6 +99,20 @@
                             </td>
                         </tr>
                         <tr><th>Indirizzo</th><td>{{ practice.address ?: '—' }}</td></tr>
+                        {# 12.2.9 / 17.1 È l'assegnazione a dare al notaio l'accesso alla pratica. #}
+                        <tr>
+                            <th>Notaio</th>
+                            <td>
+                                {% if practice.notaryEmail %}
+                                    {# Il nome sta nel master: se il notaio non c'è più resta la sola e-mail. #}
+                                    {% set assigned = notaries|filter(n => n.email == practice.notaryEmail)|first %}
+                                    {{ assigned ? assigned.fullName : practice.notaryEmail }}
+                                    {% if assigned %}<span class="op_07 font_13">— {{ assigned.email }}</span>{% endif %}
+                                {% else %}
+                                    <span class="op_07">Nessuno — la pratica non è visibile in area notaio</span>
+                                {% endif %}
+                            </td>
+                        </tr>
                         <tr><th>Oggetto</th><td>{{ practice.subject ? practice.subject|nl2br : '—' }}</td></tr>
                         <tr>
                             <th>Contrassegno</th>
@@ -121,6 +137,21 @@
                 {# ===== 12.3.2 Gestione documentale ===== #}
                 <div class="tab-pane fade" id="tab-documenti">
                     {% if canEditDocuments %}
+                        {# 12.3.2.1 Il catalogo è cambiato dopo l'apertura: qui si recuperano
+                           i documenti previsti che ancora non hanno una riga. #}
+                        {% if missingDocuments > 0 %}
+                            <div class="alert alert-warning d-flex justify-content-between align-items-center gap-3 flex-wrap">
+                                <span>
+                                    {{ missingDocuments }} document{{ missingDocuments == 1 ? 'o' : 'i' }}
+                                    previst{{ missingDocuments == 1 ? 'o' : 'i' }} dalle configurazioni
+                                    {{ missingDocuments == 1 ? 'non è' : 'non sono' }} ancora in questa pratica.
+                                </span>
+                                <form method="post" action="{{ path('agency_practice_documents_sync', {id: practice.id}) }}" class="m-0">
+                                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('practiceDocumentsSync') }}">
+                                    <button type="submit" class="button button-3d button-mini button-amber m-0">Sincronizza</button>
+                                </form>
+                            </div>
+                        {% endif %}
                         <div class="d-flex justify-content-end gap-2 m_b_10p">
                             {# 12.3.2.6 Nuovo allegato: la riga documentale si sceglie nel modale. #}
                             <a href="javascript:documentNewOpen()" class="button button-3d button-mini button-green m-0">Nuovo allegato</a>
@@ -349,13 +380,21 @@
         } %}
             {% block modalBody %}
                 {{ include('role/agency/practices/_form_fields.html.twig', {
-                    prefix: 'practiceEdit', marks: marks, tags: tags, practice: practice, geoNumber: 1
+                    prefix: 'practiceEdit', marks: marks, tags: tags, practice: practice, geoNumber: 1,
+                    quickCustomer: canAddCustomer, old: {}, notaries: notaries
                 }, with_context = false) }}
             {% endblock %}
         {% endembed %}
 
         {# Ricerca comune per il picker Città/CAP dentro il modale di modifica #}
         {% include 'components/modals/city.html.twig' with {number: 1, cities: []} only %}
+
+        {# 12.2.1 / 12.2.2 Nuovo cliente al volo: chiude e riapre il modale di modifica #}
+        {% if canAddCustomer %}
+            {% include 'role/agency/practices/_customer_quick_new.html.twig' with {
+                prefix: 'practiceEdit', modalToClose: 'practiceEditModal'
+            } only %}
+        {% endif %}
 
         {# 12.3.2.6 Nuovo allegato #}
         {% embed 'components/modals/form_modal.html.twig' with {

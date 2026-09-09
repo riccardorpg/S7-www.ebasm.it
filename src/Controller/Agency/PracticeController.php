@@ -4,6 +4,7 @@ namespace App\Controller\Agency;
 
 use App\Controller\Trait\ParsesDatesTrait;
 use App\Entity\Master\City;
+use App\Entity\Master\User as NotaryUser;
 use App\Entity\Master\Zip;
 use App\Entity\Slave\Customer;
 use App\Entity\Slave\Document;
@@ -131,12 +132,16 @@ class PracticeController extends AbstractController
     public function new(Request $request): Response
     {
         $em = $this->slave();
+        // 12.2 Dati già digitati: valorizzati solo se il POST non è andato a buon fine,
+        // così l'utente ritrova il form come l'aveva lasciato invece di ricompilarlo.
+        $old = [];
 
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('practiceNew', (string) $request->request->get('_csrf_token'))) {
                 return $this->redirectToRoute('agency_practice_new', [], Response::HTTP_SEE_OTHER);
             }
 
+            $old = $this->submittedPracticeInput($request, $em);
             $practice = new Practice();
             if ($this->fill($practice, $request, $em)) {
                 $practice->setNumber($this->nextNumber($em));
@@ -158,7 +163,7 @@ class PracticeController extends AbstractController
             }
         }
 
-        return $this->render('role/agency/practices/new.html.twig', $this->formData($em));
+        return $this->render('role/agency/practices/new.html.twig', $this->formData($em) + ['old' => $old]);
     }
 
     /**
@@ -189,6 +194,30 @@ class PracticeController extends AbstractController
         return $this->json($items);
     }
 
+    /**
+     * 12.2.9 Ricerca notai per l'autocomplete del form pratica: stessa meccanica delle
+     * parti (12.2.1 / 12.2.2), ma l'"id" è l'e-mail, che è ciò che la pratica salva.
+     */
+    #[Route('/api/cerca-notaio', name: 'agency_notary_search', methods: ['GET'])]
+    public function searchNotaries(Request $request): JsonResponse
+    {
+        $q = mb_strtolower(trim((string) $request->query->get('q', '')));
+
+        $items = [];
+        foreach ($this->notaries() as $notary) {
+            $label = $notary->getFullName() . ' — ' . $notary->getEmail();
+            if ($q !== '' && !str_contains(mb_strtolower($label), $q)) {
+                continue;
+            }
+            $items[] = ['id' => $notary->getEmail(), 'label' => $label];
+            if (count($items) === 15) {
+                break;
+            }
+        }
+
+        return $this->json($items);
+    }
+
     /** 12.3 Scheda pratica. */
     #[Route('/{id}', name: 'agency_practice_show', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function show(int $id, PracticeNotifier $notifier): Response
@@ -203,6 +232,8 @@ class PracticeController extends AbstractController
             'assignedStaffIds' => $practice->getStaff()->map(fn (StaffUser $u) => $u->getId())->toArray(),
             // 12.3.2.7 Destinatari possibili della notifica.
             'recipients' => $notifier->recipientsFor($practice),
+            // 12.3.2.1 Tipi di documento previsti ma senza riga: si propone di sincronizzare.
+            'missingDocuments' => count($this->documentSync->missingFor($em, $practice)),
         ]);
     }
 
@@ -297,6 +328,34 @@ class PracticeController extends AbstractController
             $em->flush();
             $this->addFlash('danger', 'Caricamento non riuscito: ' . $e->getMessage());
         }
+
+        return $this->backToDocuments($practice);
+    }
+
+    /**
+     * 12.3.2.1 Sincronizza le righe documentali col catalogo (13.1): aggiunge quelle dei
+     * tipi entrati dopo l'apertura della pratica. Le righe esistenti non si toccano,
+     * quindi stato, allegati e mostra/nascondi restano dove sono.
+     */
+    #[Route('/{id}/documenti/sincronizza', name: 'agency_practice_documents_sync', methods: ['POST'], requirements: ['id' => '\d+'])]
+    #[IsGranted(new Expression("is_granted('edit', 'practices')"))]
+    public function documentsSync(int $id, Request $request): RedirectResponse
+    {
+        $practice = $this->requirePracticeWithEditableDocuments($id);
+        if (!$this->isCsrfTokenValid('practiceDocumentsSync', (string) $request->request->get('_csrf_token'))) {
+            return $this->backToDocuments($practice);
+        }
+
+        $em = $this->slave();
+        $added = $this->documentSync->sync($em, $practice);
+        $em->flush();
+
+        $this->addFlash(
+            $added > 0 ? 'success' : 'warning',
+            $added > 0
+                ? sprintf('Aggiunt%s %d document%s previst%s dalle configurazioni.', $added === 1 ? 'o' : 'i', $added, $added === 1 ? 'o' : 'i', $added === 1 ? 'o' : 'i')
+                : 'I documenti della pratica sono già allineati alle configurazioni.'
+        );
 
         return $this->backToDocuments($practice);
     }
@@ -774,7 +833,95 @@ class PracticeController extends AbstractController
             'customers' => $em->getRepository(Customer::class)->findBy(['active' => true], ['surname' => 'ASC', 'name' => 'ASC']),
             'marks' => $em->getRepository(PracticeMark::class)->findBy([], ['value' => 'ASC']),
             'tags' => $em->getRepository(PracticeTag::class)->findBy([], ['value' => 'ASC']),
+            // 12.2.9 I notai stanno nel master: li gestisce l'amministrazione.
+            'notaries' => $this->notaries(),
         ];
+    }
+
+    /**
+     * 12.2 Dati appena inviati dal form pratica, pronti per essere rimessi nei campi.
+     *
+     * Venditore, acquirente e città si scelgono da ricerca o da picker: nel POST arriva
+     * solo l'id, quindi l'etichetta visibile va ricostruita qui, altrimenti tornerebbe
+     * un campo vuoto accanto a un id valorizzato.
+     *
+     * @return array<string, mixed>
+     */
+    private function submittedPracticeInput(Request $request, EntityManagerInterface $em): array
+    {
+        $data = $request->request;
+        $customers = $em->getRepository(Customer::class);
+        $labels = [];
+        foreach (['seller', 'buyer'] as $role) {
+            $id = (int) $data->get($role . '_id');
+            $customer = $id > 0 ? $customers->find($id) : null;
+            $labels[$role] = $customer === null
+                ? ''
+                : $customer->getFullName() . ($customer->getFiscalCode() ? ' — ' . $customer->getFiscalCode() : '');
+        }
+
+        $cityId = (int) $data->get('city_id');
+        $city = $cityId > 0 ? $this->registry->getManager('master')->getRepository(City::class)->find($cityId) : null;
+
+        return [
+            'seller_id' => (int) $data->get('seller_id') ?: '',
+            'seller_label' => $labels['seller'],
+            'buyer_id' => (int) $data->get('buyer_id') ?: '',
+            'buyer_label' => $labels['buyer'],
+            'created_at' => trim((string) $data->get('created_at')),
+            'mark_id' => (int) $data->get('mark_id'),
+            'mortgage' => $data->getBoolean('mortgage'),
+            'address' => trim((string) $data->get('address')),
+            'city_id' => $city !== null ? (int) $city->getId() : '',
+            'city_name' => $city !== null ? (string) $city->getName() : '',
+            'zip_id' => (int) $data->get('zip_id') ?: '',
+            'notary_email' => mb_strtolower(trim((string) $data->get('notary_email'))),
+            'notary_label' => $this->notaryLabel(mb_strtolower(trim((string) $data->get('notary_email')))),
+            'subject' => trim((string) $data->get('subject')),
+            'tags' => array_values(array_filter(array_map('intval', (array) $data->all('tags')))),
+        ];
+    }
+
+    /**
+     * 12.2.9 Notai assegnabili: utenti master attivi con ROLE_NOTARY.
+     *
+     * @return NotaryUser[]
+     */
+    private function notaries(): array
+    {
+        /** @var \App\Repository\Master\UserRepository $repo */
+        $repo = $this->registry->getManager('master')->getRepository(NotaryUser::class);
+
+        return $repo->findActiveNotaries();
+    }
+
+    /** Etichetta del notaio (come la mostra l'autocomplete); l'e-mail se non lo trova. */
+    private function notaryLabel(string $email): string
+    {
+        if ($email === '') {
+            return '';
+        }
+
+        foreach ($this->notaries() as $notary) {
+            if (mb_strtolower((string) $notary->getEmail()) === $email) {
+                return $notary->getFullName() . ' — ' . $notary->getEmail();
+            }
+        }
+
+        return $email;
+    }
+
+    /**
+     * E-mail dei notai assegnabili, in minuscolo.
+     *
+     * @return string[]
+     */
+    private function notaryEmails(): array
+    {
+        return array_map(
+            static fn (NotaryUser $u) => mb_strtolower((string) $u->getEmail()),
+            $this->notaries(),
+        );
     }
 
     /** Numero pratica progressivo per anno: P-0001/2026. */
@@ -835,11 +982,21 @@ class PracticeController extends AbstractController
             return false;
         }
 
+        // 12.2.9 Notaio assegnato: vale solo se è uno di quelli presenti, così un valore
+        // arrivato a mano non finisce in pratica (ed è quello che dà l'accesso, vedi 17.1).
+        $notaryEmail = mb_strtolower(trim((string) $request->request->get('notary_email')));
+        if ($notaryEmail !== '' && !in_array($notaryEmail, $this->notaryEmails(), true)) {
+            $this->addFlash('danger', 'Il notaio selezionato non è più disponibile.');
+
+            return false;
+        }
+
         $practice->setSeller($seller)
             ->setBuyer($buyer)
             ->setCreatedAt($createdAt)
             ->setMortgage($request->request->getBoolean('mortgage'))
             ->setAddress($address)
+            ->setNotaryEmail($notaryEmail ?: null)
             ->setSubject(trim((string) $request->request->get('subject')) ?: null);
 
         // 12.2.7 Contrassegno (uno) e 12.2.6 tag (molti).
